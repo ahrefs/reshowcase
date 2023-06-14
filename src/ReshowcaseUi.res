@@ -135,7 +135,7 @@ let rightSidebarId = "rightSidebar"
 module Link = {
   @react.component
   let make = (~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
-    let url = ReasonReact.Router.useUrl()
+    let url = React.Router.useUrl()
     let path = String.concat("/", url.path)
     let isActive = (path ++ ("?" ++ url.search))->Js.String2.endsWith(href)
     <a
