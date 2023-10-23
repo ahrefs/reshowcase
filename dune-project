@@ -22,15 +22,18 @@
  (maintainers "Denis Strelkov <denis.strelkov@ahrefs.com>")
  (authors "bloodyowl <mlbli@me.com>")
  (license "MIT")
- (tags ("melange" "org:ahrefs"))
+ (tags
+  ("melange" "org:ahrefs"))
  (depends
   ocaml
   (melange
    (>= 2.0.0))
   (reason
    (>= 3.10.0))
-  reason-react
-  reason-react-ppx
+  (reason-react
+   (>= 0.14.0))
+  (reason-react-ppx
+   (>= 0.14.0))
   (ocaml-lsp-server :with-test)
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   ))

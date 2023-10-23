@@ -105,7 +105,7 @@ module TopPanel = {
                       }
                     }
               onClick={event => {
-                event->ReactEvent.Mouse.preventDefault;
+                event->React.Event.Mouse.preventDefault;
                 onSetResponsiveMode(_ => Desktop);
               }}>
               Icon.desktop
@@ -120,7 +120,7 @@ module TopPanel = {
                       }
                     }
               onClick={event => {
-                event->ReactEvent.Mouse.preventDefault;
+                event->React.Event.Mouse.preventDefault;
                 onSetResponsiveMode(_ => Mobile);
               }}>
               Icon.mobile
@@ -139,7 +139,7 @@ module TopPanel = {
                     }
               style=Styles.squareButton
               onClick={event => {
-                event->ReactEvent.Mouse.preventDefault;
+                event->React.Event.Mouse.preventDefault;
                 onRightSidebarToggle();
               }}>
               <div
@@ -170,11 +170,11 @@ module Link = {
       href
       onClick={event =>
         switch (
-          ReactEvent.Mouse.metaKey(event),
-          ReactEvent.Mouse.ctrlKey(event),
+          React.Event.Mouse.metaKey(event),
+          React.Event.Mouse.ctrlKey(event),
         ) {
         | (false, false) =>
-          ReactEvent.Mouse.preventDefault(event);
+          React.Event.Mouse.preventDefault(event);
           ReasonReactRouter.push(href);
         | _ => ()
         }
@@ -432,7 +432,7 @@ module DemoListSidebar = {
             )}
             title="Toggle default collapsed categories"
             onClick={event => {
-              event->ReactEvent.Mouse.preventDefault;
+              event->React.Event.Mouse.preventDefault;
               onToggleCollapsedCategoriesByDefault();
             }}>
             {if (isCategoriesCollapsedByDefault) {Icon.categoryCollapsed} else {
@@ -442,7 +442,7 @@ module DemoListSidebar = {
           <SearchInput
             value={filterValue->(Option.getWithDefault(""))}
             onChange={event => {
-              let value = event->ReactEvent.Form.target##value;
+              let value = event->React.Event.Form.target##value;
 
               setFilterValue(_ =>
                 if (value->Js.String2.trim == "") {
@@ -574,7 +574,7 @@ module DemoUnitSidebar = {
                       onChange={event =>
                         onStringChange(
                           propName,
-                          event->ReactEvent.Form.target##value,
+                          event->React.Event.Form.target##value,
                         )
                       }
                     />
@@ -582,7 +582,7 @@ module DemoUnitSidebar = {
                     <select
                       style=Styles.select
                       onChange={event => {
-                        let value = event->ReactEvent.Form.target##value;
+                        let value = event->React.Event.Form.target##value;
 
                         onStringChange(propName, value);
                       }}>
@@ -618,7 +618,7 @@ module DemoUnitSidebar = {
                    onChange={event =>
                      onIntChange(
                        propName,
-                       event->ReactEvent.Form.target##value->int_of_string,
+                       event->React.Event.Form.target##value->int_of_string,
                      )
                    }
                  />
@@ -640,7 +640,7 @@ module DemoUnitSidebar = {
                    onChange={event =>
                      onFloatChange(
                        propName,
-                       event->ReactEvent.Form.target##value->float_of_string,
+                       event->React.Event.Form.target##value->float_of_string,
                      )
                    }
                  />
@@ -660,7 +660,7 @@ module DemoUnitSidebar = {
                    onChange={event =>
                      onBoolChange(
                        propName,
-                       event->ReactEvent.Form.target##checked,
+                       event->React.Event.Form.target##checked,
                      )
                    }
                  />
@@ -920,7 +920,7 @@ module DemoUnitFrame = {
     <div name="DemoUnitFrame" style={container(responsiveMode)}>
       <iframe
         onLoad={event => {
-          let iframe = event->ReactEvent.Synthetic.target;
+          let iframe = event->React.Event.Synthetic.target;
           let window = iframe##contentWindow;
           onLoad(window);
         }}
