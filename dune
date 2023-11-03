@@ -21,7 +21,9 @@
   (run
    %{bin:reshowcase}
    start
-   --entry=%{project_root}/example/example/example/Demo.js)))
+   --compiledProjectRoot=%{project_root}
+   --entry=%{project_root}/example/example/example/Demo.js
+   --output=%{project_root}/build)))
 
 (rule
  (alias build-example)
@@ -35,5 +37,6 @@
   (run
    %{bin:reshowcase}
    build
+   --compiledProjectRoot=%{project_root}
    --entry=%{project_root}/example/example/example/Demo.js
-   --output=./build)))
+   --output=%{project_root}/build)))

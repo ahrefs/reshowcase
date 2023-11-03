@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-const webpack = require("webpack");
-const WebpackDevServer = require("webpack-dev-server");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const child_process = require("child_process");
+const esbuild = require("esbuild");
+const { htmlPlugin } = require("@craftamap/esbuild-plugin-html");
 
 const toAbsolutePath = (filepath) => {
   if (path.isAbsolute(filepath)) {
@@ -69,15 +66,9 @@ if (!fs.existsSync(entryPath)) {
   process.exit(1);
 }
 
-const outputPath = (() => {
-  if (isBuild) {
-    return getRequiredPathValue("output");
-  } else {
-    return os.tmpdir();
-  }
-})();
+const outputPath = getRequiredPathValue("output");
 
-const config = (() => {
+const customConfig = (() => {
   const configDir = path.join(process.cwd(), ".reshowcase");
 
   if (!fs.existsSync(configDir)) {
@@ -102,108 +93,101 @@ const config = (() => {
   }
 })();
 
-const compiler = webpack({
-  // https://github.com/webpack/webpack-dev-server/issues/2758#issuecomment-813135032
-  // target: "web" (probably) can be removed after upgrading to webpack-dev-server v4
-  target: "web",
-  mode: isBuild ? "production" : "development",
-  entry: {
-    index: entryPath,
+// entryPoint passed to htmlPlugin must be relative to the root of user's project
+const compiledProjectRoot = getRequiredPathValue("compiledProjectRoot");
+
+const entryPathRelativeTocompiledProjectRoot = path.relative(
+  compiledProjectRoot,
+  entryPath
+);
+
+console.log({ compiledProjectRoot });
+console.log({ entryPathRelativeTocompiledProjectRoot });
+
+const defaultConfig = {
+  entryPoints: [entryPath],
+  bundle: true,
+  outdir: outputPath,
+  // publicPath: "",
+  format: "esm",
+  minify: isBuild,
+  metafile: true,
+  splitting: true,
+  treeShaking: true,
+  logLevel: "info",
+  define: {
+    USE_FULL_IFRAME_URL: JSON.stringify(useFullframeUrl),
   },
-  output: {
-    path: outputPath,
-    filename: "reshowcase[fullhash].js",
-    globalObject: "this",
-    chunkLoadingGlobal: "reshowcase__d",
-  },
-  module: config.module,
   plugins: [
-    ...(config.plugins ? config.plugins : []),
-    new CopyWebpackPlugin({
-      patterns: [{ from: path.join(__dirname, "./favicon.png"), to: "" }],
+    htmlPlugin({
+      files: [
+        {
+          filename: "index.html",
+          entryPoints: [entryPathRelativeTocompiledProjectRoot],
+          htmlTemplate: path.join(__dirname, "./ui-template.html"),
+          scriptLoading: "module",
+        },
+      ],
     }),
-    new HtmlWebpackPlugin({
-      filename: "index.html",
-      template: path.join(__dirname, "./ui-template.html"),
-    }),
-    new HtmlWebpackPlugin({
-      filename: "./demo/index.html",
-      template: process.argv.find((item) => item.startsWith("--template="))
-        ? path.join(
-            process.cwd(),
-            process.argv
-              .find((item) => item.startsWith("--template="))
-              .replace(/--template=/, "")
+    htmlPlugin({
+      files: [
+        {
+          filename: "./demo/index.html",
+          entryPoints: [entryPathRelativeTocompiledProjectRoot],
+          htmlTemplate: process.argv.find((item) =>
+            item.startsWith("--template=")
           )
-        : path.join(__dirname, "./demo-template.html"),
-    }),
-    new webpack.DefinePlugin({
-      USE_FULL_IFRAME_URL: JSON.stringify(useFullframeUrl),
+            ? path.join(
+                process.cwd(),
+                process.argv
+                  .find((item) => item.startsWith("--template="))
+                  .replace(/--template=/, "")
+              )
+            : path.join(__dirname, "./demo-template.html"),
+          scriptLoading: "module",
+        },
+      ],
     }),
   ],
-});
+};
+
+console.log({ outputPath });
+
+const config = {
+  ...defaultConfig,
+  ...customConfig,
+  define: { ...defaultConfig.define, ...(customConfig.define || {}) },
+  plugins: [...defaultConfig.plugins, ...(customConfig.plugins || [])],
+};
 
 if (isBuild) {
-  console.log("Building Reshowcase bundle...");
-  compiler.run((err, stats) => {
-    // https://webpack.js.org/api/node/#error-handling
-    if (err) {
-      console.error("Build failed. Webpack fatal errors:\n", err);
+  const durationLabel = "[Reshowcase] Bundle finished. Duration:";
+  console.log("[Reshowcase] Bundling with esbuild...");
+  console.time(durationLabel);
+  esbuild
+    .build(config)
+    .then((_buildResult) => {
+      console.timeEnd(durationLabel);
+      const json = JSON.stringify(_buildResult.metafile);
+      fs.writeFileSync(
+        "/Users/denstr/projects/ahrefs-reshowcase/meta.json",
+        json
+      );
+    })
+    .catch((error) => {
+      console.error("[Reshowcase] Build failed:", error);
       process.exit(1);
-    } else {
-      const info = stats.toJson();
-      if (stats.hasErrors && info.errors.length > 0) {
-        console.error(
-          "Build failed. Webpack complilation errors:\n",
-          info.errors
-        );
-        process.exit(1);
-      } else {
-        console.log(
-          stats.toString({ assets: true, chunks: true, colors: true })
-        );
-        console.log("Reshowcase build finished successfully.");
-      }
-    }
-  });
-} else {
-  const port = parseInt(
-    process.argv.find((item) => item.startsWith("--port="))
-      ? process.argv
-          .find((item) => item.startsWith("--port="))
-          .replace(/--port=/, "")
-      : 9000,
-    10
-  );
-
-  const server = new WebpackDevServer(
-    {
-      compress: true,
-      port: port,
-      historyApiFallback: {
-        index: "/index.html",
-      },
-      devMiddleware: {
-        publicPath: "/",
-        stats: "errors-warnings",
-      },
-      ...(config.devServer || {}),
-    },
-    compiler
-  );
-
-  ["SIGINT", "SIGTERM"].forEach((signal) => {
-    process.on(signal, () => {
-      if (server) {
-        server.stopCallback(() => {
-          console.log("Webpack DevServer has stopped!");
-          process.exit();
-        });
-      } else {
-        process.exit();
-      }
     });
-  });
-
-  server.startCallback(() => console.log("Webpack DevServer has started!"));
+} else {
+  esbuild
+    .context(config)
+    .then((ctx) => {
+      return ctx.watch().then((_) => ctx);
+    })
+    .then((ctx) => {
+      return ctx.serve();
+    })
+    .then((serveResult) => {
+      console.log({ serveResult });
+    });
 }
