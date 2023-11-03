@@ -309,23 +309,9 @@ module DemoListSidebar = {
             switch (entity) {
             | Demo(_) =>
               if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
-                <Link
-                  key=entityName
-                  style=Styles.link
-                  activeStyle=Styles.activeLink
-                  href={
-                    ("?demo=" ++ entityName->Js.Global.encodeURIComponent)
-                    ++ categoryQuery
-                  }
-                  text={
-                    <HighlightTerms
-                      text=entityName
-                      terms=searchMatchingTerms
-                    />
-                  }
-                />;
+                Some((entityName, entity));
               } else {
-                React.null;
+                None;
               }
             | Category(demos) =>
               if ((
@@ -333,56 +319,81 @@ module DemoListSidebar = {
                     || Demos.isNestedEntityMatchSearch(demos, searchString)
                   )
                   || parentCategoryMatchedSearch) {
-                let levelStr = Int.toString(nestingLevel);
-                let categoryQueryKey = {js|category|js} ++ levelStr;
-                let isCategoryInQuery =
-                  switch (
-                    urlSearchParams->(URLSearchParams.get(categoryQueryKey))
-                  ) {
-                  | Some(value)
-                      when value->Js.Global.decodeURIComponent == entityName =>
-                    true
-                  | Some(_)
-                  | None => false
-                  };
-
-                <PaddedBox key=entityName padding=LeftRight>
-                  <Collapsible
-                    title={
-                      <div style=Styles.categoryName>
-                        <HighlightTerms
-                          text=entityName
-                          terms=searchMatchingTerms
-                        />
-                      </div>
-                    }
-                    isDefaultOpen={
-                      isCategoryInQuery || !isCategoriesCollapsedByDefault
-                    }
-                    isForceOpen={searchString != ""}>
-                    <PaddedBox padding=LeftRight>
-                      {renderMenu(
-                         ~parentCategoryMatchedSearch=
-                           isEntityNameMatchSearch
-                           || parentCategoryMatchedSearch,
-                         ~nestingLevel=nestingLevel + 1,
-                         ~categoryQuery=
-                           (
-                             (({js|&category|js} ++ levelStr) ++ {js|=|js})
-                             ++ entityName->Js.Global.encodeURIComponent
-                           )
-                           ++ categoryQuery,
-                         demos,
-                       )}
-                    </PaddedBox>
-                  </Collapsible>
-                </PaddedBox>;
+                Some((entityName, entity));
               } else {
-                React.null;
+                None;
               }
             };
           })
         )
+      ->Belt.Array.keepMap(Fun.id)
+      ->Array.map(((entityName, entity)) => {
+          let searchMatchingTerms =
+            HighlightTerms.getMatchingTerms(~searchString, ~entityName);
+
+          let isEntityNameMatchSearch =
+            searchString == "" || searchMatchingTerms->Belt.Array.size > 0;
+
+          switch (entity) {
+          | Demo(_) =>
+            <Link
+              key=entityName
+              style=Styles.link
+              activeStyle=Styles.activeLink
+              href={
+                ("?demo=" ++ entityName->Js.Global.encodeURIComponent)
+                ++ categoryQuery
+              }
+              text={
+                <HighlightTerms text=entityName terms=searchMatchingTerms />
+              }
+            />
+          | Category(demos) =>
+            let levelStr = Int.toString(nestingLevel);
+            let categoryQueryKey = {js|category|js} ++ levelStr;
+            let isCategoryInQuery =
+              switch (
+                urlSearchParams->(URLSearchParams.get(categoryQueryKey))
+              ) {
+              | Some(value)
+                  when value->Js.Global.decodeURIComponent == entityName =>
+                true
+              | Some(_)
+              | None => false
+              };
+
+            <PaddedBox key=entityName padding=LeftRight>
+              <Collapsible
+                title={
+                  <div style=Styles.categoryName>
+                    <HighlightTerms
+                      text=entityName
+                      terms=searchMatchingTerms
+                    />
+                  </div>
+                }
+                isDefaultOpen={
+                  isCategoryInQuery || !isCategoriesCollapsedByDefault
+                }
+                isForceOpen={searchString != ""}>
+                <PaddedBox padding=LeftRight>
+                  {renderMenu(
+                     ~parentCategoryMatchedSearch=
+                       isEntityNameMatchSearch || parentCategoryMatchedSearch,
+                     ~nestingLevel=nestingLevel + 1,
+                     ~categoryQuery=
+                       (
+                         (({js|&category|js} ++ levelStr) ++ {js|=|js})
+                         ++ entityName->Js.Global.encodeURIComponent
+                       )
+                       ++ categoryQuery,
+                     demos,
+                   )}
+                </PaddedBox>
+              </Collapsible>
+            </PaddedBox>;
+          };
+        })
       ->React.array;
     };
 
@@ -1030,16 +1041,6 @@ module App = {
     let (loadedIframeWindow: option(Js.t('a)), setLoadedIframeWindow) =
       React.useState(() => None);
 
-    let (iframeKey, setIframeKey) =
-      React.useState(() => Js.Date.now()->Float.toString);
-
-    React.useEffect1(
-      () => {
-        setIframeKey(_ => Js.Date.now()->Float.toString);
-        None;
-      },
-      [|url|],
-    );
     let (showRightSidebar, toggleShowRightSidebar) =
       React.useState(() =>
         LocalStorage.localStorage
@@ -1123,7 +1124,6 @@ module App = {
              <div name="Demo" style=Styles.demo>
                <div style=Styles.demoContents>
                  <DemoUnitFrame
-                   key={"DemoUnitFrame" ++ iframeKey}
                    queryString
                    responsiveMode
                    onLoad={iframeWindow =>
@@ -1133,7 +1133,6 @@ module App = {
                </div>
                {if (showRightSidebar) {
                   <Sidebar
-                    key={"Sidebar" ++ iframeKey}
                     innerContainerId=rightSidebarId
                   />;
                 } else {
