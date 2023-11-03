@@ -1,6 +1,7 @@
 {
   "license": "MIT",
   "dependencies": {
+    "@craftamap/esbuild-plugin-html": "https://github.com/denis-ok/esbuild-plugin-html#79f512f447eb98efa6b6786875f617a095eaaf09",
     "copy-webpack-plugin": "^11.0.0",
     "esbuild": "^0.19.5",
     "html-webpack-plugin": "^5.5.0",
