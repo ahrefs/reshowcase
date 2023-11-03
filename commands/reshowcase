@@ -112,7 +112,7 @@ const defaultConfig = {
   treeShaking: true,
   logLevel: "warning",
   define: {
-    USE_FULL_IFRAME_URL: JSON.stringify(useFullframeUrl),
+    USE_FULL_IFRAME_URL: JSON.stringify(isBuild ? useFullframeUrl : true),
   },
   plugins: [
     htmlPlugin({
