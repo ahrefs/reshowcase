@@ -101,20 +101,16 @@ const entryPathRelativeTocompiledProjectRoot = path.relative(
   entryPath
 );
 
-console.log({ compiledProjectRoot });
-console.log({ entryPathRelativeTocompiledProjectRoot });
-
 const defaultConfig = {
   entryPoints: [entryPath],
   bundle: true,
   outdir: outputPath,
-  // publicPath: "",
   format: "esm",
   minify: isBuild,
   metafile: true,
   splitting: true,
   treeShaking: true,
-  logLevel: "info",
+  logLevel: "warning",
   define: {
     USE_FULL_IFRAME_URL: JSON.stringify(useFullframeUrl),
   },
@@ -151,8 +147,6 @@ const defaultConfig = {
   ],
 };
 
-console.log({ outputPath });
-
 const config = {
   ...defaultConfig,
   ...customConfig,
@@ -161,33 +155,39 @@ const config = {
 };
 
 if (isBuild) {
-  const durationLabel = "[Reshowcase] Bundle finished. Duration:";
-  console.log("[Reshowcase] Bundling with esbuild...");
+  const durationLabel = "[Reshowcase] Build finished. Duration";
   console.time(durationLabel);
+
   esbuild
     .build(config)
     .then((_buildResult) => {
       console.timeEnd(durationLabel);
-      const json = JSON.stringify(_buildResult.metafile);
-      fs.writeFileSync(
-        "/Users/denstr/projects/ahrefs-reshowcase/meta.json",
-        json
-      );
     })
     .catch((error) => {
-      console.error("[Reshowcase] Build failed:", error);
+      console.error("[Reshowcase] Esbuild build failed:", error);
       process.exit(1);
     });
 } else {
+  const durationLabel = "[Reshowcase] Watch and serve started. Duration";
+  console.time(durationLabel);
+
   esbuild
     .context(config)
     .then((ctx) => {
-      return ctx.watch().then((_) => ctx);
+      return ctx.watch().then(() => ctx);
+    })
+    .catch((error) => {
+      console.error("[Reshowcase] Esbuild watch start failed:", error);
+      process.exit(1);
     })
     .then((ctx) => {
-      return ctx.serve();
+      return ctx.serve({ port: 8000, servedir: outputPath });
     })
-    .then((serveResult) => {
-      console.log({ serveResult });
+    .then((_serveResult) => {
+      console.timeEnd(durationLabel);
+    })
+    .catch((error) => {
+      console.error("[Reshowcase] Esbuild serve start failed:", error);
+      process.exit(1);
     });
 }
