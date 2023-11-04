@@ -94,10 +94,7 @@ const customConfig = (() => {
 })();
 
 // entryPoint passed to htmlPlugin must be relative to the current working directory
-const entryPathRelativeToCwd = path.relative(
-  process.cwd(),
-  entryPath
-);
+const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
 
 const defaultConfig = {
   entryPoints: [entryPath],
@@ -121,10 +118,6 @@ const defaultConfig = {
           htmlTemplate: path.join(__dirname, "./ui-template.html"),
           scriptLoading: "module",
         },
-      ],
-    }),
-    htmlPlugin({
-      files: [
         {
           filename: "./demo/index.html",
           entryPoints: [entryPathRelativeToCwd],
