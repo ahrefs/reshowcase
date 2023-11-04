@@ -21,7 +21,6 @@
   (run
    %{bin:reshowcase}
    start
-   --compiledProjectRoot=%{project_root}
    --entry=%{project_root}/example/example/example/Demo.js
    --output=%{project_root}/build)))
 
@@ -37,6 +36,5 @@
   (run
    %{bin:reshowcase}
    build
-   --compiledProjectRoot=%{project_root}
    --entry=%{project_root}/example/example/example/Demo.js
    --output=%{project_root}/build)))

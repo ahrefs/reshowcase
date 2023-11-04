@@ -93,11 +93,9 @@ const customConfig = (() => {
   }
 })();
 
-// entryPoint passed to htmlPlugin must be relative to the root of user's project
-const compiledProjectRoot = getRequiredPathValue("compiledProjectRoot");
-
-const entryPathRelativeTocompiledProjectRoot = path.relative(
-  compiledProjectRoot,
+// entryPoint passed to htmlPlugin must be relative to the current working directory
+const entryPathRelativeToCwd = path.relative(
+  process.cwd(),
   entryPath
 );
 
@@ -119,7 +117,7 @@ const defaultConfig = {
       files: [
         {
           filename: "index.html",
-          entryPoints: [entryPathRelativeTocompiledProjectRoot],
+          entryPoints: [entryPathRelativeToCwd],
           htmlTemplate: path.join(__dirname, "./ui-template.html"),
           scriptLoading: "module",
         },
@@ -129,7 +127,7 @@ const defaultConfig = {
       files: [
         {
           filename: "./demo/index.html",
-          entryPoints: [entryPathRelativeTocompiledProjectRoot],
+          entryPoints: [entryPathRelativeToCwd],
           htmlTemplate: process.argv.find((item) =>
             item.startsWith("--template=")
           )
