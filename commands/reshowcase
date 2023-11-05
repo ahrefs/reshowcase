@@ -2,7 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
+const _os = require("os");
 const esbuild = require("esbuild");
 const { htmlPlugin } = require("@craftamap/esbuild-plugin-html");
 
@@ -106,6 +106,23 @@ const defaultConfig = {
   splitting: true,
   treeShaking: true,
   logLevel: "warning",
+  loader: Object.fromEntries(
+    [
+      ".css",
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".svg",
+      ".ico",
+      ".avif",
+      ".webp",
+      ".woff",
+      ".woff2",
+      ".json",
+      ".mp4",
+    ].map((ext) => [ext, "file"])
+  ),
   define: {
     USE_FULL_IFRAME_URL: JSON.stringify(isBuild ? useFullframeUrl : true),
   },
