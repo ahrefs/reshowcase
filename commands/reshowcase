@@ -98,6 +98,9 @@ const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
 
 const defaultConfig = {
   entryPoints: [entryPath],
+  entryNames: "[name]-[hash]",
+  assetNames: "[name]-[hash]",
+  chunkNames: "[name]-[hash]",
   bundle: true,
   outdir: outputPath,
   format: "esm",
