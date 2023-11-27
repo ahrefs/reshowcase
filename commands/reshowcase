@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-const webpack = require("webpack");
-const WebpackDevServer = require("webpack-dev-server");
+const rspack = require('@rspack/core');
+const { RspackDevServer } = require('@rspack/dev-server');
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const child_process = require("child_process");
 
 const toAbsolutePath = (filepath) => {
   if (path.isAbsolute(filepath)) {
@@ -102,7 +99,7 @@ const config = (() => {
   }
 })();
 
-const compiler = webpack({
+const compiler = rspack.rspack({
   // https://github.com/webpack/webpack-dev-server/issues/2758#issuecomment-813135032
   // target: "web" (probably) can be removed after upgrading to webpack-dev-server v4
   target: "web",
@@ -119,14 +116,14 @@ const compiler = webpack({
   module: config.module,
   plugins: [
     ...(config.plugins ? config.plugins : []),
-    new CopyWebpackPlugin({
+    new rspack.CopyRspackPlugin({
       patterns: [{ from: path.join(__dirname, "./favicon.png"), to: "" }],
     }),
-    new HtmlWebpackPlugin({
+    new rspack.HtmlRspackPlugin({
       filename: "index.html",
       template: path.join(__dirname, "./ui-template.html"),
     }),
-    new HtmlWebpackPlugin({
+    new rspack.HtmlRspackPlugin({
       filename: "./demo/index.html",
       template: process.argv.find((item) => item.startsWith("--template="))
         ? path.join(
@@ -137,10 +134,11 @@ const compiler = webpack({
           )
         : path.join(__dirname, "./demo-template.html"),
     }),
-    new webpack.DefinePlugin({
+    new rspack.DefinePlugin({
       USE_FULL_IFRAME_URL: JSON.stringify(useFullframeUrl),
     }),
-  ],
+    !isBuild && new rspack.ProgressPlugin(),
+  ].filter(Boolean),
 });
 
 if (isBuild) {
@@ -148,13 +146,13 @@ if (isBuild) {
   compiler.run((err, stats) => {
     // https://webpack.js.org/api/node/#error-handling
     if (err) {
-      console.error("Build failed. Webpack fatal errors:\n", err);
+      console.error("Build failed. Rspack fatal errors:\n", err);
       process.exit(1);
     } else {
       const info = stats.toJson();
       if (stats.hasErrors && info.errors.length > 0) {
         console.error(
-          "Build failed. Webpack complilation errors:\n",
+          "Build failed. Rspack complilation errors:\n",
           info.errors
         );
         process.exit(1);
@@ -176,7 +174,7 @@ if (isBuild) {
     10
   );
 
-  const server = new WebpackDevServer(
+  const server = new RspackDevServer(
     {
       compress: true,
       port: port,
@@ -196,7 +194,7 @@ if (isBuild) {
     process.on(signal, () => {
       if (server) {
         server.stopCallback(() => {
-          console.log("Webpack DevServer has stopped!");
+          console.log("Rspack DevServer has stopped!");
           process.exit();
         });
       } else {
@@ -205,5 +203,5 @@ if (isBuild) {
     });
   });
 
-  server.startCallback(() => console.log("Webpack DevServer has started!"));
+  server.startCallback(() => console.log("Rspack DevServer has started!"));
 }

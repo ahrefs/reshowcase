@@ -1,6 +1,5 @@
 depexts: [
-  ["copy-webpack-plugin"] {npm-version = "^11.0.0"}
-  ["html-webpack-plugin"] {npm-version = "^5.5.0"}
-  ["webpack"] {npm-version = "^5.76.1"}
-  ["webpack-dev-server"] {npm-version = "^4.11.1"}
+  ["@rspack/cli"] {npm-version = "^0.4.0"}
+  ["@rspack/core"] {npm-version = "^0.4.0"}
+  ["@rspack/dev-server"] {npm-version = "^0.4.0"}
 ]
