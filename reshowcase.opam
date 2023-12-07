@@ -42,6 +42,7 @@ depexts: [
   ["webpack-dev-server"] {npm-version = "^4.11.1"}
 ]
 pin-depends: [
-  [ "reason-react.dev"      "git+https://github.com/reasonml/reason-react.git#6938d62b70c506eade2755d32f7c5f3aae005e8c" ]
-  [ "reason-react-ppx.dev"  "git+https://github.com/reasonml/reason-react.git#6938d62b70c506eade2755d32f7c5f3aae005e8cd" ]
+  ["melange.dev" "git+https://github.com/melange-re/melange#982cba971fa662439f0675465ef854424771ca3d"]
+  ["reason-react.dev" "https://github.com/reasonml/reason-react/archive/f799ac03d79d39de04fe937075607c348f8053b4.tar.gz"]
+  ["reason-react-ppx.dev" "https://github.com/reasonml/reason-react/archive/f799ac03d79d39de04fe937075607c348f8053b4.tar.gz"]
 ]

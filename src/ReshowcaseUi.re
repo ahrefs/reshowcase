@@ -12,7 +12,7 @@ module Collapsible = Layout.Collapsible;
 module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;
-module Array = Js.Array2;
+module Array = Js.Array;
 
 type responsiveMode =
   | Mobile
@@ -165,7 +165,8 @@ module Link = {
   let make = (~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
     let url = ReasonReactRouter.useUrl();
     let path = String.concat("/", url.path);
-    let isActive = (path ++ "?" ++ url.search)->(Js.String2.endsWith(href));
+    let isActive =
+      Js.String.endsWith(~suffix=href, path ++ "?" ++ url.search);
     <a
       href
       onClick={event =>
@@ -299,7 +300,7 @@ module DemoListSidebar = {
       let demos = demos->Js.Dict.entries;
       demos
       ->(
-          Array.map(((entityName, entity)) => {
+          Array.map(~f=((entityName, entity)) => {
             let searchMatchingTerms =
               HighlightTerms.getMatchingTerms(~searchString, ~entityName);
 
@@ -307,7 +308,7 @@ module DemoListSidebar = {
               searchString == "" || searchMatchingTerms->Belt.Array.size > 0;
 
             switch (entity) {
-            | Demo(_) =>
+            | Entity.Demo(_) =>
               if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
                 <Link
                   key=entityName
@@ -445,7 +446,7 @@ module DemoListSidebar = {
               let value = event->React.Event.Form.target##value;
 
               setFilterValue(_ =>
-                if (value->Js.String2.trim == "") {
+                if (value->Js.String.trim == "") {
                   None;
                 } else {
                   Some(value);
@@ -460,7 +461,7 @@ module DemoListSidebar = {
         {renderMenu(
            ~isCategoriesCollapsedByDefault,
            ~searchString=
-             filterValue->(Option.mapWithDefault("", Js.String2.toLowerCase)),
+             filterValue->(Option.mapWithDefault("", Js.String.toLowerCase)),
            ~urlSearchParams,
            demos,
          )}
@@ -563,7 +564,7 @@ module DemoUnitSidebar = {
         {strings
          ->Map.String.toArray
          ->(
-             Array.map(((propName, (_config, value, options))) =>
+             Array.map(~f=((propName, (_config, value, options))) =>
                <PropBox key=propName propName>
                  {switch (options) {
                   | None =>
@@ -588,7 +589,7 @@ module DemoUnitSidebar = {
                       }}>
                       {options
                        ->(
-                           Array.map(((key, optionValue)) =>
+                           Array.map(~f=((key, optionValue)) =>
                              <option
                                key
                                selected={value == optionValue}
@@ -607,7 +608,7 @@ module DemoUnitSidebar = {
         {ints
          ->Map.String.toArray
          ->(
-             Array.map(((propName, ({min, max, _}, value))) =>
+             Array.map(~f=((propName, ({Configs.min, max, _}, value))) =>
                <PropBox key=propName propName>
                  <input
                    type_="number"
@@ -629,7 +630,7 @@ module DemoUnitSidebar = {
         {floats
          ->Map.String.toArray
          ->(
-             Array.map(((propName, ({min, max, _}, value))) =>
+             Array.map(~f=((propName, ({Configs.min, max, _}, value))) =>
                <PropBox key=propName propName>
                  <input
                    type_="number"
@@ -651,7 +652,7 @@ module DemoUnitSidebar = {
         {bools
          ->Map.String.toArray
          ->(
-             Array.map(((propName, (_config, checked))) =>
+             Array.map(~f=((propName, (_config, checked))) =>
                <PropBox key=propName propName>
                  <input
                    type_="checkbox"
