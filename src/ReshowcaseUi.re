@@ -12,7 +12,6 @@ module Collapsible = Layout.Collapsible;
 module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;
-module Array = Js.Array;
 
 type responsiveMode =
   | Mobile
@@ -300,7 +299,7 @@ module DemoListSidebar = {
       let demos = demos->Js.Dict.entries;
       demos
       ->(
-          Array.map(~f=((entityName, entity)) => {
+          Array.map(((entityName, entity)) => {
             let searchMatchingTerms =
               HighlightTerms.getMatchingTerms(~searchString, ~entityName);
 
@@ -564,7 +563,7 @@ module DemoUnitSidebar = {
         {strings
          ->Map.String.toArray
          ->(
-             Array.map(~f=((propName, (_config, value, options))) =>
+             Array.map(((propName, (_config, value, options))) =>
                <PropBox key=propName propName>
                  {switch (options) {
                   | None =>
@@ -589,7 +588,7 @@ module DemoUnitSidebar = {
                       }}>
                       {options
                        ->(
-                           Array.map(~f=((key, optionValue)) =>
+                           Array.map(((key, optionValue)) =>
                              <option
                                key
                                selected={value == optionValue}
@@ -608,13 +607,13 @@ module DemoUnitSidebar = {
         {ints
          ->Map.String.toArray
          ->(
-             Array.map(~f=((propName, ({Configs.min, max, _}, value))) =>
+             Array.map(((propName, ({Configs.min, max, _}, value))) =>
                <PropBox key=propName propName>
                  <input
                    type_="number"
-                   min={j|$min|j}
-                   max={j|$max|j}
-                   value={j|$value|j}
+                   min=string_of_int(min)
+                   max=string_of_int(max)
+                   value=string_of_int(value)
                    style=Styles.textInput
                    onChange={event =>
                      onIntChange(
@@ -630,13 +629,13 @@ module DemoUnitSidebar = {
         {floats
          ->Map.String.toArray
          ->(
-             Array.map(~f=((propName, ({Configs.min, max, _}, value))) =>
+             Array.map(((propName, ({Configs.min, max, _}, value))) =>
                <PropBox key=propName propName>
                  <input
                    type_="number"
-                   min={j|$min|j}
-                   max={j|$max|j}
-                   value={j|$value|j}
+                   min=string_of_float(min)
+                   max=string_of_float(max)
+                   value=string_of_float(value)
                    style=Styles.textInput
                    onChange={event =>
                      onFloatChange(
@@ -652,7 +651,7 @@ module DemoUnitSidebar = {
         {bools
          ->Map.String.toArray
          ->(
-             Array.map(~f=((propName, (_config, checked))) =>
+             Array.map(((propName, (_config, checked))) =>
                <PropBox key=propName propName>
                  <input
                    type_="checkbox"
