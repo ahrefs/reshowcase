@@ -117,8 +117,10 @@ const compiler = webpack({
     chunkLoadingGlobal: "reshowcase__d",
   },
   optimization: {
-    chunks: "all",
-    ...config.optimization
+    splitChunks: {
+      chunks: "all",
+    },
+    ...config.optimization,
   },
   module: config.module,
   plugins: [
