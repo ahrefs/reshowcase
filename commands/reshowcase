@@ -112,13 +112,15 @@ const compiler = webpack({
   },
   output: {
     path: outputPath,
-    filename: "reshowcase[fullhash].js",
+    filename: "reshowcase-[name]-[fullhash].js",
     globalObject: "this",
     chunkLoadingGlobal: "reshowcase__d",
+    chunkFilename: '[id].[chunkhash].js'
   },
   optimization: {
     splitChunks: {
       chunks: "all",
+      maxSize: 500000,
     },
     ...config.optimization,
   },
