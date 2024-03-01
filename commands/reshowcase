@@ -94,10 +94,12 @@ const compiler = webpack({
   },
   output: {
     path: outputPath,
-    filename: "reshowcase[fullhash].js",
+    filename: "reshowcase-[name]-[fullhash].js",
     globalObject: "this",
     chunkLoadingGlobal: "reshowcase__d",
+    chunkFilename: '[id].[chunkhash].js'
   },
+  optimization: config.optimization,
   module: config.module,
   plugins: [
     ...(config.plugins ? config.plugins : []),
