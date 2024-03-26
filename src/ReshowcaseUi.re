@@ -1066,18 +1066,16 @@ module App = {
          let demoUnit = Demos.findDemo(urlSearchParams, demoName, demos);
          <div style=Styles.main>
            {demoUnit
-            ->(Option.map(demoUnit => <DemoUnit demoUnit />))
-            ->(Option.getWithDefault("Demo not found"->React.string))}
+            ->Option.map(demoUnit => <DemoUnit demoUnit />)
+            ->Option.getWithDefault("Demo not found"->React.string)}
          </div>;
        | Demo(demoName) =>
          let demoUnit =
            Demos.findDemo(urlSearchParams, demoName, demos)
-           ->(
-               Option.map(demoUnit =>
-                 <DemoUnit demoUnit key={url.search} ?sidebarElem />
-               )
+           ->Option.map(demoUnit =>
+               <DemoUnit demoUnit key={url.search} ?sidebarElem />
              )
-           ->(Option.getWithDefault("Demo not found"->React.string));
+           ->Option.getWithDefault("Demo not found"->React.string);
          <div name="Content" style=Styles.right>
            <TopPanel
              isSidebarHidden={!showRightSidebar}
