@@ -918,7 +918,7 @@ module DemoUnitFrame = {
       (
         ~queryString as _: string,
         ~responsiveMode,
-        ~onLoad as _: Js.t('a) => unit,
+        ~onLoad: Js.t('a) => unit,
         ~children,
       ) => {
     let (body, setBody) = React.useState(_ => None);
@@ -943,10 +943,9 @@ module DemoUnitFrame = {
         onLoad={event => {
           let iframe = event->React.Event.Synthetic.target;
           let body =
-            iframe##contentWindow
-            ->Option.flatMap(w => w##document)
-            ->Option.flatMap(d => d##body);
+            iframe##contentWindow##document->Option.flatMap(d => d##body);
           setBody(_ => body);
+          onLoad(iframe##contentWindow);
         }}>
         {switch (body) {
          | None => React.null
@@ -1040,7 +1039,7 @@ module App = {
       | _ => Home
       };
 
-    let (loadedIframeWindow: option(Js.t('a)), _setLoadedIframeWindow) =
+    let (loadedIframeWindow: option(Js.t('a)), setLoadedIframeWindow) =
       React.useState(() => None);
 
     let (iframeKey, setIframeKey) =
@@ -1144,7 +1143,11 @@ module App = {
            <div name="Demo" style=Styles.demo>
              <div style=Styles.demoContents>
                <DemoUnitFrame
-                 queryString responsiveMode onLoad={_iframeWindow => ()}>
+                 queryString
+                 responsiveMode
+                 onLoad={iframeWindow =>
+                   setLoadedIframeWindow(_ => Some(iframeWindow))
+                 }>
                  demoUnit
                </DemoUnitFrame>
              </div>
