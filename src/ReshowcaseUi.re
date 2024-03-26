@@ -157,8 +157,6 @@ module TopPanel = {
     </div>;
 };
 
-// let rightSidebarId = "rightSidebar";
-
 module Link = {
   [@react.component]
   let make = (~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
