@@ -125,18 +125,8 @@ module Sidebar = {
   };
 
   [@react.component]
-  let make =
-      (
-        ~domRef=?,
-        ~innerContainerId=?,
-        ~fullHeight=false,
-        ~children=React.null,
-      ) =>
-    <div
-      name="Sidebar"
-      ref=?domRef
-      id=?innerContainerId
-      style={Styles.sidebar(~fullHeight)}>
+  let make = (~domRef=?, ~fullHeight=false, ~children=React.null) =>
+    <div name="Sidebar" ref=?domRef style={Styles.sidebar(~fullHeight)}>
       children
     </div>;
 };
