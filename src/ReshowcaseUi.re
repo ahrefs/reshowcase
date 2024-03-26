@@ -880,20 +880,9 @@ module DemoUnitFrame = {
       (),
     );
 
-  let useFullframeUrl: bool = [%mel.raw
-    {js|typeof USE_FULL_IFRAME_URL === "boolean" ? USE_FULL_IFRAME_URL : false|js}
-  ];
-
   [@react.component]
-  let make =
-      (
-        ~queryString as _: string,
-        ~responsiveMode,
-        ~onLoad: Js.t('a) => unit,
-        ~children,
-      ) => {
+  let make = (~responsiveMode, ~onLoad: Js.t('a) => unit, ~children) => {
     let (body, setBody) = React.useState(_ => None);
-    let _iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
 
     <div name="DemoUnitFrame" style={container(responsiveMode)}>
       <iframe
@@ -993,7 +982,7 @@ module App = {
 
   type route =
     | Unit(URLSearchParams.t, string)
-    | Demo(string, string)
+    | Demo(string)
     | Home;
 
   [@react.component]
@@ -1007,7 +996,7 @@ module App = {
         urlSearchParams->(URLSearchParams.get("demo")),
       ) {
       | (Some("true"), Some(demoName)) => Unit(urlSearchParams, demoName)
-      | (_, Some(demoName)) => Demo(url.search, demoName)
+      | (_, Some(demoName)) => Demo(demoName)
       | _ => Home
       };
 
@@ -1065,7 +1054,7 @@ module App = {
     <div name="App" style=Styles.app>
       {switch (route) {
        | Unit(_, _) => React.null
-       | Demo(_, _)
+       | Demo(_)
        | Home =>
          <DemoListSidebar
            demos
@@ -1082,7 +1071,7 @@ module App = {
             ->(Option.map(demoUnit => <DemoUnit demoUnit />))
             ->(Option.getWithDefault("Demo not found"->React.string))}
          </div>;
-       | Demo(queryString, demoName) =>
+       | Demo(demoName) =>
          let demoUnit =
            Demos.findDemo(urlSearchParams, demoName, demos)
            ->(
@@ -1109,7 +1098,6 @@ module App = {
            <div name="Demo" style=Styles.demo>
              <div style=Styles.demoContents>
                <DemoUnitFrame
-                 queryString
                  responsiveMode
                  onLoad={iframeWindow => {
                    setLoadedIframeWindow(_ => Some(iframeWindow))
