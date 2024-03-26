@@ -157,7 +157,7 @@ module TopPanel = {
     </div>;
 };
 
-let rightSidebarId = "rightSidebar";
+// let rightSidebarId = "rightSidebar";
 
 module Link = {
   [@react.component]
@@ -712,38 +712,9 @@ module DemoUnit = {
       ->(ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch"));
   };
 
-  let getRightSidebarElement = (): option(Dom.element) =>
-    Window.window##parent##document##getElementById(rightSidebarId)
-    ->Js.Nullable.toOption;
-
   [@react.component]
-  let make = (~demoUnit: Configs.demoUnitProps => React.element) => {
-    let (parentWindowRightSidebarElem, setParentWindowRightSidebarElem) =
-      React.useState(() => None);
-
-    React.useEffect0(() => {
-      switch (getRightSidebarElement()) {
-      | Some(elem) => setParentWindowRightSidebarElem(_ => Some(elem))
-      | None => ()
-      };
-      None;
-    });
-    React.useEffect0(() => {
-      Window.addMessageListener(event =>
-        if (Window.window##parent === event##source) {
-          let message: string = event##data;
-          switch (message->Window.Message.fromStringOpt) {
-          | Some(RightSidebarDisplayed) =>
-            switch (getRightSidebarElement()) {
-            | Some(elem) => setParentWindowRightSidebarElem(_ => Some(elem))
-            | None => ()
-            }
-          | None => Js.Console.error("Unexpected message received")
-          };
-        }
-      );
-      None;
-    });
+  let make =
+      (~demoUnit: Configs.demoUnitProps => React.element, ~sidebarElem=?) => {
     let (state, dispatch) =
       React.useReducer(
         (state, action) =>
@@ -867,7 +838,7 @@ module DemoUnit = {
 
     <div name="DemoUnit" style=Styles.container>
       <div style=Styles.contents> {demoUnit(props)} </div>
-      {switch (parentWindowRightSidebarElem) {
+      {switch (sidebarElem) {
        | None => React.null
        | Some(element) =>
          ReactDOM.createPortal(
@@ -1029,6 +1000,7 @@ module App = {
   let make = (~demos: Demos.t) => {
     let url = ReasonReactRouter.useUrl();
     let urlSearchParams = url.search->URLSearchParams.make;
+    let (sidebarElem, setSidebarElem) = React.useState(_ => None);
     let route =
       switch (
         urlSearchParams->(URLSearchParams.get("iframe")),
@@ -1042,16 +1014,6 @@ module App = {
     let (loadedIframeWindow: option(Js.t('a)), setLoadedIframeWindow) =
       React.useState(() => None);
 
-    let (iframeKey, setIframeKey) =
-      React.useState(() => Js.Date.now()->Float.toString);
-
-    React.useEffect1(
-      () => {
-        setIframeKey(_ => Js.Date.now()->Float.toString);
-        None;
-      },
-      [|url|],
-    );
     let (showRightSidebar, toggleShowRightSidebar) =
       React.useState(() =>
         LocalStorage.localStorage
@@ -1123,7 +1085,11 @@ module App = {
        | Demo(queryString, demoName) =>
          let demoUnit =
            Demos.findDemo(urlSearchParams, demoName, demos)
-           ->(Option.map(demoUnit => <DemoUnit demoUnit />))
+           ->(
+               Option.map(demoUnit =>
+                 <DemoUnit demoUnit key={url.search} ?sidebarElem />
+               )
+             )
            ->(Option.getWithDefault("Demo not found"->React.string));
          <div name="Content" style=Styles.right>
            <TopPanel
@@ -1145,20 +1111,19 @@ module App = {
                <DemoUnitFrame
                  queryString
                  responsiveMode
-                 onLoad={iframeWindow =>
+                 onLoad={iframeWindow => {
                    setLoadedIframeWindow(_ => Some(iframeWindow))
-                 }>
+                 }}>
                  demoUnit
                </DemoUnitFrame>
              </div>
-             {if (showRightSidebar) {
-                <Sidebar
-                  key={"Sidebar" ++ iframeKey}
-                  innerContainerId=rightSidebarId
-                />;
-              } else {
-                React.null;
-              }}
+             {showRightSidebar
+                ? <Sidebar
+                    domRef={ReactDOM.Ref.callbackDomRef(node =>
+                      setSidebarElem(_ => node->Js.Nullable.toOption)
+                    )}
+                  />
+                : React.null}
            </div>
          </div>;
        | Home =>
