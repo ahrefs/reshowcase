@@ -23,8 +23,8 @@ demo(({addDemo: _, addCategory}) =>
           ~borderRadius="10px",
           ~fontFamily="inherit",
           ~fontSize="inherit",
-          ~opacity=if (disabled) {"0.5"} else {"1"},
-          ~cursor=if (disabled) {"default"} else {"pointer"},
+          ~opacity=disabled ? "0.5" : "1",
+          ~cursor=disabled ? "default" : "pointer",
           (),
         )}>
         {string("Text", "hello")->React.string}
@@ -51,8 +51,8 @@ demo(({addDemo: _, addCategory}) =>
           ~borderRadius="10px",
           ~fontFamily="inherit",
           ~fontSize="30px",
-          ~opacity=if (disabled) {"0.5"} else {"1"},
-          ~cursor=if (disabled) {"default"} else {"pointer"},
+          ~opacity=disabled ? "0.5" : "1",
+          ~cursor=disabled ? "default" : "pointer",
           (),
         )}>
         {string("Text", "Hello")->React.string}
@@ -69,7 +69,8 @@ demo(({addDemo: _, addCategory}) =>
           style={ReactDOM.Style.make(
             ~fontSize=
               {let size =
-                 int("Font size", {min: 0, max: 100, initial: 30, step: 1})->string_of_int;
+                 int("Font size", {min: 0, max: 100, initial: 30, step: 1})
+                 ->string_of_int;
                {j|$(size)px|j}},
             (),
           )}>

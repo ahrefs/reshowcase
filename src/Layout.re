@@ -116,12 +116,12 @@ module Sidebar = {
       ReactDOM.Style.make(
         ~minWidth=width,
         ~width,
-        ~height=if (fullHeight) {"100vh"} else {"auto"},
+        ~height=fullHeight ? "100vh" : "auto",
         ~overflowY="auto",
         ~backgroundColor=Color.lightGray,
         (),
       )
-      ->(ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch"));
+      ->ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch");
   };
 
   [@react.component]
@@ -225,7 +225,7 @@ module Collapsible = {
       height="6"
       style={ReactDOM.Style.make(
         ~transition="200ms ease-out transform",
-        ~transform=if (isOpen) {""} else {"rotate(-90deg)"},
+        ~transform=isOpen ? "" : "rotate(-90deg)",
         (),
       )}>
       <polygon points="0,0  10,0  5,6" fill=Color.darkGray />
@@ -254,11 +254,7 @@ module Collapsible = {
         {triangleIcon(isOpen)}
         title
       </div>
-      {if (isForceOpen || isOpen) {
-         children;
-       } else {
-         React.null;
-       }}
+      {isForceOpen || isOpen ? children : React.null}
     </div>;
   };
 };
