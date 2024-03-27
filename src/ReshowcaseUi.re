@@ -882,6 +882,19 @@ module DemoUnitFrame = {
   let make = (~responsiveMode, ~onLoad: Js.t('a) => unit, ~children) => {
     let (body, setBody) = React.useState(_ => None);
 
+    React.useEffect2(
+      () => {
+        switch (body) {
+        | Some(body) =>
+          let root = ReactDOM.Client.createRoot(body);
+          ReactDOM.Client.render(root, children);
+        | None => ()
+        };
+        None;
+      },
+      (body, children),
+    );
+
     <div name="DemoUnitFrame" style={container(responsiveMode)}>
       <iframe
         style={ReactDOM.Style.make(
@@ -904,12 +917,8 @@ module DemoUnitFrame = {
             iframe##contentWindow##document->Option.flatMap(d => d##body);
           setBody(_ => body);
           onLoad(iframe##contentWindow);
-        }}>
-        {switch (body) {
-         | None => React.null
-         | Some(body) => ReactDOM.createPortal(children, body)
-         }}
-      </iframe>
+        }}
+      />
     </div>;
   };
 };
