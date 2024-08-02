@@ -36,8 +36,6 @@ build: [
 ]
 dev-repo: "git+https://github.com/ahrefs/reshowcase.git"
 depexts: [
-  ["copy-webpack-plugin"] {npm-version = "^11.0.0"}
-  ["html-webpack-plugin"] {npm-version = "^5.5.0"}
-  ["webpack"] {npm-version = "^5.76.1"}
-  ["webpack-dev-server"] {npm-version = "^4.11.1"}
+  ["esbuild"] {npm-version = "^0.21.3"}
+  # @craftamap/esbuild-plugin-html
 ]
