@@ -157,8 +157,6 @@ module TopPanel = {
     </div>;
 };
 
-let rightSidebarId = "rightSidebar";
-
 module Link = {
   [@react.component]
   let make = (~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
@@ -611,9 +609,9 @@ module DemoUnitSidebar = {
                <PropBox key=propName propName>
                  <input
                    type_="number"
-                   min=string_of_int(min)
-                   max=string_of_int(max)
-                   value=string_of_int(value)
+                   min={string_of_int(min)}
+                   max={string_of_int(max)}
+                   value={string_of_int(value)}
                    style=Styles.textInput
                    onChange={event =>
                      onIntChange(
@@ -633,9 +631,9 @@ module DemoUnitSidebar = {
                <PropBox key=propName propName>
                  <input
                    type_="number"
-                   min=string_of_float(min)
-                   max=string_of_float(max)
-                   value=string_of_float(value)
+                   min={string_of_float(min)}
+                   max={string_of_float(max)}
+                   value={string_of_float(value)}
                    style=Styles.textInput
                    onChange={event =>
                      onFloatChange(
@@ -712,38 +710,9 @@ module DemoUnit = {
       ->(ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch"));
   };
 
-  let getRightSidebarElement = (): option(Dom.element) =>
-    Window.window##parent##document##getElementById(rightSidebarId)
-    ->Js.Nullable.toOption;
-
   [@react.component]
-  let make = (~demoUnit: Configs.demoUnitProps => React.element) => {
-    let (parentWindowRightSidebarElem, setParentWindowRightSidebarElem) =
-      React.useState(() => None);
-
-    React.useEffect0(() => {
-      switch (getRightSidebarElement()) {
-      | Some(elem) => setParentWindowRightSidebarElem(_ => Some(elem))
-      | None => ()
-      };
-      None;
-    });
-    React.useEffect0(() => {
-      Window.addMessageListener(event =>
-        if (Window.window##parent === event##source) {
-          let message: string = event##data;
-          switch (message->Window.Message.fromStringOpt) {
-          | Some(RightSidebarDisplayed) =>
-            switch (getRightSidebarElement()) {
-            | Some(elem) => setParentWindowRightSidebarElem(_ => Some(elem))
-            | None => ()
-            }
-          | None => Js.Console.error("Unexpected message received")
-          };
-        }
-      );
-      None;
-    });
+  let make =
+      (~demoUnit: Configs.demoUnitProps => React.element, ~sidebarElem=?) => {
     let (state, dispatch) =
       React.useReducer(
         (state, action) =>
@@ -867,7 +836,7 @@ module DemoUnit = {
 
     <div name="DemoUnit" style=Styles.container>
       <div style=Styles.contents> {demoUnit(props)} </div>
-      {switch (parentWindowRightSidebarElem) {
+      {switch (sidebarElem) {
        | None => React.null
        | Some(element) =>
          ReactDOM.createPortal(
@@ -909,22 +878,12 @@ module DemoUnitFrame = {
       (),
     );
 
-  let useFullframeUrl: bool = [%mel.raw
-    {js|typeof USE_FULL_IFRAME_URL === "boolean" ? USE_FULL_IFRAME_URL : false|js}
-  ];
-
   [@react.component]
-  let make =
-      (~queryString: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
-    let iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
+  let make = (~responsiveMode, ~onLoad: Js.t('a) => unit, ~children) => {
+    let (body, setBody) = React.useState(_ => None);
+
     <div name="DemoUnitFrame" style={container(responsiveMode)}>
       <iframe
-        onLoad={event => {
-          let iframe = event->React.Event.Synthetic.target;
-          let window = iframe##contentWindow;
-          onLoad(window);
-        }}
-        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
         style={ReactDOM.Style.make(
           ~height=
             switch (responsiveMode) {
@@ -939,7 +898,18 @@ module DemoUnitFrame = {
           ~border="none",
           (),
         )}
-      />
+        onLoad={event => {
+          let iframe = event->React.Event.Synthetic.target;
+          let body =
+            iframe##contentWindow##document->Option.flatMap(d => d##body);
+          setBody(_ => body);
+          onLoad(iframe##contentWindow);
+        }}>
+        {switch (body) {
+         | None => React.null
+         | Some(body) => ReactDOM.createPortal(children, body)
+         }}
+      </iframe>
     </div>;
   };
 };
@@ -1017,29 +987,20 @@ module App = {
   let make = (~demos: Demos.t) => {
     let url = ReasonReactRouter.useUrl();
     let urlSearchParams = url.search->URLSearchParams.make;
+    let (sidebarElem, setSidebarElem) = React.useState(_ => None);
     let route =
       switch (
         urlSearchParams->(URLSearchParams.get("iframe")),
         urlSearchParams->(URLSearchParams.get("demo")),
       ) {
       | (Some("true"), Some(demoName)) => Unit(urlSearchParams, demoName)
-      | (_, Some(_)) => Demo(url.search)
+      | (_, Some(demoName)) => Demo(demoName)
       | _ => Home
       };
 
     let (loadedIframeWindow: option(Js.t('a)), setLoadedIframeWindow) =
       React.useState(() => None);
 
-    let (iframeKey, setIframeKey) =
-      React.useState(() => Js.Date.now()->Float.toString);
-
-    React.useEffect1(
-      () => {
-        setIframeKey(_ => Js.Date.now()->Float.toString);
-        None;
-      },
-      [|url|],
-    );
     let (showRightSidebar, toggleShowRightSidebar) =
       React.useState(() =>
         LocalStorage.localStorage
@@ -1090,71 +1051,69 @@ module App = {
 
     <div name="App" style=Styles.app>
       {switch (route) {
+       | Unit(_, _) => React.null
+       | Demo(_)
+       | Home =>
+         <DemoListSidebar
+           demos
+           urlSearchParams
+           isCategoriesCollapsedByDefault
+           onToggleCollapsedCategoriesByDefault
+         />
+       }}
+      {switch (route) {
        | Unit(urlSearchParams, demoName) =>
          let demoUnit = Demos.findDemo(urlSearchParams, demoName, demos);
          <div style=Styles.main>
            {demoUnit
-            ->(Option.map(demoUnit => <DemoUnit demoUnit />))
-            ->(Option.getWithDefault("Demo not found"->React.string))}
+            ->Option.map(demoUnit => <DemoUnit demoUnit />)
+            ->Option.getWithDefault("Demo not found"->React.string)}
          </div>;
-       | Demo(queryString) =>
-         <>
-           <DemoListSidebar
-             demos
-             urlSearchParams
-             isCategoriesCollapsedByDefault
-             onToggleCollapsedCategoriesByDefault
+       | Demo(demoName) =>
+         let demoUnit =
+           Demos.findDemo(urlSearchParams, demoName, demos)
+           ->Option.map(demoUnit =>
+               <DemoUnit demoUnit key={url.search} ?sidebarElem />
+             )
+           ->Option.getWithDefault("Demo not found"->React.string);
+         <div name="Content" style=Styles.right>
+           <TopPanel
+             isSidebarHidden={!showRightSidebar}
+             responsiveMode
+             onRightSidebarToggle={() => {
+               toggleShowRightSidebar(_ => !showRightSidebar);
+               switch (loadedIframeWindow) {
+               | Some(window) when !showRightSidebar =>
+                 Window.postMessage(window, RightSidebarDisplayed)
+               | None
+               | _ => ()
+               };
+             }}
+             onSetResponsiveMode
            />
-           <div name="Content" style=Styles.right>
-             <TopPanel
-               isSidebarHidden={!showRightSidebar}
-               responsiveMode
-               onRightSidebarToggle={() => {
-                 toggleShowRightSidebar(_ => !showRightSidebar);
-                 switch (loadedIframeWindow) {
-                 | Some(window) when !showRightSidebar =>
-                   Window.postMessage(window, RightSidebarDisplayed)
-                 | None
-                 | _ => ()
-                 };
-               }}
-               onSetResponsiveMode
-             />
-             <div name="Demo" style=Styles.demo>
-               <div style=Styles.demoContents>
-                 <DemoUnitFrame
-                   key={"DemoUnitFrame" ++ iframeKey}
-                   queryString
-                   responsiveMode
-                   onLoad={iframeWindow =>
-                     setLoadedIframeWindow(_ => Some(iframeWindow))
-                   }
-                 />
-               </div>
-               {if (showRightSidebar) {
-                  <Sidebar
-                    key={"Sidebar" ++ iframeKey}
-                    innerContainerId=rightSidebarId
-                  />;
-                } else {
-                  React.null;
-                }}
+           <div name="Demo" style=Styles.demo>
+             <div style=Styles.demoContents>
+               <DemoUnitFrame
+                 responsiveMode
+                 onLoad={iframeWindow => {
+                   setLoadedIframeWindow(_ => Some(iframeWindow))
+                 }}>
+                 demoUnit
+               </DemoUnitFrame>
              </div>
+             {showRightSidebar
+                ? <Sidebar
+                    domRef={ReactDOM.Ref.callbackDomRef(node =>
+                      setSidebarElem(_ => node->Js.Nullable.toOption)
+                    )}
+                  />
+                : React.null}
            </div>
-         </>
-
+         </div>;
        | Home =>
-         <>
-           <DemoListSidebar
-             demos
-             urlSearchParams
-             isCategoriesCollapsedByDefault
-             onToggleCollapsedCategoriesByDefault
-           />
-           <div style=Styles.empty>
-             <div style=Styles.emptyText> "Pick a demo"->React.string </div>
-           </div>
-         </>
+         <div style=Styles.empty>
+           <div style=Styles.emptyText> "Pick a demo"->React.string </div>
+         </div>
        }}
     </div>;
   };
