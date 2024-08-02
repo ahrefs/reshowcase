@@ -2,5 +2,6 @@
  (target example)
  (alias example)
  (libraries reshowcase reason-react)
+ (module_systems es6)
  (preprocess
   (pps melange.ppx reason-react-ppx)))

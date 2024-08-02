@@ -12,10 +12,10 @@ bug-reports: "https://github.com/ahrefs/reshowcase/issues"
 depends: [
   "dune" {>= "3.8"}
   "ocaml"
-  "melange" {>= "2.0.0"}
+  "melange" {>= "3.0.0"}
   "reason" {>= "3.10.0"}
-  "reason-react"
-  "reason-react-ppx"
+  "reason-react" {>= "0.14.0"}
+  "reason-react-ppx" {>= "0.14.0"}
   "ocaml-lsp-server" {with-test}
   "opam-check-npm-deps" {with-test}
   "odoc" {with-doc}

@@ -36,7 +36,7 @@ let findDemo = (urlSearchParams: URLSearchParams.t, demoName, demos: t) => {
     ->List.fromArray
     ->(
         List.keep(((key, _value)) =>
-          key->(Js.String2.startsWith("category"))
+          key->(Js.String.startsWith(~prefix="category"))
         )
       )
     ->(
