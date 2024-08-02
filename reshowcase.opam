@@ -43,6 +43,4 @@ depexts: [
 ]
 pin-depends: [
   ["melange.dev" "git+https://github.com/melange-re/melange#d2715c469e8cf8bf8cff81b897c212094a9517c5"]
-  ["reason-react.dev" "https://github.com/reasonml/reason-react/archive/1f084f4ecf380b2144809065e5935a41866eab3f.tar.gz"]
-  ["reason-react-ppx.dev" "https://github.com/reasonml/reason-react/archive/1f084f4ecf380b2144809065e5935a41866eab3f.tar.gz"]
 ]
