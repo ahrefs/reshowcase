@@ -2,14 +2,9 @@
   "license": "MIT",
   "dependencies": {
     "@craftamap/esbuild-plugin-html": "https://github.com/denis-ok/esbuild-plugin-html#79f512f447eb98efa6b6786875f617a095eaaf09",
-    "copy-webpack-plugin": "^11.0.0",
-    "esbuild": "^0.21.3",
-    "html-webpack-plugin": "^5.5.0",
-    "webpack": "^5.76.1",
-    "webpack-dev-server": "^4.11.1"
+    "esbuild": "^0.21.3"
   },
   "devDependencies": {
-    "concurrently": "^6.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   }
