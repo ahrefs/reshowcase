@@ -2,6 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const esbuild = require("esbuild");
 const { htmlPlugin } = require("@craftamap/esbuild-plugin-html");
 
@@ -65,7 +66,13 @@ if (!fs.existsSync(entryPath)) {
   process.exit(1);
 }
 
-const outputPath = getRequiredPathValue("output");
+const outputPath = (() => {
+  if (isBuild) {
+    return getRequiredPathValue("output");
+  } else {
+    return os.tmpdir();
+  }
+})();
 
 const customConfig = (() => {
   const configDir = path.join(process.cwd(), ".reshowcase");
@@ -109,6 +116,7 @@ const defaultConfig = {
   chunkNames: "[name]-[hash]",
   bundle: true,
   outdir: outputPath,
+  publicPath: "/",
   format: "esm",
   minify: isBuild,
   metafile: true,
