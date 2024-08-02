@@ -22,7 +22,8 @@
    %{bin:reshowcase}
    start
    --entry=%{project_root}/example/example/example/Demo.js
-   --output=%{project_root}/build)))
+   --output=%{project_root}/build
+   --port=8000)))
 
 (rule
  (alias build-example)

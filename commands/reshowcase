@@ -2,7 +2,6 @@
 
 const fs = require("fs");
 const path = require("path");
-const _os = require("os");
 const esbuild = require("esbuild");
 const { htmlPlugin } = require("@craftamap/esbuild-plugin-html");
 
@@ -93,6 +92,13 @@ const customConfig = (() => {
   }
 })();
 
+const watchPlugin = {
+  name: "watchPlugin",
+  setup: (build) => {
+    build.onEnd((_buildResult) => console.log("[Esbuild] Rebuild finished!"));
+  },
+};
+
 // entryPoint passed to htmlPlugin must be relative to the current working directory
 const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
 
@@ -155,7 +161,25 @@ const defaultConfig = {
         },
       ],
     }),
+    ...(isBuild ? [] : [watchPlugin]),
   ],
+};
+
+const getPort = () => {
+  const defaultPort = 8000;
+  const prefix = "--port=";
+  const arg = process.argv.find((item) => item.startsWith(prefix));
+  if (arg === undefined) {
+    return defaultPort;
+  } else {
+    const portStr = arg.replace(prefix, "");
+    if (portStr === "") {
+      return defaultPort;
+    } else {
+      const parsed = parseInt(portStr, 10);
+      return isNaN(parsed) ? defaultPort : parsed;
+    }
+  }
 };
 
 const config = {
@@ -179,6 +203,7 @@ if (isBuild) {
       process.exit(1);
     });
 } else {
+  const port = getPort();
   const durationLabel = "[Reshowcase] Watch and serve started. Duration";
   console.time(durationLabel);
 
@@ -192,10 +217,11 @@ if (isBuild) {
       process.exit(1);
     })
     .then((ctx) => {
-      return ctx.serve({ port: 8000, servedir: outputPath });
+      return ctx.serve({ port: port, servedir: outputPath });
     })
     .then((_serveResult) => {
       console.timeEnd(durationLabel);
+      console.error("[Reshowcase] Watch mode started on port:", port);
     })
     .catch((error) => {
       console.error("[Reshowcase] Esbuild serve start failed:", error);
