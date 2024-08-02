@@ -27,7 +27,7 @@
  (depends
   ocaml
   (melange
-   (>= 2.0.0))
+   (>= 3.0.0))
   (reason
    (>= 3.10.0))
   (reason-react

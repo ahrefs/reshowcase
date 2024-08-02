@@ -41,6 +41,3 @@ depexts: [
   ["webpack"] {npm-version = "^5.76.1"}
   ["webpack-dev-server"] {npm-version = "^4.11.1"}
 ]
-pin-depends: [
-  ["melange.dev" "git+https://github.com/melange-re/melange#d2715c469e8cf8bf8cff81b897c212094a9517c5"]
-]
