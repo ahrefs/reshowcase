@@ -1,3 +1,8 @@
+## 5.4.0 (2024-08-02)
+
+- Upgrade `reason-react` to `0.14` (thanks [@jchavarri](https://github.com/jchavarri)) ([914d280](https://github.com/ahrefs/reshowcase/pull/18))
+- Migrage to Melange v3 (thanks [@jchavarri](https://github.com/jchavarri)) ([914d280](https://github.com/ahrefs/reshowcase/pull/21))
+
 ## 5.3.0 (2023-10-23)
 
 Migrate to Melange v2.
