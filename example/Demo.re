@@ -69,7 +69,7 @@ demo(({addDemo: _, addCategory}) =>
           style={ReactDOM.Style.make(
             ~fontSize=
               {let size =
-                 int("Font size", {min: 0, max: 100, initial: 30, step: 1});
+                 int("Font size", {min: 0, max: 100, initial: 30, step: 1})->string_of_int;
                {j|$(size)px|j}},
             (),
           )}>

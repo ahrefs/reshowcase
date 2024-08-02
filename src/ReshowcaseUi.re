@@ -12,7 +12,6 @@ module Collapsible = Layout.Collapsible;
 module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;
-module Array = Js.Array2;
 
 type responsiveMode =
   | Mobile
@@ -105,7 +104,7 @@ module TopPanel = {
                       }
                     }
               onClick={event => {
-                event->ReactEvent.Mouse.preventDefault;
+                event->React.Event.Mouse.preventDefault;
                 onSetResponsiveMode(_ => Desktop);
               }}>
               Icon.desktop
@@ -120,7 +119,7 @@ module TopPanel = {
                       }
                     }
               onClick={event => {
-                event->ReactEvent.Mouse.preventDefault;
+                event->React.Event.Mouse.preventDefault;
                 onSetResponsiveMode(_ => Mobile);
               }}>
               Icon.mobile
@@ -139,7 +138,7 @@ module TopPanel = {
                     }
               style=Styles.squareButton
               onClick={event => {
-                event->ReactEvent.Mouse.preventDefault;
+                event->React.Event.Mouse.preventDefault;
                 onRightSidebarToggle();
               }}>
               <div
@@ -165,16 +164,17 @@ module Link = {
   let make = (~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
     let url = ReasonReactRouter.useUrl();
     let path = String.concat("/", url.path);
-    let isActive = (path ++ "?" ++ url.search)->(Js.String2.endsWith(href));
+    let isActive =
+      Js.String.endsWith(~suffix=href, path ++ "?" ++ url.search);
     <a
       href
       onClick={event =>
         switch (
-          ReactEvent.Mouse.metaKey(event),
-          ReactEvent.Mouse.ctrlKey(event),
+          React.Event.Mouse.metaKey(event),
+          React.Event.Mouse.ctrlKey(event),
         ) {
         | (false, false) =>
-          ReactEvent.Mouse.preventDefault(event);
+          React.Event.Mouse.preventDefault(event);
           ReasonReactRouter.push(href);
         | _ => ()
         }
@@ -307,7 +307,7 @@ module DemoListSidebar = {
               searchString == "" || searchMatchingTerms->Belt.Array.size > 0;
 
             switch (entity) {
-            | Demo(_) =>
+            | Entity.Demo(_) =>
               if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
                 <Link
                   key=entityName
@@ -432,7 +432,7 @@ module DemoListSidebar = {
             )}
             title="Toggle default collapsed categories"
             onClick={event => {
-              event->ReactEvent.Mouse.preventDefault;
+              event->React.Event.Mouse.preventDefault;
               onToggleCollapsedCategoriesByDefault();
             }}>
             {if (isCategoriesCollapsedByDefault) {Icon.categoryCollapsed} else {
@@ -442,10 +442,10 @@ module DemoListSidebar = {
           <SearchInput
             value={filterValue->(Option.getWithDefault(""))}
             onChange={event => {
-              let value = event->ReactEvent.Form.target##value;
+              let value = event->React.Event.Form.target##value;
 
               setFilterValue(_ =>
-                if (value->Js.String2.trim == "") {
+                if (value->Js.String.trim == "") {
                   None;
                 } else {
                   Some(value);
@@ -460,7 +460,7 @@ module DemoListSidebar = {
         {renderMenu(
            ~isCategoriesCollapsedByDefault,
            ~searchString=
-             filterValue->(Option.mapWithDefault("", Js.String2.toLowerCase)),
+             filterValue->(Option.mapWithDefault("", Js.String.toLowerCase)),
            ~urlSearchParams,
            demos,
          )}
@@ -574,7 +574,7 @@ module DemoUnitSidebar = {
                       onChange={event =>
                         onStringChange(
                           propName,
-                          event->ReactEvent.Form.target##value,
+                          event->React.Event.Form.target##value,
                         )
                       }
                     />
@@ -582,7 +582,7 @@ module DemoUnitSidebar = {
                     <select
                       style=Styles.select
                       onChange={event => {
-                        let value = event->ReactEvent.Form.target##value;
+                        let value = event->React.Event.Form.target##value;
 
                         onStringChange(propName, value);
                       }}>
@@ -607,18 +607,18 @@ module DemoUnitSidebar = {
         {ints
          ->Map.String.toArray
          ->(
-             Array.map(((propName, ({min, max, _}, value))) =>
+             Array.map(((propName, ({Configs.min, max, _}, value))) =>
                <PropBox key=propName propName>
                  <input
                    type_="number"
-                   min={j|$min|j}
-                   max={j|$max|j}
-                   value={j|$value|j}
+                   min=string_of_int(min)
+                   max=string_of_int(max)
+                   value=string_of_int(value)
                    style=Styles.textInput
                    onChange={event =>
                      onIntChange(
                        propName,
-                       event->ReactEvent.Form.target##value->int_of_string,
+                       event->React.Event.Form.target##value->int_of_string,
                      )
                    }
                  />
@@ -629,18 +629,18 @@ module DemoUnitSidebar = {
         {floats
          ->Map.String.toArray
          ->(
-             Array.map(((propName, ({min, max, _}, value))) =>
+             Array.map(((propName, ({Configs.min, max, _}, value))) =>
                <PropBox key=propName propName>
                  <input
                    type_="number"
-                   min={j|$min|j}
-                   max={j|$max|j}
-                   value={j|$value|j}
+                   min=string_of_float(min)
+                   max=string_of_float(max)
+                   value=string_of_float(value)
                    style=Styles.textInput
                    onChange={event =>
                      onFloatChange(
                        propName,
-                       event->ReactEvent.Form.target##value->float_of_string,
+                       event->React.Event.Form.target##value->float_of_string,
                      )
                    }
                  />
@@ -660,7 +660,7 @@ module DemoUnitSidebar = {
                    onChange={event =>
                      onBoolChange(
                        propName,
-                       event->ReactEvent.Form.target##checked,
+                       event->React.Event.Form.target##checked,
                      )
                    }
                  />
@@ -920,7 +920,7 @@ module DemoUnitFrame = {
     <div name="DemoUnitFrame" style={container(responsiveMode)}>
       <iframe
         onLoad={event => {
-          let iframe = event->ReactEvent.Synthetic.target;
+          let iframe = event->React.Event.Synthetic.target;
           let window = iframe##contentWindow;
           onLoad(window);
         }}
