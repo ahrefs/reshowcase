@@ -157,17 +157,38 @@ module TopPanel = {
 
 let rightSidebarId = "rightSidebar";
 
-module Link = {
+module SidebarLink = {
+  module Css = {
+    open Theme;
+
+    let link = [%cx
+      {|
+      text-decoration: none;
+      color: $(Color.blue);
+      display: block;
+      padding: $(Gap.xs) $(Gap.md);
+      border-radius: $(BorderRadius.default);
+      font-size: $(FontSize.md);
+      font-weight: 500;
+    |}
+    ];
+
+    let linkActive = [%cx {|
+      background-color: $(Color.midGray);
+    |}];
+  };
+
   [@react.component]
-  let make =
-      (~activeDomRef=?, ~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
+  let make = (~activeDomRef=?, ~href, ~text: React.element) => {
     let url = ReasonReactRouter.useUrl();
     let path = String.concat("/", url.path);
     let isActive =
       Js.String.endsWith(~suffix=href, path ++ "?" ++ url.search);
+
     <a
       ref=?{isActive ? activeDomRef : None}
       href
+      className={Css.link +++ Css.linkActive->Cn.ifTrue(isActive)}
       onClick={event =>
         switch (
           React.Event.Mouse.metaKey(event),
@@ -178,16 +199,6 @@ module Link = {
           ReasonReactRouter.push(href);
         | _ => ()
         }
-      }
-      style=?{
-        switch (style, activeStyle, isActive) {
-        | (Some(style), _, false) => Some(style)
-        | (Some(style), None, true) => Some(style)
-        | (Some(style), Some(activeStyle), true) =>
-          Some(ReactDOM.Style.combine(style, activeStyle))
-        | (_, Some(activeStyle), true) => Some(activeStyle)
-        | _ => None
-        }
       }>
       text
     </a>;
@@ -195,96 +206,109 @@ module Link = {
 };
 
 module DemoListSidebar = {
-  module Styles = {
-    let categoryName =
-      ReactDOM.Style.make(
-        ~padding=(Gap.xs ++ {js| |js}) ++ Gap.xxs,
-        ~fontSize=FontSize.md,
-        ~fontWeight="500",
-        (),
-      );
+  module Css = {
+    open Theme;
 
-    let link =
-      ReactDOM.Style.make(
-        ~textDecoration="none",
-        ~color=Color.blue,
-        ~display="block",
-        ~padding=(Gap.xs ++ {js| |js}) ++ Gap.md,
-        ~borderRadius=BorderRadius.default,
-        ~fontSize=FontSize.md,
-        ~fontWeight="500",
-        (),
-      );
+    let categoryName = [%cx {|
+      padding: $(Gap.xs) $(Gap.xxs);
+    |}];
 
-    let activeLink = ReactDOM.Style.make(~backgroundColor=Color.midGray, ());
+    let sidebarPanelWrapper = [%cx
+      {|
+      position: sticky;
+      top: 0;
+      background-color: $(Color.lightGray);
+    |}
+    ];
+
+    let sidebarPanel = [%cx
+      {|
+      display: flex;
+      align-items: center;
+      gap: $(Gap.xs);
+    |}
+    ];
+
+    let collapseButton = [%cx
+      {|
+      height: 32px;
+      min-width: 32px;
+      width: 32px;
+      cursor: pointer;
+      font-size: $(FontSize.sm);
+      background-color: $(Color.white);
+      color: $(Color.darkGray);
+      border: 1px solid $(Color.darkGray);
+      border-radius: $(BorderRadius.default);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    |}
+    ];
   };
 
   module SearchInput = {
-    module Styles = {
-      let clearButton =
-        ReactDOM.Style.make(
-          ~position="absolute",
-          ~right="7px",
-          ~display="flex",
-          ~cursor="pointer",
-          ~border="none",
-          ~padding="0",
-          ~backgroundColor=Color.transparent,
-          ~top="50%",
-          ~transform="translateY(-50%)",
-          ~margin="0",
-          (),
-        );
+    module Css = {
+      open Theme;
 
-      let inputWrapper =
-        ReactDOM.Style.make(
-          ~position="relative",
-          ~display="flex",
-          ~alignItems="center",
-          ~backgroundColor=Color.midGray,
-          ~borderRadius=BorderRadius.default,
-          (),
-        );
+      let inputWrapper = [%cx
+        {|
+        position: relative;
+        display: flex;
+        align-items: center;
+        background-color: $(Color.midGray);
+        border-radius: $(BorderRadius.default);
+      |}
+      ];
 
-      let input =
-        ReactDOM.Style.make(
-          ~padding=(Gap.xs ++ {js| |js}) ++ Gap.md,
-          ~width="100%",
-          ~margin="0",
-          ~height="32px",
-          ~boxSizing="border-box",
-          ~fontFamily="inherit",
-          ~fontSize=FontSize.md,
-          ~border="none",
-          ~backgroundColor=Color.transparent,
-          ~borderRadius=BorderRadius.default,
-          (),
-        );
-    };
+      let input = [%cx
+        {|
+        padding: $(Gap.xs) $(Gap.md);
+        width: 100%;
+        margin: 0;
+        height: 32px;
+        box-sizing: border-box;
+        font-family: inherit;
+        font-size: $(FontSize.md);
+        border: none;
+        background-color: transparent;
+        border-radius: $(BorderRadius.default);
+      |}
+      ];
 
-    module ClearButton = {
-      [@react.component]
-      let make = (~onClear) =>
-        <button style=Styles.clearButton onClick={_event => onClear()}>
-          Icon.close
-        </button>;
+      let clearButton = [%cx
+        {|
+        position: absolute;
+        right: 7px;
+        display: flex;
+        cursor: pointer;
+        border: none;
+        padding: 0;
+        margin: 0;
+        background-color: transparent;
+        top: 50%;
+        transform: translateY(-50%);
+      |}
+      ];
     };
 
     [@react.component]
     let make = (~autoFocus=?, ~value, ~onChange, ~onClear) =>
-      <div style=Styles.inputWrapper>
+      <div className=Css.inputWrapper>
         <input
           ?autoFocus
-          style=Styles.input
+          className=Css.input
           placeholder="Filter"
           value
           onChange
         />
-        {if (value == "") {
-           React.null;
-         } else {
-           <ClearButton onClear />;
-         }}
+        {value == ""
+           ? React.null
+           : <button className=Css.clearButton onClick={_event => onClear()}>
+               Icon.close
+             </button>}
       </div>;
   };
 
@@ -316,11 +340,9 @@ module DemoListSidebar = {
           switch (entity) {
           | Entity.Demo(_) =>
             if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
-              <Link
+              <SidebarLink
                 activeDomRef=activeElementRef
                 key=entityName
-                style=Styles.link
-                activeStyle=Styles.activeLink
                 href={
                   ("?demo=" ++ entityName->Js.Global.encodeURIComponent)
                   ++ categoryQuery
@@ -354,7 +376,7 @@ module DemoListSidebar = {
               <PaddedBox key=entityName padding=LeftRight>
                 <Collapsible
                   title={
-                    <div style=Styles.categoryName>
+                    <div className=Css.categoryName>
                       <HighlightTerms
                         text=entityName
                         terms=searchMatchingTerms
@@ -407,39 +429,11 @@ module DemoListSidebar = {
       ) => {
     let (filterValue, setFilterValue) = React.useState(() => None);
     <Sidebar fullHeight=true>
-      <div
-        style={ReactDOM.Style.make(
-          ~position="sticky",
-          ~top="0",
-          ~backgroundColor=Color.lightGray,
-          (),
-        )}>
+      <div className=Css.sidebarPanelWrapper>
         <PaddedBox gap=Md border=Bottom>
-          <div
-            style={ReactDOM.Style.make(
-              ~display="flex",
-              ~alignItems="center",
-              ~gridGap="5px",
-              (),
-            )}>
+          <div className=Css.sidebarPanel>
             <button
-              style={ReactDOM.Style.make(
-                ~height="32px",
-                ~minWidth="32px",
-                ~width="32px",
-                ~cursor="pointer",
-                ~fontSize=FontSize.sm,
-                ~backgroundColor=Color.white,
-                ~color=Color.darkGray,
-                ~border=Border.default,
-                ~borderRadius=BorderRadius.default,
-                ~margin="0",
-                ~padding="0",
-                ~display="flex",
-                ~alignItems="center",
-                ~justifyContent="center",
-                (),
-              )}
+              className=Css.collapseButton
               title="Toggle default collapsed categories"
               onClick={event => {
                 event->React.Event.Mouse.preventDefault;

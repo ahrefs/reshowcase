@@ -8,23 +8,11 @@ module Color = {
   let orange = `hex("ffae4b");
 };
 
-// module Gap = {
-//   let xxs = "2px";
-//   let xs = "5px";
-//   let md = "8px";
-
-//   type t =
-//     | Xxs
-//     | Xs
-//     | Md;
-
-//   let getGap = (gap: t) =>
-//     switch (gap) {
-//     | Xxs => xxs
-//     | Xs => xs
-//     | Md => md
-//     };
-// };
+module Gap = {
+  let xxs = `px(2);
+  let xs = `px(5);
+  let md = `px(8);
+};
 
 // module Border = {
 //   let default = {js|1px solid |js} ++ Color.midGray;
