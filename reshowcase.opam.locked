@@ -1,0 +1,167 @@
+opam-version: "2.0"
+name: "reshowcase"
+version: "5.3.0"
+synopsis: "A tool to create demos for your ReasonReact components"
+maintainer: "Denis Strelkov <denis.strelkov@ahrefs.com>"
+authors: "bloodyowl <mlbli@me.com>"
+license: "MIT"
+tags: ["melange" "org:ahrefs"]
+homepage: "https://github.com/ahrefs/reshowcase"
+doc: "https://github.com/ahrefs/reshowcase"
+bug-reports: "https://github.com/ahrefs/reshowcase/issues"
+depends: [
+  "0install-solver" {= "2.18" & with-test}
+  "angstrom" {= "0.16.0"}
+  "astring" {= "0.8.5" & with-test}
+  "base" {= "v0.16.3" & with-test}
+  "base-bigarray" {= "base"}
+  "base-bytes" {= "base"}
+  "base-domains" {= "base"}
+  "base-nnp" {= "base"}
+  "base-threads" {= "base"}
+  "base-unix" {= "base"}
+  "base64" {= "3.5.1" & with-test}
+  "bigarray-compat" {= "1.1.0"}
+  "bigstringaf" {= "0.9.1"}
+  "bos" {= "0.2.1" & with-test}
+  "camlp-streams" {= "5.0.1" & with-test}
+  "chrome-trace" {= "3.14.0" & with-test}
+  "cmdliner" {= "1.2.0"}
+  "conf-bash" {= "1" & with-test}
+  "conf-c++" {= "1.0" & with-test}
+  "cppo" {= "1.6.9"}
+  "csexp" {= "1.5.2"}
+  "ctypes" {= "0.23.0"}
+  "cudf" {= "0.10" & with-test}
+  "dose3" {= "7.0.0" & with-test}
+  "dune" {= "3.14.0"}
+  "dune-build-info" {= "3.14.0"}
+  "dune-configurator" {= "3.14.0"}
+  "dune-rpc" {= "3.14.0" & with-test}
+  "dyn" {= "3.14.0" & with-test}
+  "extlib" {= "1.7.9" & with-test}
+  "fiber" {= "3.7.0" & with-test}
+  "fix" {= "20230505"}
+  "fmt" {= "0.9.0" & with-test}
+  "fpath" {= "0.7.3" & with-test}
+  "gen" {= "1.1"}
+  "integers" {= "0.7.0"}
+  "jane-street-headers" {= "v0.16.0" & with-test}
+  "jsonm" {= "1.0.2" & with-test}
+  "jst-config" {= "v0.16.0" & with-test}
+  "logs" {= "0.7.0" & with-test}
+  "lwt" {= "5.7.0"}
+  "lwt_ppx" {= "2.1.0"}
+  "mccs" {= "1.1+17" & with-test}
+  "melange" {= "dev"}
+  "menhir" {= "20231231"}
+  "menhirCST" {= "20231231"}
+  "menhirLib" {= "20231231"}
+  "menhirSdk" {= "20231231"}
+  "merlin-extend" {= "0.6.1"}
+  "merlin-lib" {= "4.14-501" & with-test}
+  "ocaml" {= "5.1.1"}
+  "ocaml-base-compiler" {= "5.1.1~rc1"}
+  "ocaml-compiler-libs" {= "v0.12.4"}
+  "ocaml-config" {= "3"}
+  "ocaml-lsp-server" {= "1.17.0" & with-test}
+  "ocaml-options-vanilla" {= "1"}
+  "ocaml-syntax-shims" {= "1.0.0"}
+  "ocamlbuild" {= "0.14.3" & with-test}
+  "ocamlc-loc" {= "3.14.0" & with-test}
+  "ocamlfind" {= "1.9.6"}
+  "ocamlformat-rpc-lib" {= "0.26.1" & with-test}
+  "ocamlgraph" {= "2.1.0" & with-test}
+  "ocplib-endian" {= "1.2"}
+  "opam-0install-cudf" {= "0.5.0" & with-test}
+  "opam-check-npm-deps" {= "2.0.0" & with-test}
+  "opam-client" {= "2.2.1" & with-test}
+  "opam-core" {= "2.2.1" & with-test}
+  "opam-file-format" {= "2.1.6" & with-test}
+  "opam-format" {= "2.2.1" & with-test}
+  "opam-repository" {= "2.2.1" & with-test}
+  "opam-solver" {= "2.2.1" & with-test}
+  "opam-state" {= "2.2.1" & with-test}
+  "ordering" {= "3.14.0" & with-test}
+  "pp" {= "1.2.0"}
+  "ppx_assert" {= "v0.16.0" & with-test}
+  "ppx_base" {= "v0.16.0" & with-test}
+  "ppx_cold" {= "v0.16.0" & with-test}
+  "ppx_compare" {= "v0.16.0" & with-test}
+  "ppx_derivers" {= "1.2.1"}
+  "ppx_deriving" {= "5.2.1"}
+  "ppx_deriving_yojson" {= "3.7.0"}
+  "ppx_enumerate" {= "v0.16.0" & with-test}
+  "ppx_expect" {= "v0.16.0" & with-test}
+  "ppx_globalize" {= "v0.16.0" & with-test}
+  "ppx_hash" {= "v0.16.0" & with-test}
+  "ppx_here" {= "v0.16.0" & with-test}
+  "ppx_inline_test" {= "v0.16.1" & with-test}
+  "ppx_let" {= "v0.16.0" & with-test}
+  "ppx_optcomp" {= "v0.16.0" & with-test}
+  "ppx_sexp_conv" {= "v0.16.0" & with-test}
+  "ppx_yojson_conv_lib" {= "v0.16.0" & with-test}
+  "ppxlib" {= "0.32.0"}
+  "promise" {= "1.1.2"}
+  "quickjs" {= "0.1.2"}
+  "re" {= "1.11.0" & with-test}
+  "reason" {= "3.12.0"}
+  "reason-react" {= "dev"}
+  "reason-react-ppx" {= "dev"}
+  "result" {= "1.5"}
+  "rresult" {= "0.7.0" & with-test}
+  "sedlex" {= "3.2"}
+  "seq" {= "base"}
+  "server-reason-react" {= "0.3.1"}
+  "sexplib0" {= "v0.16.0"}
+  "sha" {= "1.15.4" & with-test}
+  "spawn" {= "v0.15.1" & with-test}
+  "spdx_licenses" {= "1.2.0" & with-test}
+  "stdio" {= "v0.16.0" & with-test}
+  "stdlib-shims" {= "0.3.0"}
+  "stdune" {= "3.14.0" & with-test}
+  "stringext" {= "1.6.0"}
+  "styled-ppx" {= "0.59.1"}
+  "swhid_core" {= "0.1" & with-test}
+  "time_now" {= "v0.16.0" & with-test}
+  "topkg" {= "1.0.7" & with-test}
+  "uri" {= "4.4.0"}
+  "uutf" {= "1.0.3" & with-test}
+  "xdg" {= "3.14.0" & with-test}
+  "yojson" {= "2.1.2"}
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]
+depexts: [
+  ["copy-webpack-plugin"] {npm-version = "^11.0.0"}
+  ["html-webpack-plugin"] {npm-version = "^5.5.0"}
+  ["webpack"] {npm-version = "^5.76.1"}
+  ["webpack-dev-server"] {npm-version = "^4.11.1"}
+]
+dev-repo: "git+https://github.com/ahrefs/reshowcase.git"
+pin-depends: [
+  [
+    "melange.dev"
+    "git+https://github.com/melange-re/melange#d2715c469e8cf8bf8cff81b897c212094a9517c5"
+  ]
+  [
+    "reason-react.dev"
+    "https://github.com/reasonml/reason-react/archive/1f084f4ecf380b2144809065e5935a41866eab3f.tar.gz"
+  ]
+  [
+    "reason-react-ppx.dev"
+    "https://github.com/reasonml/reason-react/archive/1f084f4ecf380b2144809065e5935a41866eab3f.tar.gz"
+  ]
+]
