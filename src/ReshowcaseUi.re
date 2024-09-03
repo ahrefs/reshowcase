@@ -11,7 +11,7 @@ type responsiveMode =
 
 module TopPanel = {
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let panel = [%cx
       {|
@@ -150,7 +150,7 @@ let rightSidebarId = "rightSidebar";
 
 module SidebarLink = {
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let link = [%cx
       {|
@@ -198,7 +198,7 @@ module SidebarLink = {
 
 module DemoListSidebar = {
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let categoryName = [%cx {|
       padding: $(Gap.xs) $(Gap.xxs);
@@ -242,7 +242,7 @@ module DemoListSidebar = {
 
   module SearchInput = {
     module Css = {
-      open Theme;
+      open StyleVars;
 
       let inputWrapper = [%cx
         {|
@@ -468,7 +468,7 @@ module DemoListSidebar = {
 
 module DemoUnitSidebar = {
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let label = [%cx
       {|
@@ -869,7 +869,7 @@ module DemoUnit = {
 
 module DemoUnitFrame = {
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let container = [%cx
       {|
@@ -939,7 +939,7 @@ module DemoUnitFrame = {
 
 module App = {
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let app = [%cx
       {|

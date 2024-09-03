@@ -16,7 +16,7 @@ module PaddedBox = {
     | Md;
 
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let boxPadding = (~paddingType, ~gap) => {
       let paddingSize =
@@ -59,7 +59,7 @@ module PaddedBox = {
 
 module Stack = {
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let stack = [%cx
       {|
@@ -76,7 +76,7 @@ module Stack = {
 
 module Sidebar = {
   module Css = {
-    open Theme;
+    open StyleVars;
 
     let width = `px(230);
 
@@ -106,7 +106,7 @@ module Sidebar = {
 };
 
 module Icon = {
-  open Theme;
+  open StyleVars;
 
   module Css = {
     let iconBlock = [%cx {|
@@ -217,7 +217,10 @@ module Collapsible = {
       width="10"
       height="6"
       className={Css.icon +++ Css.iconActive->Cn.ifTrue(isOpen)}>
-      <polygon points="0,0  10,0  5,6" fill=Theme.Color.(darkGray->toString) />
+      <polygon
+        points="0,0  10,0  5,6"
+        fill=StyleVars.Color.(darkGray->toString)
+      />
     </svg>;
 
   [@react.component]

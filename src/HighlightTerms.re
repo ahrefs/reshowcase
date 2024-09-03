@@ -161,7 +161,7 @@ let getTextParts = (~text, ~terms) => {
 };
 
 module Css = {
-  open Theme;
+  open StyleVars;
 
   let highlight = [%cx {|
     background-color: $(Color.orange);
