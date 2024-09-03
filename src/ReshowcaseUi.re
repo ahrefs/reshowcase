@@ -1,4 +1,5 @@
 open Belt;
+open Prelude;
 module Color = Layout.Color;
 module Gap = Layout.Gap;
 module Border = Layout.Border;
@@ -18,63 +19,76 @@ type responsiveMode =
   | Desktop;
 
 module TopPanel = {
-  module Styles = {
-    let panel =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~justifyContent="flex-end",
-        ~borderBottom=Border.default,
-        (),
-      );
+  module Css = {
+    open Theme;
 
-    let buttonGroup =
-      ReactDOM.Style.make(
-        ~overflow="hidden",
-        ~display="flex",
-        ~flexDirection="row",
-        ~alignItems="stretch",
-        ~borderRadius=BorderRadius.default,
-        (),
-      );
+    let panel = [%cx
+      {|
+      display: flex;
+      justify-content: flex-end;
+      border-bottom: 1px solid $(Color.midGray);
+    |}
+    ];
 
-    let button =
-      ReactDOM.Style.make(
-        ~height="32px",
-        ~width="48px",
-        ~cursor="pointer",
-        ~fontSize=FontSize.sm,
-        ~backgroundColor=Color.lightGray,
-        ~color=Color.darkGray,
-        ~border="none",
-        ~margin="0",
-        ~padding="0",
-        ~display="flex",
-        ~alignItems="center",
-        ~justifyContent="center",
-        (),
-      );
+    let buttonGroup = [%cx
+      {|
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      border-radius: $(BorderRadius.default);
+    |}
+    ];
 
-    let squareButton =
-      button->ReactDOM.Style.combine(ReactDOM.Style.make(~width="32px", ()));
+    let button = [%cx
+      {|
+      height: 32px;
+      width: 48px;
+      cursor: pointer;
+      font-size: $(FontSize.sm);
+      background-color: $(Color.lightGray);
+      color: $(Color.darkGray);
+      border: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    |}
+    ];
 
-    let activeButton =
-      button->ReactDOM.Style.combine(
-        ReactDOM.Style.make(
-          ~backgroundColor=Color.blue,
-          ~color=Color.white,
-          (),
-        ),
-      );
+    let buttonSquare = [%cx {|
+      width: 32px;
+    |}];
 
-    let middleSection =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flex="1",
-        ~justifyContent="center",
-        (),
-      );
+    let buttonActive = [%cx
+      {|
+      background-color: $(Color.blue);
+      color: $(Color.white);
+    |}
+    ];
 
-    let rightSection = ReactDOM.Style.make(~display="flex", ());
+    let middleSection = [%cx
+      {|
+      display: flex;
+      flex: 1;
+      justify-content: center;
+    |}
+    ];
+
+    let rightSection = [%cx {|
+      display: flex;
+    |}];
+
+    let sidebarIcon = [%cx
+      {|
+      transition: 200ms ease-in-out transform;
+    |}
+    ];
+
+    let sidebarIconActive = [%cx {|
+      transform: rotate(180deg)
+    |}];
   };
 
   [@react.component]
@@ -85,20 +99,17 @@ module TopPanel = {
         ~onRightSidebarToggle: unit => unit,
         ~onSetResponsiveMode: (responsiveMode => responsiveMode) => unit,
       ) =>
-    <div style=Styles.panel>
-      <div style=Styles.rightSection />
-      <div style=Styles.middleSection>
+    <div className=Css.panel>
+      <div className=Css.rightSection />
+      <div className=Css.middleSection>
         <PaddedBox gap=Md>
-          <div style=Styles.buttonGroup>
+          <div className=Css.buttonGroup>
             <button
               title="Show in desktop mode"
-              style={
-                      if (responsiveMode == Desktop) {
-                        Styles.activeButton;
-                      } else {
-                        Styles.button;
-                      }
-                    }
+              className={
+                Css.button
+                +++ Css.buttonActive->Cn.ifTrue(responsiveMode == Desktop)
+              }
               onClick={event => {
                 event->React.Event.Mouse.preventDefault;
                 onSetResponsiveMode(_ => Desktop);
@@ -107,13 +118,10 @@ module TopPanel = {
             </button>
             <button
               title="Show in mobile mode"
-              style={
-                      if (responsiveMode == Mobile) {
-                        Styles.activeButton;
-                      } else {
-                        Styles.button;
-                      }
-                    }
+              className={
+                Css.button
+                +++ Css.buttonActive->Cn.ifTrue(responsiveMode == Mobile)
+              }
               onClick={event => {
                 event->React.Event.Mouse.preventDefault;
                 onSetResponsiveMode(_ => Mobile);
@@ -123,27 +131,21 @@ module TopPanel = {
           </div>
         </PaddedBox>
       </div>
-      <div style=Styles.rightSection>
+      <div className=Css.rightSection>
         <PaddedBox gap=Md>
-          <div style=Styles.buttonGroup>
+          <div className=Css.buttonGroup>
             <button
-              title={
-                      if (isSidebarHidden) {"Show sidebar"} else {
-                        "Hide sidebar"
-                      }
-                    }
-              style=Styles.squareButton
+              title={isSidebarHidden ? "Show sidebar" : "Hide sidebar"}
+              className={Css.button +++ Css.buttonSquare}
               onClick={event => {
                 event->React.Event.Mouse.preventDefault;
                 onRightSidebarToggle();
               }}>
               <div
-                style={ReactDOM.Style.make(
-                  ~transition="200ms ease-in-out transform",
-                  ~transform=
-                    if (isSidebarHidden) {"rotate(0)"} else {"rotate(180deg)"},
-                  (),
-                )}>
+                className={
+                  Css.sidebarIcon
+                  +++ Css.sidebarIconActive->Cn.ifTrue(!isSidebarHidden)
+                }>
                 Icon.sidebar
               </div>
             </button>
