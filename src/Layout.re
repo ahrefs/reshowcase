@@ -18,17 +18,23 @@ module PaddedBox = {
   module Css = {
     open StyleVars;
 
-    let boxPadding = (~paddingType, ~gap) => {
-      let paddingSize =
+    let box = gap => {
+      let padding =
         switch (gap) {
         | Xxs => Gap.xxs
         | Xs => Gap.xs
         | Md => Gap.md
         };
+      [%cx {|
+      padding: $(padding);
+    |}];
+    };
+
+    let boxPadding = paddingType => {
       switch (paddingType) {
-      | Around => [%cx {| padding: $(paddingSize) |}]
-      | LeftRight => [%cx {| padding: 0 $(paddingSize) |}]
-      | TopLeftRight => [%cx {| padding: $(paddingSize) $(paddingSize) 0 |}]
+      | Around => [%cx {||}]
+      | LeftRight => [%cx {| padding-top: 0; padding-bottom: 0; |}]
+      | TopLeftRight => [%cx {| padding-bottom: 0; |}]
       };
     };
 
@@ -51,7 +57,7 @@ module PaddedBox = {
       name="PaddedBox"
       ?id
       className={
-        Css.boxPadding(~paddingType=padding, ~gap) +++ Css.boxBorder(border)
+        Css.box(gap) +++ Css.boxPadding(padding) +++ Css.boxBorder(border)
       }>
       children
     </div>;
