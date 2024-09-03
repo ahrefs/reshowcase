@@ -1,4 +1,6 @@
 module Color = {
+  let toString = CSS.Types.Color.toString;
+
   let white = `hex("fff");
   let lightGray = `hex("f5f6f6");
   let midGray = `hex("e0e2e4");

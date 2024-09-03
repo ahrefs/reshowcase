@@ -1,15 +1,6 @@
 open Belt;
 open Prelude;
-module Color = Layout.Color;
-module Gap = Layout.Gap;
-module Border = Layout.Border;
-module BorderRadius = Layout.BorderRadius;
-module FontSize = Layout.FontSize;
-module PaddedBox = Layout.PaddedBox;
-module Stack = Layout.Stack;
-module Sidebar = Layout.Sidebar;
-module Icon = Layout.Icon;
-module Collapsible = Layout.Collapsible;
+open Layout;
 module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;

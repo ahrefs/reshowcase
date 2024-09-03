@@ -160,6 +160,14 @@ let getTextParts = (~text, ~terms) => {
   getMarkedAndUnmarkedParts(markRanges, text)->List.toArray;
 };
 
+module Css = {
+  open Theme;
+
+  let highlight = [%cx {|
+    background-color: $(Color.orange);
+  |}];
+};
+
 [@react.component]
 let make = (~text, ~terms) =>
   switch (terms) {
@@ -170,12 +178,7 @@ let make = (~text, ~terms) =>
     |> Array.mapi(~f=(item, index) =>
          switch (item) {
          | Marked(text) =>
-           <mark
-             key={Belt.Int.toString(index)}
-             style={ReactDOM.Style.make(
-               ~backgroundColor=Layout.Color.orange,
-               (),
-             )}>
+           <mark key={Belt.Int.toString(index)} className=Css.highlight>
              text->React.string
            </mark>
          | Unmarked(text) =>

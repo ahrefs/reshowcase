@@ -1,138 +1,119 @@
-module Color = {
-  let white = "#fff";
-  let lightGray = "#f5f6f6";
-  let midGray = "#e0e2e4";
-  let darkGray = "#42484d";
-  let black40a = "rgba(0, 0, 0, 0.4)";
-  let blue = "#0091ff";
-  let orange = "#ffae4b";
-  let transparent = "transparent";
-};
-
-module Gap = {
-  let xxs = "2px";
-  let xs = "5px";
-  let md = "8px";
-
-  type t =
-    | Xxs
-    | Xs
-    | Md;
-
-  let getGap = (gap: t) =>
-    switch (gap) {
-    | Xxs => xxs
-    | Xs => xs
-    | Md => md
-    };
-};
-
-module Border = {
-  let default = {js|1px solid |js} ++ Color.midGray;
-};
-
-module BorderRadius = {
-  let default = "5px";
-};
-
-module FontSize = {
-  let sm = "12px";
-  let md = "14px";
-  let lg = "20px";
-};
+open Prelude;
 
 module PaddedBox = {
   type padding =
     | Around
     | LeftRight
     | TopLeftRight;
+
   type border =
     | None
     | Bottom;
 
-  module Styles = {
-    let around = gapValue => ReactDOM.Style.make(~padding=gapValue, ());
+  type gap =
+    | Xxs
+    | Xs
+    | Md;
 
-    let leftRight = gapValue =>
-      ReactDOM.Style.make(~padding={js|0 |js} ++ gapValue, ());
+  module Css = {
+    open Theme;
 
-    let topLeftRight = gapValue =>
-      ReactDOM.Style.make(
-        ~padding=((gapValue ++ {js| |js}) ++ gapValue) ++ {js| 0|js},
-        (),
-      );
-
-    let getPadding = (padding: padding, gap: Gap.t) => {
-      let gapValue = Gap.getGap(gap);
-      switch (padding) {
-      | Around => around(gapValue)
-      | LeftRight => leftRight(gapValue)
-      | TopLeftRight => topLeftRight(gapValue)
+    let boxPadding = (~paddingType, ~gap) => {
+      let paddingSize =
+        switch (gap) {
+        | Xxs => Gap.xxs
+        | Xs => Gap.xs
+        | Md => Gap.md
+        };
+      switch (paddingType) {
+      | Around => [%cx {| padding: $(paddingSize) |}]
+      | LeftRight => [%cx {| padding: 0 $(paddingSize) |}]
+      | TopLeftRight => [%cx {| padding: $(paddingSize) $(paddingSize) 0 |}]
       };
     };
 
-    let getBorder = (border: border) =>
-      switch (border) {
-      | None => ReactDOM.Style.make()
-      | Bottom => ReactDOM.Style.make(~borderBottom=Border.default, ())
-      };
-
-    let make = (~padding, ~gap, ~border) => {
-      let paddingStyles = getPadding(padding, gap);
-      let borderStyles = getBorder(border);
-      ReactDOM.Style.combine(paddingStyles, borderStyles);
-    };
+    let boxBorder =
+      fun
+      | None => [%cx ""]
+      | Bottom => [%cx {| border-bottom: 1px solid $(Color.midGray); |}];
   };
 
   [@react.component]
   let make =
       (
-        ~gap: Gap.t=Xs,
+        ~gap: gap=Xs,
         ~padding: padding=Around,
         ~border: border=None,
         ~id=?,
         ~children,
       ) =>
-    <div name="PaddedBox" ?id style={Styles.make(~padding, ~border, ~gap)}>
+    <div
+      name="PaddedBox"
+      ?id
+      className={
+        Css.boxPadding(~paddingType=padding, ~gap) +++ Css.boxBorder(border)
+      }>
       children
     </div>;
 };
 
 module Stack = {
-  module Styles = {
-    let stack = ReactDOM.Style.make(~display="grid", ~gridGap=Gap.xs, ());
+  module Css = {
+    open Theme;
+
+    let stack = [%cx
+      {|
+        display: grid;
+        grid-gap: $(Gap.xs);
+      |}
+    ];
   };
 
   [@react.component]
   let make = (~children) =>
-    <div name="Stack" style=Styles.stack> children </div>;
+    <div name="Stack" className=Css.stack> children </div>;
 };
 
 module Sidebar = {
-  module Styles = {
-    let width = "230px";
+  module Css = {
+    open Theme;
 
-    let sidebar = (~fullHeight) =>
-      ReactDOM.Style.make(
-        ~minWidth=width,
-        ~width,
-        ~height=if (fullHeight) {"100vh"} else {"auto"},
-        ~overflowY="auto",
-        ~backgroundColor=Color.lightGray,
-        (),
-      )
-      ->ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch");
+    let width = `px(230);
+
+    let sidebar = [%cx
+      {|
+      min-width: $(width);
+      width: $(width);
+      overflow-y: auto;
+      background-color: $(Color.lightGray);
+      -webkit-overflow-scrolling: touch;
+    |}
+    ];
+
+    let sidebarFullHeight = [%cx {|
+      height: 100vh;
+    |}];
   };
 
   [@react.component]
   let make = (~innerContainerId=?, ~fullHeight=false, ~children=React.null) =>
     <div
-      name="Sidebar" id=?innerContainerId style={Styles.sidebar(~fullHeight)}>
+      name="Sidebar"
+      id=?innerContainerId
+      className={Css.sidebar +++ Css.sidebarFullHeight->Cn.ifTrue(fullHeight)}>
       children
     </div>;
 };
 
 module Icon = {
+  open Theme;
+
+  module Css = {
+    let iconBlock = [%cx {|
+      display: block;
+    |}];
+  };
+
   let desktop =
     <svg width="32" height="32">
       <g transform="translate(5 8)" fill="none" fillRule="evenodd">
@@ -173,7 +154,7 @@ module Icon = {
       width="18"
       height="18"
       viewBox="0 0 18 18"
-      style={ReactDOM.Style.make(~display="block", ())}>
+      className=Css.iconBlock>
       <path
         fill="gray"
         d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"
@@ -185,7 +166,7 @@ module Icon = {
       width="20"
       height="17"
       viewBox="0 0 20 17"
-      fill=Color.darkGray
+      fill={Color.darkGray->Color.toString}
       xmlns="http://www.w3.org/2000/svg">
       <rect x="2" y="1" width="16" height="2" />
       <rect x="2" y="7" width="16" height="2" />
@@ -197,7 +178,7 @@ module Icon = {
       width="26"
       height="17"
       viewBox="0 0 26 17"
-      fill=Color.darkGray
+      fill={Color.darkGray->Color.toString}
       xmlns="http://www.w3.org/2000/svg">
       <rect x="6" y="1" width="16" height="2" />
       <rect x="2" y="1" width="2" height="2" />
@@ -209,27 +190,34 @@ module Icon = {
 };
 
 module Collapsible = {
-  module Styles = {
-    let clickableArea =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~cursor="pointer",
-        ~gridGap="2px",
-        ~alignItems="center",
-        (),
-      );
+  module Css = {
+    let clickableArea = [%cx
+      {|
+      display: flex;
+      cursor: pointer;
+      grid-gap: 2px;
+      align-items: center;
+    |}
+    ];
+
+    let icon = [%cx
+      {|
+      transition: 200ms ease-out transform;
+      transform: rotate(-90deg);
+    |}
+    ];
+
+    let iconActive = [%cx {|
+      transform: rotate(0);
+    |}];
   };
 
   let triangleIcon = isOpen =>
     <svg
       width="10"
       height="6"
-      style={ReactDOM.Style.make(
-        ~transition="200ms ease-out transform",
-        ~transform=if (isOpen) {""} else {"rotate(-90deg)"},
-        (),
-      )}>
-      <polygon points="0,0  10,0  5,6" fill=Color.darkGray />
+      className={Css.icon +++ Css.iconActive->Cn.ifTrue(isOpen)}>
+      <polygon points="0,0  10,0  5,6" fill=Theme.Color.(darkGray->toString) />
     </svg>;
 
   [@react.component]
@@ -250,16 +238,12 @@ module Collapsible = {
     );
     <div>
       <div
-        style=Styles.clickableArea
+        className=Css.clickableArea
         onClick={_event => setIsOpen(isOpen => !isOpen)}>
         {triangleIcon(isOpen)}
         title
       </div>
-      {if (isForceOpen || isOpen) {
-         children;
-       } else {
-         React.null;
-       }}
+      {isForceOpen || isOpen ? children : React.null}
     </div>;
   };
 };
