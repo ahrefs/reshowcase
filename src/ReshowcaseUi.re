@@ -269,9 +269,15 @@ module DemoListSidebar = {
     };
 
     [@react.component]
-    let make = (~value, ~onChange, ~onClear) =>
+    let make = (~autoFocus=?, ~value, ~onChange, ~onClear) =>
       <div style=Styles.inputWrapper>
-        <input style=Styles.input placeholder="Filter" value onChange />
+        <input
+          ?autoFocus
+          style=Styles.input
+          placeholder="Filter"
+          value
+          onChange
+        />
         {if (value == "") {
            React.null;
          } else {
@@ -442,6 +448,7 @@ module DemoListSidebar = {
                }}
             </button>
             <SearchInput
+              autoFocus=true
               value={filterValue->Option.getWithDefault("")}
               onChange={event => {
                 let value = event->React.Event.Form.target##value;
