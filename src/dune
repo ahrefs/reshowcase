@@ -1,7 +1,7 @@
 (library
  (name reshowcase)
  (preprocess
-  (pps melange.ppx reason-react-ppx))
+  (pps melange.ppx reason-react-ppx styled-ppx))
  (libraries melange.belt reason-react)
  (public_name reshowcase)
  (modes melange))
