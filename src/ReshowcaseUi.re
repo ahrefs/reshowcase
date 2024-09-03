@@ -293,7 +293,7 @@ module DemoListSidebar = {
         ~searchString,
         demos: Demos.t,
       ) => {
-    let activeElementRef = UseScrollIntoView.use([||]);
+    let activeElementRef = UseScrollIntoView.use();
 
     let rec renderMenu =
             (
