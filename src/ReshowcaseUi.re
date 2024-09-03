@@ -675,6 +675,29 @@ module DemoUnitSidebar = {
 };
 
 module DemoUnit = {
+  module Css = {
+    let container = [%cx
+      {|
+      flex-grow: 1;
+      display: flex;
+      align-items: stretch;
+      flex-direction: row;
+    |}
+    ];
+
+    let contents = [%cx
+      {|
+      flex-grow: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      -webkit-overflow-scrolling: touch;
+    |}
+    ];
+  };
+
   type state = {
     strings:
       Map.String.t(
@@ -690,29 +713,6 @@ module DemoUnit = {
     | SetInt(string, int)
     | SetFloat(string, float)
     | SetBool(string, bool);
-
-  module Styles = {
-    let container =
-      ReactDOM.Style.make(
-        ~flexGrow="1",
-        ~display="flex",
-        ~alignItems="stretch",
-        ~flexDirection="row",
-        (),
-      );
-
-    let contents =
-      ReactDOM.Style.make(
-        ~flexGrow="1",
-        ~overflowY="auto",
-        ~display="flex",
-        ~flexDirection="column",
-        ~alignItems="center",
-        ~justifyContent="center",
-        (),
-      )
-      ->ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch");
-  };
 
   let getRightSidebarElement = (): option(Dom.element) =>
     Window.window##parent##document##getElementById(rightSidebarId)
@@ -849,8 +849,8 @@ module DemoUnit = {
       },
     };
 
-    <div name="DemoUnit" style=Styles.container>
-      <div style=Styles.contents> {demoUnit(props)} </div>
+    <div name="DemoUnit" className=Css.container>
+      <div className=Css.contents> {demoUnit(props)} </div>
       {switch (parentWindowRightSidebarElem) {
        | None => React.null
        | Some(element) =>
@@ -877,21 +877,50 @@ module DemoUnit = {
 };
 
 module DemoUnitFrame = {
-  let container = responsiveMode =>
-    ReactDOM.Style.make(
-      ~flex="1",
-      ~display="flex",
-      ~justifyContent="center",
-      ~alignItems="center",
-      ~backgroundColor=
+  module Css = {
+    open Theme;
+
+    let container = [%cx
+      {|
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 1px;
+      overflow-y: auto;
+  |}
+    ];
+
+    let containerBackground = responsiveMode => {
+      let backgroundColor =
         switch (responsiveMode) {
         | Mobile => Color.midGray
         | Desktop => Color.white
-        },
-      ~height="1px",
-      ~overflowY="auto",
-      (),
-    );
+        };
+      [%cx {|
+        background-color: $(backgroundColor);
+      |}];
+    };
+
+    let iframe = responsiveMode => {
+      let height =
+        switch (responsiveMode) {
+        | Mobile => `px(667)
+        | Desktop => `percent(100.)
+        };
+      let width =
+        switch (responsiveMode) {
+        | Mobile => `px(375)
+        | Desktop => `percent(100.)
+        };
+      [%cx
+       {|
+        border: none;
+        height: $(height);
+        width: $(width);
+      |}];
+    };
+  };
 
   let useFullframeUrl: bool = [%mel.raw
     {js|typeof USE_FULL_IFRAME_URL === "boolean" ? USE_FULL_IFRAME_URL : false|js}
@@ -901,95 +930,86 @@ module DemoUnitFrame = {
   let make =
       (~queryString: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
     let iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
-    <div name="DemoUnitFrame" style={container(responsiveMode)}>
+    <div
+      name="DemoUnitFrame"
+      className={Css.container +++ Css.containerBackground(responsiveMode)}>
       <iframe
+        className={Css.iframe(responsiveMode)}
+        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
         onLoad={event => {
           let iframe = event->React.Event.Synthetic.target;
           let window = iframe##contentWindow;
           onLoad(window);
         }}
-        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
-        style={ReactDOM.Style.make(
-          ~height=
-            switch (responsiveMode) {
-            | Mobile => "667px"
-            | Desktop => "100%"
-            },
-          ~width=
-            switch (responsiveMode) {
-            | Mobile => "375px"
-            | Desktop => "100%"
-            },
-          ~border="none",
-          (),
-        )}
       />
     </div>;
   };
 };
 
 module App = {
-  module Styles = {
-    let app =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flexDirection="row",
-        ~minHeight="100vh",
-        ~alignItems="stretch",
-        ~color=Color.darkGray,
-        (),
-      );
+  module Css = {
+    open Theme;
 
-    let main =
-      ReactDOM.Style.make(
-        ~flexGrow="1",
-        ~display="flex",
-        ~flexDirection="column",
-        (),
-      );
+    let app = [%cx
+      {|
+      display: flex;
+      flex-direction: row;
+      min-height: 100vh;
+      align-items: stretch;
+      color: $(Color.darkGray);
+    |}
+    ];
 
-    let empty =
-      ReactDOM.Style.make(
-        ~flexGrow="1",
-        ~display="flex",
-        ~flexDirection="column",
-        ~alignItems="center",
-        ~justifyContent="center",
-        (),
-      );
+    let main = [%cx
+      {|
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    |}
+    ];
 
-    let emptyText =
-      ReactDOM.Style.make(
-        ~fontSize=FontSize.lg,
-        ~color=Color.black40a,
-        ~textAlign="center",
-        (),
-      );
+    let empty = [%cx
+      {|
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    |}
+    ];
 
-    let right =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flexDirection="column",
-        ~width="100%",
-        (),
-      );
+    let emptyText = [%cx
+      {|
+      font-size: $(FontSize.lg);
+      color: $(Color.black40a);
+      text-align: center;
+    |}
+    ];
 
-    let demo =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flex="1",
-        ~flexDirection="row",
-        ~alignItems="stretch",
-        (),
-      );
+    let right = [%cx
+      {|
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    |}
+    ];
 
-    let demoContents =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flex="1",
-        ~flexDirection="column",
-        (),
-      );
+    let demo = [%cx
+      {|
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      align-items: stretch;
+    |}
+    ];
+
+    let demoContents = [%cx
+      {|
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+    |}
+    ];
   };
 
   type route =
@@ -1060,19 +1080,15 @@ module App = {
       toggleIsCategoriesCollapsed(_ => !isCategoriesCollapsedByDefault);
       LocalStorage.localStorage->LocalStorage.setItem(
         "isCategoriesCollapsedByDefault",
-        if (!isCategoriesCollapsedByDefault) {
-          "true";
-        } else {
-          "false";
-        },
+        isCategoriesCollapsedByDefault ? "false" : "true",
       );
     };
 
-    <div name="App" style=Styles.app>
+    <div name="App" className=Css.app>
       {switch (route) {
        | Unit(urlSearchParams, demoName) =>
          let demoUnit = Demos.findDemo(urlSearchParams, demoName, demos);
-         <div style=Styles.main>
+         <div className=Css.main>
            {demoUnit
             ->Option.map(demoUnit => <DemoUnit demoUnit />)
             ->Option.getWithDefault("Demo not found"->React.string)}
@@ -1085,7 +1101,7 @@ module App = {
              isCategoriesCollapsedByDefault
              onToggleCollapsedCategoriesByDefault
            />
-           <div name="Content" style=Styles.right>
+           <div name="Content" className=Css.right>
              <TopPanel
                isSidebarHidden={!showRightSidebar}
                responsiveMode
@@ -1100,8 +1116,8 @@ module App = {
                }}
                onSetResponsiveMode
              />
-             <div name="Demo" style=Styles.demo>
-               <div style=Styles.demoContents>
+             <div name="Demo" className=Css.demo>
+               <div className=Css.demoContents>
                  <DemoUnitFrame
                    key={"DemoUnitFrame" ++ iframeKey}
                    queryString
@@ -1111,14 +1127,12 @@ module App = {
                    }
                  />
                </div>
-               {if (showRightSidebar) {
-                  <Sidebar
-                    key={"Sidebar" ++ iframeKey}
-                    innerContainerId=rightSidebarId
-                  />;
-                } else {
-                  React.null;
-                }}
+               {showRightSidebar
+                  ? <Sidebar
+                      key={"Sidebar" ++ iframeKey}
+                      innerContainerId=rightSidebarId
+                    />
+                  : React.null}
              </div>
            </div>
          </>
@@ -1131,8 +1145,8 @@ module App = {
              isCategoriesCollapsedByDefault
              onToggleCollapsedCategoriesByDefault
            />
-           <div style=Styles.empty>
-             <div style=Styles.emptyText> "Pick a demo"->React.string </div>
+           <div className=Css.empty>
+             <div className=Css.emptyText> "Pick a demo"->React.string </div>
            </div>
          </>
        }}
