@@ -69,7 +69,8 @@ demo(({addDemo: _, addCategory}) =>
           style={ReactDOM.Style.make(
             ~fontSize=
               {let size =
-                 int("Font size", {min: 0, max: 100, initial: 30, step: 1})->string_of_int;
+                 int("Font size", {min: 0, max: 100, initial: 30, step: 1})
+                 ->string_of_int;
                {j|$(size)px|j}},
             (),
           )}>
@@ -97,7 +98,7 @@ demo(({addDemo, addCategory: _}) =>
       style={ReactDOM.Style.make(
         ~whiteSpace="pre",
         ~padding="0",
-        ~backgroundColor=Reshowcase.Layout.Color.lightGray,
+        ~backgroundColor="#f5f6f6",
         (),
       )}>
       "\ndemo(({addDemo: _, addCategory}) => {\n  addCategory(\"Typography\", ({addDemo: _, addCategory}) => {\n    addCategory(\"Headings\", ({addDemo, addCategory: _}) => {\n      addDemo(\"H1\", ({string, int}) =>\n        <h1\n          style={ReactDOM.Style.make(\n            ~fontSize={\n              let size = int(\"Font size\", {min: 0, max: 100, initial: 30, step: 1})\n              j`$(size)px`\n            },\n            (),\n          )}>\n          {string(\"Text\", \"hello\")->React.string}\n        </h1>\n      )\n      addDemo(\"H2\", ({string}) => <h2> {string(\"Text\", \"hello\")->React.string} </h2>)\n    })\n\n    addCategory(\"Text\", ({addDemo, addCategory: _}) => {\n      addDemo(\"Paragraph\", ({string}) => <p> {string(\"Text\", \"hello\")->React.string} </p>)\n      addDemo(\"Italic\", ({string}) => <i> {string(\"Text\", \"hello\")->React.string} </i>)\n    })\n  })\n})\n\nstart()\n\n"
