@@ -1,7 +1,7 @@
 (melange.emit
  (target example)
  (alias example)
- (libraries reshowcase reason-react)
+ (libraries reshowcase reason-react styled-ppx.melange)
  (module_systems es6)
  (preprocess
-  (pps melange.ppx reason-react-ppx)))
+  (pps melange.ppx reason-react-ppx styled-ppx)))
