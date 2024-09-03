@@ -11,8 +11,8 @@ let use = dependency => {
         ->Js.toOption
         ->Option.forEach(elem =>
             elem->Bindings.Element.scrollIntoView({
-              "behavior": "auto",
-              "block": "nearest",
+              behavior: "auto",
+              block: "nearest",
             })
           );
       };

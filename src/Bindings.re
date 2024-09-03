@@ -58,6 +58,10 @@ module LocalStorage = {
 module Element = {
   type t = Dom.element;
 
-  [@mel.send]
-  external scrollIntoView: (t, Js.t('options)) => unit = "scrollIntoView";
+  type options = {
+    behavior: string,
+    block: string,
+  };
+
+  [@mel.send] external scrollIntoView: (t, options) => unit = "scrollIntoView";
 };
