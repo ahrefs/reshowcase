@@ -157,12 +157,14 @@ let rightSidebarId = "rightSidebar";
 
 module Link = {
   [@react.component]
-  let make = (~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
+  let make =
+      (~activeDomRef=?, ~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
     let url = ReasonReactRouter.useUrl();
     let path = String.concat("/", url.path);
     let isActive =
       Js.String.endsWith(~suffix=href, path ++ "?" ++ url.search);
     <a
+      ref=?{isActive ? activeDomRef : None}
       href
       onClick={event =>
         switch (
@@ -285,6 +287,8 @@ module DemoListSidebar = {
         ~searchString,
         demos: Demos.t,
       ) => {
+    let activeElementRef = UseScrollIntoView.use([||]);
+
     let rec renderMenu =
             (
               ~parentCategoryMatchedSearch: bool,
@@ -305,6 +309,7 @@ module DemoListSidebar = {
           | Entity.Demo(_) =>
             if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
               <Link
+                activeDomRef=activeElementRef
                 key=entityName
                 style=Styles.link
                 activeStyle=Styles.activeLink

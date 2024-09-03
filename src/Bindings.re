@@ -54,3 +54,10 @@ module LocalStorage = {
   [@mel.send] external removeItem: (t, string) => unit = "removeItem";
   external localStorage: t = "localStorage";
 };
+
+module Element = {
+  type t = Dom.element;
+
+  [@mel.send]
+  external scrollIntoView: (t, Js.t('options)) => unit = "scrollIntoView";
+};
