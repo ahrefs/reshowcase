@@ -200,9 +200,13 @@ module DemoListSidebar = {
   module Css = {
     open StyleVars;
 
-    let categoryName = [%cx {|
+    let categoryName = [%cx
+      {|
       padding: $(Gap.xs) $(Gap.xxs);
-    |}];
+      font-size: $(FontSize.md);
+      font-weight: 500;
+    |}
+    ];
 
     let sidebarPanelWrapper = [%cx
       {|
@@ -229,7 +233,7 @@ module DemoListSidebar = {
       font-size: $(FontSize.sm);
       background-color: $(Color.white);
       color: $(Color.darkGray);
-      border: 1px solid $(Color.darkGray);
+      border: 1px solid $(Color.midGray);
       border-radius: $(BorderRadius.default);
       margin: 0;
       padding: 0;
