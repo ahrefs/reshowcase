@@ -476,69 +476,75 @@ module DemoListSidebar = {
 };
 
 module DemoUnitSidebar = {
-  module Styles = {
-    let label =
-      ReactDOM.Style.make(
-        ~display="block",
-        ~backgroundColor=Color.white,
-        ~borderRadius=BorderRadius.default,
-        ~boxShadow="0 5px 10px rgba(0, 0, 0, 0.07)",
-        (),
-      );
+  module Css = {
+    open Theme;
 
-    let labelText =
-      ReactDOM.Style.make(~fontSize=FontSize.md, ~textAlign="center", ());
+    let label = [%cx
+      {|
+      display: block;
+      background-color: $(Color.white);
+      border-radius: $(BorderRadius.default);
+      box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.07);
+    |}
+    ];
 
-    let textInput =
-      ReactDOM.Style.make(
-        ~fontSize=FontSize.md,
-        ~width="100%",
-        ~boxSizing="border-box",
-        ~backgroundColor=Color.lightGray,
-        ~boxShadow="inset 0 0 0 1px rgba(0, 0, 0, 0.1)",
-        ~border="none",
-        ~padding=Gap.md,
-        ~borderRadius=BorderRadius.default,
-        (),
-      );
+    let labelText = [%cx
+      {|
+      font-size: $(FontSize.md);
+      text-align: center;
+    |}
+    ];
 
-    let select =
-      ReactDOM.Style.make(
-        ~fontSize=FontSize.md,
-        ~width="100%",
-        ~boxSizing="border-box",
-        ~backgroundColor=Color.lightGray,
-        ~boxShadow="inset 0 0 0 1px rgba(0, 0, 0, 0.1)",
-        ~border="none",
-        ~padding=Gap.md,
-        ~borderRadius=BorderRadius.default,
-        ~appearance="none",
-        ~paddingRight="30px",
-        ~backgroundImage=
-          {js|url("data:image/svg+xml,%3Csvg width='36' height='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='%2342484E' stroke-width='2' d='M12.246 14.847l5.826 5.826 5.827-5.826' fill='none' fill-rule='evenodd' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")|js},
-        ~backgroundPosition="center right",
-        ~backgroundSize="contain",
-        ~backgroundRepeat="no-repeat",
-        (),
-      )
-      ->ReactDOM.Style.unsafeAddProp("WebkitAppearance", "none");
+    let textInput = [%cx
+      {|
+      font-size: $(FontSize.md);
+      width: 100%;
+      box-sizing: border-box;
+      background-color: $(Color.lightGray);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+      border: none;
+      padding: $(Gap.md);
+      border-radius: $(BorderRadius.default);
+    |}
+    ];
 
-    let checkbox =
-      ReactDOM.Style.make(
-        ~fontSize=FontSize.md,
-        ~margin="0 auto",
-        ~display="block",
-        (),
-      );
+    let select = [%cx
+      {|
+      font-size: $(FontSize.md);
+      width: 100%;
+      box-sizing: border-box;
+      background-color: $(Color.lightGray);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+      border: none;
+      padding: $(Gap.md);
+      border-radius: $(BorderRadius.default);
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 30px;
+      background-image:
+          url("data:image/svg+xml,%3Csvg width='36' height='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='%2342484E' stroke-width='2' d='M12.246 14.847l5.826 5.826 5.827-5.826' fill='none' fill-rule='evenodd' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-position: center right;
+      background-size: contain;
+      background-repeat: no-repeat;
+    |}
+    ];
+
+    let checkbox = [%cx
+      {|
+      font-size: $(FontSize.md);
+      margin: 0 auto;
+      display: block;
+    |}
+    ];
   };
 
   module PropBox = {
     [@react.component]
     let make = (~propName: string, ~children) =>
-      <label style=Styles.label>
+      <label className=Css.label>
         <PaddedBox>
           <Stack>
-            <div style=Styles.labelText> propName->React.string </div>
+            <div className=Css.labelText> propName->React.string </div>
             children
           </Stack>
         </PaddedBox>
@@ -575,7 +581,7 @@ module DemoUnitSidebar = {
                   <input
                     type_="text"
                     value
-                    style=Styles.textInput
+                    className=Css.textInput
                     onChange={event =>
                       onStringChange(
                         propName,
@@ -585,7 +591,7 @@ module DemoUnitSidebar = {
                   />
                 | Some(options) =>
                   <select
-                    style=Styles.select
+                    className=Css.select
                     onChange={event => {
                       let value = event->React.Event.Form.target##value;
 
@@ -615,7 +621,7 @@ module DemoUnitSidebar = {
                  min={string_of_int(min)}
                  max={string_of_int(max)}
                  value={string_of_int(value)}
-                 style=Styles.textInput
+                 className=Css.textInput
                  onChange={event =>
                    onIntChange(
                      propName,
@@ -635,7 +641,7 @@ module DemoUnitSidebar = {
                  min={string_of_float(min)}
                  max={string_of_float(max)}
                  value={string_of_float(value)}
-                 style=Styles.textInput
+                 className=Css.textInput
                  onChange={event =>
                    onFloatChange(
                      propName,
@@ -653,7 +659,7 @@ module DemoUnitSidebar = {
                <input
                  type_="checkbox"
                  checked
-                 style=Styles.checkbox
+                 className=Css.checkbox
                  onChange={event =>
                    onBoolChange(
                      propName,
