@@ -17,7 +17,7 @@ let getTermGroups = (~searchString, ~entityName) =>
   | _ =>
     let searchString = searchString->String.toLowerCase;
     let entityName = entityName->String.toLowerCase;
-    if (entityName->(String.includes(~search=searchString))) {
+    if (entityName->String.includes(~search=searchString)) {
       [|[|searchString|]|];
     } else {
       let refinedSearchString =
@@ -49,11 +49,9 @@ let getMatchingTerms = (~searchString, ~entityName) => {
   let includedTerms =
     termGroups
     |> Array.filter(~f=terms =>
-         terms->(
-                  Array.every(~f=term =>
-                    String.includes(entityName, ~search=term)
-                  )
-                )
+         terms->Array.every(~f=term =>
+           String.includes(entityName, ~search=term)
+         )
        );
 
   Belt.Array.concatMany(includedTerms);
@@ -104,12 +102,10 @@ let compareInt: (int, int) => int = Stdlib.compare;
 
 let getMarkRanges = (text, terms) =>
   terms
-  ->(Array.map(~f=term => getMarkRangeIndexes(text, term)))
+  ->Array.map(~f=term => getMarkRangeIndexes(text, term))
   ->Array.copy
-  ->(
-      Array.sortInPlaceWith(~f=((from1, to1), (from2, to2)) =>
-        compareInt(from1 + to1, from2 + to2)
-      )
+  ->Array.sortInPlaceWith(~f=((from1, to1), (from2, to2)) =>
+      compareInt(from1 + to1, from2 + to2)
     );
 
 let getMarkedAndUnmarkedParts = (ranges, text) => {

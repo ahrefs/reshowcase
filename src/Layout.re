@@ -121,7 +121,7 @@ module Sidebar = {
         ~backgroundColor=Color.lightGray,
         (),
       )
-      ->(ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch"));
+      ->ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch");
   };
 
   [@react.component]

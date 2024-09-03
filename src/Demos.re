@@ -7,63 +7,54 @@ let rec dig = (demos: t, categories: list(string), demoName: string) =>
   switch (categories) {
   | [] =>
     demos
-    ->(Js.Dict.get(demoName))
-    ->(
-        Option.flatMap(entity =>
-          switch (entity) {
-          | Demo(demoUnit) => Some(demoUnit)
-          | Category(_) => None
-          }
-        )
+    ->Js.Dict.get(demoName)
+    ->Option.flatMap(entity =>
+        switch (entity) {
+        | Demo(demoUnit) => Some(demoUnit)
+        | Category(_) => None
+        }
       )
+
   | [categoryName, ...categories] =>
     demos
-    ->(Js.Dict.get(categoryName))
-    ->(
-        Option.flatMap(entity =>
-          switch (entity) {
-          | Category(demos) => dig(demos, categories, demoName)
-          | Demo(_) => None
-          }
-        )
+    ->Js.Dict.get(categoryName)
+    ->Option.flatMap(entity =>
+        switch (entity) {
+        | Category(demos) => dig(demos, categories, demoName)
+        | Demo(_) => None
+        }
       )
   };
 
 let findDemo = (urlSearchParams: URLSearchParams.t, demoName, demos: t) => {
   let categories =
     urlSearchParams
-    ->(URLSearchParams.toArray())
+    ->URLSearchParams.toArray()
     ->List.fromArray
-    ->(
-        List.keep(((key, _value)) =>
-          key->(Js.String.startsWith(~prefix="category"))
-        )
+    ->List.keep(((key, _value)) =>
+        key->Js.String.startsWith(~prefix="category")
       )
-    ->(
-        List.sort(((categoryNum1, _), (categoryNum2, _)) =>
-          String.compare(categoryNum1, categoryNum2)
-        )
+    ->List.sort(((categoryNum1, _), (categoryNum2, _)) =>
+        String.compare(categoryNum1, categoryNum2)
       )
-    ->(List.map(((_categoryNum, categoryName)) => categoryName));
+    ->List.map(((_categoryNum, categoryName)) => categoryName);
 
-  demos->(dig(categories, demoName));
+  demos->dig(categories, demoName);
 };
 
 let rec isNestedEntityMatchSearch = (demos: t, searchString) =>
   demos
   ->Js.Dict.entries
-  ->(
-      Array.some(((entityName, entity)) => {
-        let isEntityNameMatchSearch =
-          HighlightTerms.getMatchingTerms(~searchString, ~entityName)
-          ->Array.size
-          > 0;
+  ->Array.some(((entityName, entity)) => {
+      let isEntityNameMatchSearch =
+        HighlightTerms.getMatchingTerms(~searchString, ~entityName)
+        ->Array.size
+        > 0;
 
-        switch (entity) {
-        | Demo(_) => isEntityNameMatchSearch
-        | Category(demos) =>
-          isEntityNameMatchSearch
-          || isNestedEntityMatchSearch(demos, searchString)
-        };
-      })
-    );
+      switch (entity) {
+      | Demo(_) => isEntityNameMatchSearch
+      | Category(demos) =>
+        isEntityNameMatchSearch
+        || isNestedEntityMatchSearch(demos, searchString)
+      };
+    });
