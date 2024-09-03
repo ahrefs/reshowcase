@@ -448,6 +448,8 @@ module DemoListSidebar = {
                }}
             </button>
             <SearchInput
+              // SearchInput renders before any story, so there should be no race-condition
+              // if a component in a story wants to take over focus
               autoFocus=true
               value={filterValue->Option.getWithDefault("")}
               onChange={event => {
