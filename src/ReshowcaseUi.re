@@ -55,20 +55,16 @@ module TopPanel = {
       );
 
     let squareButton =
-      button->(
-                ReactDOM.Style.combine(ReactDOM.Style.make(~width="32px", ()))
-              );
+      button->ReactDOM.Style.combine(ReactDOM.Style.make(~width="32px", ()));
 
     let activeButton =
-      button->(
-                ReactDOM.Style.combine(
-                  ReactDOM.Style.make(
-                    ~backgroundColor=Color.blue,
-                    ~color=Color.white,
-                    (),
-                  ),
-                )
-              );
+      button->ReactDOM.Style.combine(
+        ReactDOM.Style.make(
+          ~backgroundColor=Color.blue,
+          ~color=Color.white,
+          (),
+        ),
+      );
 
     let middleSection =
       ReactDOM.Style.make(
@@ -298,91 +294,85 @@ module DemoListSidebar = {
             ) => {
       let demos = demos->Js.Dict.entries;
       demos
-      ->(
-          Array.map(((entityName, entity)) => {
-            let searchMatchingTerms =
-              HighlightTerms.getMatchingTerms(~searchString, ~entityName);
+      ->Array.map(((entityName, entity)) => {
+          let searchMatchingTerms =
+            HighlightTerms.getMatchingTerms(~searchString, ~entityName);
 
-            let isEntityNameMatchSearch =
-              searchString == "" || searchMatchingTerms->Belt.Array.size > 0;
+          let isEntityNameMatchSearch =
+            searchString == "" || searchMatchingTerms->Belt.Array.size > 0;
 
-            switch (entity) {
-            | Entity.Demo(_) =>
-              if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
-                <Link
-                  key=entityName
-                  style=Styles.link
-                  activeStyle=Styles.activeLink
-                  href={
-                    ("?demo=" ++ entityName->Js.Global.encodeURIComponent)
-                    ++ categoryQuery
+          switch (entity) {
+          | Entity.Demo(_) =>
+            if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
+              <Link
+                key=entityName
+                style=Styles.link
+                activeStyle=Styles.activeLink
+                href={
+                  ("?demo=" ++ entityName->Js.Global.encodeURIComponent)
+                  ++ categoryQuery
+                }
+                text={
+                  <HighlightTerms text=entityName terms=searchMatchingTerms />
+                }
+              />;
+            } else {
+              React.null;
+            }
+          | Category(demos) =>
+            if ((
+                  isEntityNameMatchSearch
+                  || Demos.isNestedEntityMatchSearch(demos, searchString)
+                )
+                || parentCategoryMatchedSearch) {
+              let levelStr = Int.toString(nestingLevel);
+              let categoryQueryKey = {js|category|js} ++ levelStr;
+              let isCategoryInQuery =
+                switch (
+                  urlSearchParams->URLSearchParams.get(categoryQueryKey)
+                ) {
+                | Some(value)
+                    when value->Js.Global.decodeURIComponent == entityName =>
+                  true
+                | Some(_)
+                | None => false
+                };
+
+              <PaddedBox key=entityName padding=LeftRight>
+                <Collapsible
+                  title={
+                    <div style=Styles.categoryName>
+                      <HighlightTerms
+                        text=entityName
+                        terms=searchMatchingTerms
+                      />
+                    </div>
                   }
-                  text={
-                    <HighlightTerms
-                      text=entityName
-                      terms=searchMatchingTerms
-                    />
+                  isDefaultOpen={
+                    isCategoryInQuery || !isCategoriesCollapsedByDefault
                   }
-                />;
-              } else {
-                React.null;
-              }
-            | Category(demos) =>
-              if ((
-                    isEntityNameMatchSearch
-                    || Demos.isNestedEntityMatchSearch(demos, searchString)
-                  )
-                  || parentCategoryMatchedSearch) {
-                let levelStr = Int.toString(nestingLevel);
-                let categoryQueryKey = {js|category|js} ++ levelStr;
-                let isCategoryInQuery =
-                  switch (
-                    urlSearchParams->(URLSearchParams.get(categoryQueryKey))
-                  ) {
-                  | Some(value)
-                      when value->Js.Global.decodeURIComponent == entityName =>
-                    true
-                  | Some(_)
-                  | None => false
-                  };
-
-                <PaddedBox key=entityName padding=LeftRight>
-                  <Collapsible
-                    title={
-                      <div style=Styles.categoryName>
-                        <HighlightTerms
-                          text=entityName
-                          terms=searchMatchingTerms
-                        />
-                      </div>
-                    }
-                    isDefaultOpen={
-                      isCategoryInQuery || !isCategoriesCollapsedByDefault
-                    }
-                    isForceOpen={searchString != ""}>
-                    <PaddedBox padding=LeftRight>
-                      {renderMenu(
-                         ~parentCategoryMatchedSearch=
-                           isEntityNameMatchSearch
-                           || parentCategoryMatchedSearch,
-                         ~nestingLevel=nestingLevel + 1,
-                         ~categoryQuery=
-                           (
-                             (({js|&category|js} ++ levelStr) ++ {js|=|js})
-                             ++ entityName->Js.Global.encodeURIComponent
-                           )
-                           ++ categoryQuery,
-                         demos,
-                       )}
-                    </PaddedBox>
-                  </Collapsible>
-                </PaddedBox>;
-              } else {
-                React.null;
-              }
-            };
-          })
-        )
+                  isForceOpen={searchString != ""}>
+                  <PaddedBox padding=LeftRight>
+                    {renderMenu(
+                       ~parentCategoryMatchedSearch=
+                         isEntityNameMatchSearch || parentCategoryMatchedSearch,
+                       ~nestingLevel=nestingLevel + 1,
+                       ~categoryQuery=
+                         (
+                           (({js|&category|js} ++ levelStr) ++ {js|=|js})
+                           ++ entityName->Js.Global.encodeURIComponent
+                         )
+                         ++ categoryQuery,
+                       demos,
+                     )}
+                  </PaddedBox>
+                </Collapsible>
+              </PaddedBox>;
+            } else {
+              React.null;
+            }
+          };
+        })
       ->React.array;
     };
 
@@ -440,7 +430,7 @@ module DemoListSidebar = {
              }}
           </button>
           <SearchInput
-            value={filterValue->(Option.getWithDefault(""))}
+            value={filterValue->Option.getWithDefault("")}
             onChange={event => {
               let value = event->React.Event.Form.target##value;
 
@@ -460,7 +450,7 @@ module DemoListSidebar = {
         {renderMenu(
            ~isCategoriesCollapsedByDefault,
            ~searchString=
-             filterValue->(Option.mapWithDefault("", Js.String.toLowerCase)),
+             filterValue->Option.mapWithDefault("", Js.String.toLowerCase),
            ~urlSearchParams,
            demos,
          )}
@@ -515,7 +505,7 @@ module DemoUnitSidebar = {
         ~backgroundRepeat="no-repeat",
         (),
       )
-      ->(ReactDOM.Style.unsafeAddProp("WebkitAppearance", "none"));
+      ->ReactDOM.Style.unsafeAddProp("WebkitAppearance", "none");
 
     let checkbox =
       ReactDOM.Style.make(
@@ -562,110 +552,100 @@ module DemoUnitSidebar = {
       <Stack>
         {strings
          ->Map.String.toArray
-         ->(
-             Array.map(((propName, (_config, value, options))) =>
-               <PropBox key=propName propName>
-                 {switch (options) {
-                  | None =>
-                    <input
-                      type_="text"
-                      value
-                      style=Styles.textInput
-                      onChange={event =>
-                        onStringChange(
-                          propName,
-                          event->React.Event.Form.target##value,
-                        )
-                      }
-                    />
-                  | Some(options) =>
-                    <select
-                      style=Styles.select
-                      onChange={event => {
-                        let value = event->React.Event.Form.target##value;
+         ->Array.map(((propName, (_config, value, options))) =>
+             <PropBox key=propName propName>
+               {switch (options) {
+                | None =>
+                  <input
+                    type_="text"
+                    value
+                    style=Styles.textInput
+                    onChange={event =>
+                      onStringChange(
+                        propName,
+                        event->React.Event.Form.target##value,
+                      )
+                    }
+                  />
+                | Some(options) =>
+                  <select
+                    style=Styles.select
+                    onChange={event => {
+                      let value = event->React.Event.Form.target##value;
 
-                        onStringChange(propName, value);
-                      }}>
-                      {options
-                       ->(
-                           Array.map(((key, optionValue)) =>
-                             <option
-                               key
-                               selected={value == optionValue}
-                               value=optionValue>
-                               key->React.string
-                             </option>
-                           )
-                         )
-                       ->React.array}
-                    </select>
-                  }}
-               </PropBox>
-             )
+                      onStringChange(propName, value);
+                    }}>
+                    {options
+                     ->Array.map(((key, optionValue)) =>
+                         <option
+                           key
+                           selected={value == optionValue}
+                           value=optionValue>
+                           key->React.string
+                         </option>
+                       )
+                     ->React.array}
+                  </select>
+                }}
+             </PropBox>
            )
          ->React.array}
         {ints
          ->Map.String.toArray
-         ->(
-             Array.map(((propName, ({Configs.min, max, _}, value))) =>
-               <PropBox key=propName propName>
-                 <input
-                   type_="number"
-                   min=string_of_int(min)
-                   max=string_of_int(max)
-                   value=string_of_int(value)
-                   style=Styles.textInput
-                   onChange={event =>
-                     onIntChange(
-                       propName,
-                       event->React.Event.Form.target##value->int_of_string,
-                     )
-                   }
-                 />
-               </PropBox>
-             )
+         ->Array.map(((propName, ({Configs.min, max, _}, value))) =>
+             <PropBox key=propName propName>
+               <input
+                 type_="number"
+                 min={string_of_int(min)}
+                 max={string_of_int(max)}
+                 value={string_of_int(value)}
+                 style=Styles.textInput
+                 onChange={event =>
+                   onIntChange(
+                     propName,
+                     event->React.Event.Form.target##value->int_of_string,
+                   )
+                 }
+               />
+             </PropBox>
            )
          ->React.array}
         {floats
          ->Map.String.toArray
-         ->(
-             Array.map(((propName, ({Configs.min, max, _}, value))) =>
-               <PropBox key=propName propName>
-                 <input
-                   type_="number"
-                   min=string_of_float(min)
-                   max=string_of_float(max)
-                   value=string_of_float(value)
-                   style=Styles.textInput
-                   onChange={event =>
-                     onFloatChange(
-                       propName,
-                       event->React.Event.Form.target##value->float_of_string,
-                     )
-                   }
-                 />
-               </PropBox>
-             )
+         ->Array.map(((propName, ({Configs.min, max, _}, value))) =>
+             <PropBox key=propName propName>
+               <input
+                 type_="number"
+                 min={string_of_float(min)}
+                 max={string_of_float(max)}
+                 value={string_of_float(value)}
+                 style=Styles.textInput
+                 onChange={event =>
+                   onFloatChange(
+                     propName,
+                     event->React.Event.Form.target##value->float_of_string,
+                   )
+                 }
+               />
+             </PropBox>
            )
          ->React.array}
         {bools
          ->Map.String.toArray
-         ->(
-             Array.map(((propName, (_config, checked))) =>
-               <PropBox key=propName propName>
-                 <input
-                   type_="checkbox"
-                   checked
-                   style=Styles.checkbox
-                   onChange={event =>
-                     onBoolChange(
-                       propName,
-                       event->React.Event.Form.target##checked,
-                     )
-                   }
-                 />
-               </PropBox>
-             )
+         ->Array.map(((propName, (_config, checked))) =>
+             <PropBox key=propName propName>
+               <input
+                 type_="checkbox"
+                 checked
+                 style=Styles.checkbox
+                 onChange={event =>
+                   onBoolChange(
+                     propName,
+                     event->React.Event.Form.target##checked,
+                   )
+                 }
+               />
+             </PropBox>
            )
          ->React.array}
       </Stack>
@@ -709,7 +689,7 @@ module DemoUnit = {
         ~justifyContent="center",
         (),
       )
-      ->(ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch"));
+      ->ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch");
   };
 
   let getRightSidebarElement = (): option(Dom.element) =>
@@ -752,13 +732,9 @@ module DemoUnit = {
               ...state,
               strings:
                 state.strings
-                ->(
-                    Map.String.update(name, value =>
-                      value->(
-                               Option.map(((config, _value, options)) =>
-                                 (config, newValue, options)
-                               )
-                             )
+                ->Map.String.update(name, value =>
+                    value->Option.map(((config, _value, options)) =>
+                      (config, newValue, options)
                     )
                   ),
             }
@@ -766,13 +742,9 @@ module DemoUnit = {
               ...state,
               ints:
                 state.ints
-                ->(
-                    Map.String.update(name, value =>
-                      value->(
-                               Option.map(((config, _value)) =>
-                                 (config, newValue)
-                               )
-                             )
+                ->Map.String.update(name, value =>
+                    value->Option.map(((config, _value)) =>
+                      (config, newValue)
                     )
                   ),
             }
@@ -780,13 +752,9 @@ module DemoUnit = {
               ...state,
               floats:
                 state.floats
-                ->(
-                    Map.String.update(name, value =>
-                      value->(
-                               Option.map(((config, _value)) =>
-                                 (config, newValue)
-                               )
-                             )
+                ->Map.String.update(name, value =>
+                    value->Option.map(((config, _value)) =>
+                      (config, newValue)
                     )
                   ),
             }
@@ -794,13 +762,9 @@ module DemoUnit = {
               ...state,
               bools:
                 state.bools
-                ->(
-                    Map.String.update(name, value =>
-                      value->(
-                               Option.map(((config, _value)) =>
-                                 (config, newValue)
-                               )
-                             )
+                ->Map.String.update(name, value =>
+                    value->Option.map(((config, _value)) =>
+                      (config, newValue)
                     )
                   ),
             }
@@ -814,24 +778,22 @@ module DemoUnit = {
             string: (name, ~options=?, config) => {
               strings :=
                 strings.contents
-                ->(Map.String.set(name, (config, config, options)));
+                ->Map.String.set(name, (config, config, options));
               config;
             },
             int: (name, config) => {
               ints :=
-                ints.contents
-                ->(Map.String.set(name, (config, config.initial)));
+                ints.contents->Map.String.set(name, (config, config.initial));
               config.initial;
             },
             float: (name, config) => {
               floats :=
                 floats.contents
-                ->(Map.String.set(name, (config, config.initial)));
+                ->Map.String.set(name, (config, config.initial));
               config.initial;
             },
             bool: (name, config) => {
-              bools :=
-                bools.contents->(Map.String.set(name, (config, config)));
+              bools := bools.contents->Map.String.set(name, (config, config));
               config;
             },
           };
@@ -848,19 +810,19 @@ module DemoUnit = {
 
     let props: Configs.demoUnitProps = {
       string: (name, ~options as _=?, _config) => {
-        let (_, value, _) = state.strings->(Map.String.getExn(name));
+        let (_, value, _) = state.strings->Map.String.getExn(name);
         value;
       },
       int: (name, _config) => {
-        let (_, value) = state.ints->(Map.String.getExn(name));
+        let (_, value) = state.ints->Map.String.getExn(name);
         value;
       },
       float: (name, _config) => {
-        let (_, value) = state.floats->(Map.String.getExn(name));
+        let (_, value) = state.floats->Map.String.getExn(name);
         value;
       },
       bool: (name, _config) => {
-        let (_, value) = state.bools->(Map.String.getExn(name));
+        let (_, value) = state.bools->Map.String.getExn(name);
         value;
       },
     };
@@ -1019,8 +981,8 @@ module App = {
     let urlSearchParams = url.search->URLSearchParams.make;
     let route =
       switch (
-        urlSearchParams->(URLSearchParams.get("iframe")),
-        urlSearchParams->(URLSearchParams.get("demo")),
+        urlSearchParams->URLSearchParams.get("iframe"),
+        urlSearchParams->URLSearchParams.get("demo"),
       ) {
       | (Some("true"), Some(demoName)) => Unit(urlSearchParams, demoName)
       | (_, Some(_)) => Demo(url.search)
@@ -1043,7 +1005,7 @@ module App = {
     let (showRightSidebar, toggleShowRightSidebar) =
       React.useState(() =>
         LocalStorage.localStorage
-        ->(LocalStorage.getItem("sidebar"))
+        ->LocalStorage.getItem("sidebar")
         ->Option.isSome
       );
 
@@ -1052,9 +1014,9 @@ module App = {
     React.useEffect1(
       () => {
         if (showRightSidebar) {
-          LocalStorage.localStorage->(LocalStorage.setItem("sidebar", "1"));
+          LocalStorage.localStorage->LocalStorage.setItem("sidebar", "1");
         } else {
-          LocalStorage.localStorage->(LocalStorage.removeItem("sidebar"));
+          LocalStorage.localStorage->LocalStorage.removeItem("sidebar");
         };
         None;
       },
@@ -1063,11 +1025,9 @@ module App = {
     let (isCategoriesCollapsedByDefault, toggleIsCategoriesCollapsed) =
       React.useState(() =>
         switch (
-          LocalStorage.localStorage->(
-                                       LocalStorage.getItem(
-                                         "isCategoriesCollapsedByDefault",
-                                       )
-                                     )
+          LocalStorage.localStorage->LocalStorage.getItem(
+            "isCategoriesCollapsedByDefault",
+          )
         ) {
         | Some("true") => true
         | _ => false
@@ -1076,16 +1036,14 @@ module App = {
 
     let onToggleCollapsedCategoriesByDefault = () => {
       toggleIsCategoriesCollapsed(_ => !isCategoriesCollapsedByDefault);
-      LocalStorage.localStorage->(
-                                   LocalStorage.setItem(
-                                     "isCategoriesCollapsedByDefault",
-                                     if (!isCategoriesCollapsedByDefault) {
-                                       "true";
-                                     } else {
-                                       "false";
-                                     },
-                                   )
-                                 );
+      LocalStorage.localStorage->LocalStorage.setItem(
+        "isCategoriesCollapsedByDefault",
+        if (!isCategoriesCollapsedByDefault) {
+          "true";
+        } else {
+          "false";
+        },
+      );
     };
 
     <div name="App" style=Styles.app>
@@ -1094,8 +1052,8 @@ module App = {
          let demoUnit = Demos.findDemo(urlSearchParams, demoName, demos);
          <div style=Styles.main>
            {demoUnit
-            ->(Option.map(demoUnit => <DemoUnit demoUnit />))
-            ->(Option.getWithDefault("Demo not found"->React.string))}
+            ->Option.map(demoUnit => <DemoUnit demoUnit />)
+            ->Option.getWithDefault("Demo not found"->React.string)}
          </div>;
        | Demo(queryString) =>
          <>

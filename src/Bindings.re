@@ -11,11 +11,9 @@ module URLSearchParams = {
 
   let toArray = (t, ()) => {
     let array = [||];
-    t->(
-         forEach((value, key) =>
-           Js.Array.push(array, ~value=(key, value))->ignore
-         )
-       );
+    t->forEach((value, key) =>
+      Js.Array.push(array, ~value=(key, value))->ignore
+    );
     array;
   };
 };

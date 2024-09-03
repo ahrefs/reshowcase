@@ -8,7 +8,7 @@ let rootMap: Demos.t = Js.Dict.empty();
 let demo = (f): unit => {
   let internalAddDemo =
       (demoName: string, demoUnit: Configs.demoUnitProps => React.element) =>
-    rootMap->(Js.Dict.set(demoName, Demo(demoUnit)));
+    rootMap->Js.Dict.set(demoName, Demo(demoUnit));
 
   let rec internalAddCategory =
           (
@@ -17,10 +17,10 @@ let demo = (f): unit => {
             ~prevMap: Demos.t,
           ) => {
     let newCategory = Js.Dict.empty();
-    prevMap->(Js.Dict.set(categoryName, Category(newCategory)));
+    prevMap->Js.Dict.set(categoryName, Category(newCategory));
     let newAddDemo =
         (demoName: string, demoUnit: Configs.demoUnitProps => React.element) =>
-      newCategory->(Js.Dict.set(demoName, Demo(demoUnit)));
+      newCategory->Js.Dict.set(demoName, Demo(demoUnit));
 
     let newFunctions = {
       addDemo: newAddDemo,
