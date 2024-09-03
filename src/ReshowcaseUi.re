@@ -399,58 +399,66 @@ module DemoListSidebar = {
       ) => {
     let (filterValue, setFilterValue) = React.useState(() => None);
     <Sidebar fullHeight=true>
-      <PaddedBox gap=Md border=Bottom>
-        <div
-          style={ReactDOM.Style.make(
-            ~display="flex",
-            ~alignItems="center",
-            ~gridGap="5px",
-            (),
-          )}>
-          <button
+      <div
+        style={ReactDOM.Style.make(
+          ~position="sticky",
+          ~top="0",
+          ~backgroundColor=Color.lightGray,
+          (),
+        )}>
+        <PaddedBox gap=Md border=Bottom>
+          <div
             style={ReactDOM.Style.make(
-              ~height="32px",
-              ~minWidth="32px",
-              ~width="32px",
-              ~cursor="pointer",
-              ~fontSize=FontSize.sm,
-              ~backgroundColor=Color.white,
-              ~color=Color.darkGray,
-              ~border=Border.default,
-              ~borderRadius=BorderRadius.default,
-              ~margin="0",
-              ~padding="0",
               ~display="flex",
               ~alignItems="center",
-              ~justifyContent="center",
+              ~gridGap="5px",
               (),
-            )}
-            title="Toggle default collapsed categories"
-            onClick={event => {
-              event->React.Event.Mouse.preventDefault;
-              onToggleCollapsedCategoriesByDefault();
-            }}>
-            {if (isCategoriesCollapsedByDefault) {Icon.categoryCollapsed} else {
-               Icon.categoryExpanded
-             }}
-          </button>
-          <SearchInput
-            value={filterValue->Option.getWithDefault("")}
-            onChange={event => {
-              let value = event->React.Event.Form.target##value;
+            )}>
+            <button
+              style={ReactDOM.Style.make(
+                ~height="32px",
+                ~minWidth="32px",
+                ~width="32px",
+                ~cursor="pointer",
+                ~fontSize=FontSize.sm,
+                ~backgroundColor=Color.white,
+                ~color=Color.darkGray,
+                ~border=Border.default,
+                ~borderRadius=BorderRadius.default,
+                ~margin="0",
+                ~padding="0",
+                ~display="flex",
+                ~alignItems="center",
+                ~justifyContent="center",
+                (),
+              )}
+              title="Toggle default collapsed categories"
+              onClick={event => {
+                event->React.Event.Mouse.preventDefault;
+                onToggleCollapsedCategoriesByDefault();
+              }}>
+              {if (isCategoriesCollapsedByDefault) {Icon.categoryCollapsed} else {
+                 Icon.categoryExpanded
+               }}
+            </button>
+            <SearchInput
+              value={filterValue->Option.getWithDefault("")}
+              onChange={event => {
+                let value = event->React.Event.Form.target##value;
 
-              setFilterValue(_ =>
-                if (value->Js.String.trim == "") {
-                  None;
-                } else {
-                  Some(value);
-                }
-              );
-            }}
-            onClear={() => setFilterValue(_ => None)}
-          />
-        </div>
-      </PaddedBox>
+                setFilterValue(_ =>
+                  if (value->Js.String.trim == "") {
+                    None;
+                  } else {
+                    Some(value);
+                  }
+                );
+              }}
+              onClear={() => setFilterValue(_ => None)}
+            />
+          </div>
+        </PaddedBox>
+      </div>
       <PaddedBox gap=Xxs>
         {renderMenu(
            ~isCategoriesCollapsedByDefault,
