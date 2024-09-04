@@ -611,9 +611,9 @@ module DemoUnitSidebar = {
                <PropBox key=propName propName>
                  <input
                    type_="number"
-                   min=string_of_int(min)
-                   max=string_of_int(max)
-                   value=string_of_int(value)
+                   min={string_of_int(min)}
+                   max={string_of_int(max)}
+                   value={string_of_int(value)}
                    style=Styles.textInput
                    onChange={event =>
                      onIntChange(
@@ -633,9 +633,9 @@ module DemoUnitSidebar = {
                <PropBox key=propName propName>
                  <input
                    type_="number"
-                   min=string_of_float(min)
-                   max=string_of_float(max)
-                   value=string_of_float(value)
+                   min={string_of_float(min)}
+                   max={string_of_float(max)}
+                   value={string_of_float(value)}
                    style=Styles.textInput
                    onChange={event =>
                      onFloatChange(
@@ -914,9 +914,8 @@ module DemoUnitFrame = {
   ];
 
   [@react.component]
-  let make =
-      (~queryString: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
-    let iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
+  let make = (~demoName: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
+    let _iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
     <div name="DemoUnitFrame" style={container(responsiveMode)}>
       <iframe
         onLoad={event => {
@@ -924,7 +923,8 @@ module DemoUnitFrame = {
           let window = iframe##contentWindow;
           onLoad(window);
         }}
-        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
+        // src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
+        src={"/" ++ demoName}
         style={ReactDOM.Style.make(
           ~height=
             switch (responsiveMode) {
@@ -1010,7 +1010,7 @@ module App = {
 
   type route =
     | Unit(URLSearchParams.t, string)
-    | Demo(string)
+    | Demo(URLSearchParams.t, string)
     | Home;
 
   [@react.component]
@@ -1023,7 +1023,7 @@ module App = {
         urlSearchParams->(URLSearchParams.get("demo")),
       ) {
       | (Some("true"), Some(demoName)) => Unit(urlSearchParams, demoName)
-      | (_, Some(_)) => Demo(url.search)
+      | (_, Some(demoName)) => Demo(urlSearchParams, demoName)
       | _ => Home
       };
 
@@ -1097,7 +1097,7 @@ module App = {
             ->(Option.map(demoUnit => <DemoUnit demoUnit />))
             ->(Option.getWithDefault("Demo not found"->React.string))}
          </div>;
-       | Demo(queryString) =>
+       | Demo(urlSearchParams, demoName) =>
          <>
            <DemoListSidebar
              demos
@@ -1124,7 +1124,7 @@ module App = {
                <div style=Styles.demoContents>
                  <DemoUnitFrame
                    key={"DemoUnitFrame" ++ iframeKey}
-                   queryString
+                   demoName
                    responsiveMode
                    onLoad={iframeWindow =>
                      setLoadedIframeWindow(_ => Some(iframeWindow))
