@@ -924,20 +924,20 @@ module DemoUnitFrame = {
   ];
 
   [@react.component]
-  let make =
-      (~queryString: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
-    let iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
+  let make = (~demoName: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
+    let _iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
     <div
       name="DemoUnitFrame"
       className={Css.container +++ Css.containerBackground(responsiveMode)}>
       <iframe
         className={Css.iframe(responsiveMode)}
-        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
+        src={"/" ++ demoName}
         onLoad={event => {
           let iframe = event->React.Event.Synthetic.target;
           let window = iframe##contentWindow;
           onLoad(window);
         }}
+        // src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
       />
     </div>;
   };
@@ -1011,7 +1011,7 @@ module App = {
 
   type route =
     | Unit(URLSearchParams.t, string)
-    | Demo(string)
+    | Demo(URLSearchParams.t, string)
     | Home;
 
   [@react.component]
@@ -1024,7 +1024,7 @@ module App = {
         urlSearchParams->URLSearchParams.get("demo"),
       ) {
       | (Some("true"), Some(demoName)) => Unit(urlSearchParams, demoName)
-      | (_, Some(_)) => Demo(url.search)
+      | (_, Some(demoName)) => Demo(urlSearchParams, demoName)
       | _ => Home
       };
 
@@ -1090,7 +1090,7 @@ module App = {
             ->Option.map(demoUnit => <DemoUnit demoUnit />)
             ->Option.getWithDefault("Demo not found"->React.string)}
          </div>;
-       | Demo(queryString) =>
+       | Demo(urlSearchParams, demoName) =>
          <>
            <DemoListSidebar
              demos
@@ -1117,7 +1117,7 @@ module App = {
                <div className=Css.demoContents>
                  <DemoUnitFrame
                    key={"DemoUnitFrame" ++ iframeKey}
-                   queryString
+                   demoName
                    responsiveMode
                    onLoad={iframeWindow =>
                      setLoadedIframeWindow(_ => Some(iframeWindow))

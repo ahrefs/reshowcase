@@ -1,3 +1,10 @@
+(include_subdirs unqualified)
+
+(env
+ (_
+  (flags
+   (-w +a-27))))
+
 (melange.emit
  (target example)
  (alias example)
@@ -5,3 +12,8 @@
  (module_systems es6)
  (preprocess
   (pps melange.ppx reason-react-ppx styled-ppx)))
+
+(rule
+ (targets Demo.re)
+ (action
+  (run reshowcase generate)))
