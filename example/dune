@@ -1,12 +1,8 @@
 (include_subdirs unqualified)
 
-(env
- (_
-  (flags
-   (-w +a-27))))
-
 (melange.emit
  (target example)
+ (compile_flags -w -27)
  (alias example)
  (libraries reshowcase reason-react)
  (module_systems es6)
@@ -14,6 +10,10 @@
   (pps melange.ppx reason-react-ppx)))
 
 (rule
- (targets Demo.re)
+ (target Demo__.re)
+ (deps
+  (glob_files_rec *[!D][!e][!m][!o][!_][!_].re))
  (action
-  (run reshowcase generate)))
+  (with-stdout-to
+   %{target}
+   (run /Users/rusty/code/tools/reshowcase/commands/reshowcase generate-demo))))

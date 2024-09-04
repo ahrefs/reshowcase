@@ -33,11 +33,41 @@ const getRequiredPathValue = (name) => {
 
 const task = process.argv[2];
 
-if (task !== "build" && task !== "start") {
+if (task !== "build" && task !== "start" && task !== "generate-demo") {
   console.error(
     "You need to pass 'start' or 'build' command and path to the entry point.\nFor example: reshowcase start --entry=./example/Demo.bs.js"
   );
   process.exit(1);
+}
+
+if (task == "generate-demo") {
+  console.log(`
+open Reshowcase.Entry;
+
+// - we compile every file as separate bundle
+// - reshowcase looks at folder structure
+// - picks up each file and creates category-demo
+
+demo(({addDemo: _, addCategory}) =>
+  addCategory("Buttons", ({addDemo, addCategory: _}) => {
+    addDemo("Buttons/Normal", _ => React.null);
+    addDemo("Buttons/Huge", _ => React.null);
+  })
+);
+
+demo(({addDemo: _, addCategory}) =>
+  addCategory("----------- 111", ({addDemo: _, addCategory}) => {
+    addCategory("Headings", ({addDemo, addCategory: _}) => {
+      addDemo("H1", _ => React.null);
+      addDemo("H2", _ => React.null);
+    })
+  })
+);
+
+start();
+`)
+
+  process.exit(0);
 }
 
 // Servers can handle paths to HTML files differently.
