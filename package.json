@@ -1,6 +1,13 @@
 {
   "license": "MIT",
+  "dependenciesComment": {
+    "//": "Below we define the deps used by bindings installed by opam",
+    "@emotion/cache": "For styled-ppx.melange",
+    "@emotion/css": "For styled-ppx.melange"
+  },
   "dependencies": {
+    "@emotion/cache": "^11.0.0",
+    "@emotion/css": "^11.0.0",
     "copy-webpack-plugin": "^11.0.0",
     "html-webpack-plugin": "^5.5.0",
     "webpack": "^5.76.1",

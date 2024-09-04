@@ -1,14 +1,6 @@
 open Belt;
-module Color = Layout.Color;
-module Gap = Layout.Gap;
-module Border = Layout.Border;
-module BorderRadius = Layout.BorderRadius;
-module FontSize = Layout.FontSize;
-module PaddedBox = Layout.PaddedBox;
-module Stack = Layout.Stack;
-module Sidebar = Layout.Sidebar;
-module Icon = Layout.Icon;
-module Collapsible = Layout.Collapsible;
+open Prelude;
+open Layout;
 module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;
@@ -18,63 +10,76 @@ type responsiveMode =
   | Desktop;
 
 module TopPanel = {
-  module Styles = {
-    let panel =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~justifyContent="flex-end",
-        ~borderBottom=Border.default,
-        (),
-      );
+  module Css = {
+    open StyleVars;
 
-    let buttonGroup =
-      ReactDOM.Style.make(
-        ~overflow="hidden",
-        ~display="flex",
-        ~flexDirection="row",
-        ~alignItems="stretch",
-        ~borderRadius=BorderRadius.default,
-        (),
-      );
+    let panel = [%cx
+      {|
+      display: flex;
+      justify-content: flex-end;
+      border-bottom: 1px solid $(Color.midGray);
+    |}
+    ];
 
-    let button =
-      ReactDOM.Style.make(
-        ~height="32px",
-        ~width="48px",
-        ~cursor="pointer",
-        ~fontSize=FontSize.sm,
-        ~backgroundColor=Color.lightGray,
-        ~color=Color.darkGray,
-        ~border="none",
-        ~margin="0",
-        ~padding="0",
-        ~display="flex",
-        ~alignItems="center",
-        ~justifyContent="center",
-        (),
-      );
+    let buttonGroup = [%cx
+      {|
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      border-radius: $(BorderRadius.default);
+    |}
+    ];
 
-    let squareButton =
-      button->ReactDOM.Style.combine(ReactDOM.Style.make(~width="32px", ()));
+    let button = [%cx
+      {|
+      height: 32px;
+      width: 48px;
+      cursor: pointer;
+      font-size: $(FontSize.sm);
+      background-color: $(Color.lightGray);
+      color: $(Color.darkGray);
+      border: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    |}
+    ];
 
-    let activeButton =
-      button->ReactDOM.Style.combine(
-        ReactDOM.Style.make(
-          ~backgroundColor=Color.blue,
-          ~color=Color.white,
-          (),
-        ),
-      );
+    let buttonSquare = [%cx {|
+      width: 32px;
+    |}];
 
-    let middleSection =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flex="1",
-        ~justifyContent="center",
-        (),
-      );
+    let buttonActive = [%cx
+      {|
+      background-color: $(Color.blue);
+      color: $(Color.white);
+    |}
+    ];
 
-    let rightSection = ReactDOM.Style.make(~display="flex", ());
+    let middleSection = [%cx
+      {|
+      display: flex;
+      flex: 1;
+      justify-content: center;
+    |}
+    ];
+
+    let rightSection = [%cx {|
+      display: flex;
+    |}];
+
+    let sidebarIcon = [%cx
+      {|
+      transition: 200ms ease-in-out transform;
+    |}
+    ];
+
+    let sidebarIconActive = [%cx {|
+      transform: rotate(180deg)
+    |}];
   };
 
   [@react.component]
@@ -85,20 +90,17 @@ module TopPanel = {
         ~onRightSidebarToggle: unit => unit,
         ~onSetResponsiveMode: (responsiveMode => responsiveMode) => unit,
       ) =>
-    <div style=Styles.panel>
-      <div style=Styles.rightSection />
-      <div style=Styles.middleSection>
+    <div className=Css.panel>
+      <div className=Css.rightSection />
+      <div className=Css.middleSection>
         <PaddedBox gap=Md>
-          <div style=Styles.buttonGroup>
+          <div className=Css.buttonGroup>
             <button
               title="Show in desktop mode"
-              style={
-                      if (responsiveMode == Desktop) {
-                        Styles.activeButton;
-                      } else {
-                        Styles.button;
-                      }
-                    }
+              className={
+                Css.button
+                +++ Css.buttonActive->Cn.ifTrue(responsiveMode == Desktop)
+              }
               onClick={event => {
                 event->React.Event.Mouse.preventDefault;
                 onSetResponsiveMode(_ => Desktop);
@@ -107,13 +109,10 @@ module TopPanel = {
             </button>
             <button
               title="Show in mobile mode"
-              style={
-                      if (responsiveMode == Mobile) {
-                        Styles.activeButton;
-                      } else {
-                        Styles.button;
-                      }
-                    }
+              className={
+                Css.button
+                +++ Css.buttonActive->Cn.ifTrue(responsiveMode == Mobile)
+              }
               onClick={event => {
                 event->React.Event.Mouse.preventDefault;
                 onSetResponsiveMode(_ => Mobile);
@@ -123,27 +122,21 @@ module TopPanel = {
           </div>
         </PaddedBox>
       </div>
-      <div style=Styles.rightSection>
+      <div className=Css.rightSection>
         <PaddedBox gap=Md>
-          <div style=Styles.buttonGroup>
+          <div className=Css.buttonGroup>
             <button
-              title={
-                      if (isSidebarHidden) {"Show sidebar"} else {
-                        "Hide sidebar"
-                      }
-                    }
-              style=Styles.squareButton
+              title={isSidebarHidden ? "Show sidebar" : "Hide sidebar"}
+              className={Css.button +++ Css.buttonSquare}
               onClick={event => {
                 event->React.Event.Mouse.preventDefault;
                 onRightSidebarToggle();
               }}>
               <div
-                style={ReactDOM.Style.make(
-                  ~transition="200ms ease-in-out transform",
-                  ~transform=
-                    if (isSidebarHidden) {"rotate(0)"} else {"rotate(180deg)"},
-                  (),
-                )}>
+                className={
+                  Css.sidebarIcon
+                  +++ Css.sidebarIconActive->Cn.ifTrue(!isSidebarHidden)
+                }>
                 Icon.sidebar
               </div>
             </button>
@@ -155,17 +148,38 @@ module TopPanel = {
 
 let rightSidebarId = "rightSidebar";
 
-module Link = {
+module SidebarLink = {
+  module Css = {
+    open StyleVars;
+
+    let link = [%cx
+      {|
+      text-decoration: none;
+      color: $(Color.blue);
+      display: block;
+      padding: $(Gap.xs) $(Gap.md);
+      border-radius: $(BorderRadius.default);
+      font-size: $(FontSize.md);
+      font-weight: 500;
+    |}
+    ];
+
+    let linkActive = [%cx {|
+      background-color: $(Color.midGray);
+    |}];
+  };
+
   [@react.component]
-  let make =
-      (~activeDomRef=?, ~href, ~text: React.element, ~style=?, ~activeStyle=?) => {
+  let make = (~activeDomRef=?, ~href, ~text: React.element) => {
     let url = ReasonReactRouter.useUrl();
     let path = String.concat("/", url.path);
     let isActive =
       Js.String.endsWith(~suffix=href, path ++ "?" ++ url.search);
+
     <a
       ref=?{isActive ? activeDomRef : None}
       href
+      className={Css.link +++ Css.linkActive->Cn.ifTrue(isActive)}
       onClick={event =>
         switch (
           React.Event.Mouse.metaKey(event),
@@ -176,16 +190,6 @@ module Link = {
           ReasonReactRouter.push(href);
         | _ => ()
         }
-      }
-      style=?{
-        switch (style, activeStyle, isActive) {
-        | (Some(style), _, false) => Some(style)
-        | (Some(style), None, true) => Some(style)
-        | (Some(style), Some(activeStyle), true) =>
-          Some(ReactDOM.Style.combine(style, activeStyle))
-        | (_, Some(activeStyle), true) => Some(activeStyle)
-        | _ => None
-        }
       }>
       text
     </a>;
@@ -193,96 +197,113 @@ module Link = {
 };
 
 module DemoListSidebar = {
-  module Styles = {
-    let categoryName =
-      ReactDOM.Style.make(
-        ~padding=(Gap.xs ++ {js| |js}) ++ Gap.xxs,
-        ~fontSize=FontSize.md,
-        ~fontWeight="500",
-        (),
-      );
+  module Css = {
+    open StyleVars;
 
-    let link =
-      ReactDOM.Style.make(
-        ~textDecoration="none",
-        ~color=Color.blue,
-        ~display="block",
-        ~padding=(Gap.xs ++ {js| |js}) ++ Gap.md,
-        ~borderRadius=BorderRadius.default,
-        ~fontSize=FontSize.md,
-        ~fontWeight="500",
-        (),
-      );
+    let categoryName = [%cx
+      {|
+      padding: $(Gap.xs) $(Gap.xxs);
+      font-size: $(FontSize.md);
+      font-weight: 500;
+    |}
+    ];
 
-    let activeLink = ReactDOM.Style.make(~backgroundColor=Color.midGray, ());
+    let sidebarPanelWrapper = [%cx
+      {|
+      position: sticky;
+      top: 0;
+      background-color: $(Color.lightGray);
+    |}
+    ];
+
+    let sidebarPanel = [%cx
+      {|
+      display: flex;
+      align-items: center;
+      gap: $(Gap.xs);
+    |}
+    ];
+
+    let collapseButton = [%cx
+      {|
+      height: 32px;
+      min-width: 32px;
+      width: 32px;
+      cursor: pointer;
+      font-size: $(FontSize.sm);
+      background-color: $(Color.white);
+      color: $(Color.darkGray);
+      border: 1px solid $(Color.midGray);
+      border-radius: $(BorderRadius.default);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    |}
+    ];
   };
 
   module SearchInput = {
-    module Styles = {
-      let clearButton =
-        ReactDOM.Style.make(
-          ~position="absolute",
-          ~right="7px",
-          ~display="flex",
-          ~cursor="pointer",
-          ~border="none",
-          ~padding="0",
-          ~backgroundColor=Color.transparent,
-          ~top="50%",
-          ~transform="translateY(-50%)",
-          ~margin="0",
-          (),
-        );
+    module Css = {
+      open StyleVars;
 
-      let inputWrapper =
-        ReactDOM.Style.make(
-          ~position="relative",
-          ~display="flex",
-          ~alignItems="center",
-          ~backgroundColor=Color.midGray,
-          ~borderRadius=BorderRadius.default,
-          (),
-        );
+      let inputWrapper = [%cx
+        {|
+        position: relative;
+        display: flex;
+        align-items: center;
+        background-color: $(Color.midGray);
+        border-radius: $(BorderRadius.default);
+      |}
+      ];
 
-      let input =
-        ReactDOM.Style.make(
-          ~padding=(Gap.xs ++ {js| |js}) ++ Gap.md,
-          ~width="100%",
-          ~margin="0",
-          ~height="32px",
-          ~boxSizing="border-box",
-          ~fontFamily="inherit",
-          ~fontSize=FontSize.md,
-          ~border="none",
-          ~backgroundColor=Color.transparent,
-          ~borderRadius=BorderRadius.default,
-          (),
-        );
-    };
+      let input = [%cx
+        {|
+        padding: $(Gap.xs) $(Gap.md);
+        width: 100%;
+        margin: 0;
+        height: 32px;
+        box-sizing: border-box;
+        font-family: inherit;
+        font-size: $(FontSize.md);
+        border: none;
+        background-color: transparent;
+        border-radius: $(BorderRadius.default);
+      |}
+      ];
 
-    module ClearButton = {
-      [@react.component]
-      let make = (~onClear) =>
-        <button style=Styles.clearButton onClick={_event => onClear()}>
-          Icon.close
-        </button>;
+      let clearButton = [%cx
+        {|
+        position: absolute;
+        right: 7px;
+        display: flex;
+        cursor: pointer;
+        border: none;
+        padding: 0;
+        margin: 0;
+        background-color: transparent;
+        top: 50%;
+        transform: translateY(-50%);
+      |}
+      ];
     };
 
     [@react.component]
     let make = (~autoFocus=?, ~value, ~onChange, ~onClear) =>
-      <div style=Styles.inputWrapper>
+      <div className=Css.inputWrapper>
         <input
           ?autoFocus
-          style=Styles.input
+          className=Css.input
           placeholder="Filter"
           value
           onChange
         />
-        {if (value == "") {
-           React.null;
-         } else {
-           <ClearButton onClear />;
-         }}
+        {value == ""
+           ? React.null
+           : <button className=Css.clearButton onClick={_event => onClear()}>
+               Icon.close
+             </button>}
       </div>;
   };
 
@@ -314,11 +335,9 @@ module DemoListSidebar = {
           switch (entity) {
           | Entity.Demo(_) =>
             if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
-              <Link
+              <SidebarLink
                 activeDomRef=activeElementRef
                 key=entityName
-                style=Styles.link
-                activeStyle=Styles.activeLink
                 href={
                   ("?demo=" ++ entityName->Js.Global.encodeURIComponent)
                   ++ categoryQuery
@@ -352,7 +371,7 @@ module DemoListSidebar = {
               <PaddedBox key=entityName padding=LeftRight>
                 <Collapsible
                   title={
-                    <div style=Styles.categoryName>
+                    <div className=Css.categoryName>
                       <HighlightTerms
                         text=entityName
                         terms=searchMatchingTerms
@@ -405,39 +424,11 @@ module DemoListSidebar = {
       ) => {
     let (filterValue, setFilterValue) = React.useState(() => None);
     <Sidebar fullHeight=true>
-      <div
-        style={ReactDOM.Style.make(
-          ~position="sticky",
-          ~top="0",
-          ~backgroundColor=Color.lightGray,
-          (),
-        )}>
+      <div className=Css.sidebarPanelWrapper>
         <PaddedBox gap=Md border=Bottom>
-          <div
-            style={ReactDOM.Style.make(
-              ~display="flex",
-              ~alignItems="center",
-              ~gridGap="5px",
-              (),
-            )}>
+          <div className=Css.sidebarPanel>
             <button
-              style={ReactDOM.Style.make(
-                ~height="32px",
-                ~minWidth="32px",
-                ~width="32px",
-                ~cursor="pointer",
-                ~fontSize=FontSize.sm,
-                ~backgroundColor=Color.white,
-                ~color=Color.darkGray,
-                ~border=Border.default,
-                ~borderRadius=BorderRadius.default,
-                ~margin="0",
-                ~padding="0",
-                ~display="flex",
-                ~alignItems="center",
-                ~justifyContent="center",
-                (),
-              )}
+              className=Css.collapseButton
               title="Toggle default collapsed categories"
               onClick={event => {
                 event->React.Event.Mouse.preventDefault;
@@ -482,69 +473,75 @@ module DemoListSidebar = {
 };
 
 module DemoUnitSidebar = {
-  module Styles = {
-    let label =
-      ReactDOM.Style.make(
-        ~display="block",
-        ~backgroundColor=Color.white,
-        ~borderRadius=BorderRadius.default,
-        ~boxShadow="0 5px 10px rgba(0, 0, 0, 0.07)",
-        (),
-      );
+  module Css = {
+    open StyleVars;
 
-    let labelText =
-      ReactDOM.Style.make(~fontSize=FontSize.md, ~textAlign="center", ());
+    let label = [%cx
+      {|
+      display: block;
+      background-color: $(Color.white);
+      border-radius: $(BorderRadius.default);
+      box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.07);
+    |}
+    ];
 
-    let textInput =
-      ReactDOM.Style.make(
-        ~fontSize=FontSize.md,
-        ~width="100%",
-        ~boxSizing="border-box",
-        ~backgroundColor=Color.lightGray,
-        ~boxShadow="inset 0 0 0 1px rgba(0, 0, 0, 0.1)",
-        ~border="none",
-        ~padding=Gap.md,
-        ~borderRadius=BorderRadius.default,
-        (),
-      );
+    let labelText = [%cx
+      {|
+      font-size: $(FontSize.md);
+      text-align: center;
+    |}
+    ];
 
-    let select =
-      ReactDOM.Style.make(
-        ~fontSize=FontSize.md,
-        ~width="100%",
-        ~boxSizing="border-box",
-        ~backgroundColor=Color.lightGray,
-        ~boxShadow="inset 0 0 0 1px rgba(0, 0, 0, 0.1)",
-        ~border="none",
-        ~padding=Gap.md,
-        ~borderRadius=BorderRadius.default,
-        ~appearance="none",
-        ~paddingRight="30px",
-        ~backgroundImage=
-          {js|url("data:image/svg+xml,%3Csvg width='36' height='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='%2342484E' stroke-width='2' d='M12.246 14.847l5.826 5.826 5.827-5.826' fill='none' fill-rule='evenodd' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")|js},
-        ~backgroundPosition="center right",
-        ~backgroundSize="contain",
-        ~backgroundRepeat="no-repeat",
-        (),
-      )
-      ->ReactDOM.Style.unsafeAddProp("WebkitAppearance", "none");
+    let textInput = [%cx
+      {|
+      font-size: $(FontSize.md);
+      width: 100%;
+      box-sizing: border-box;
+      background-color: $(Color.lightGray);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+      border: none;
+      padding: $(Gap.md);
+      border-radius: $(BorderRadius.default);
+    |}
+    ];
 
-    let checkbox =
-      ReactDOM.Style.make(
-        ~fontSize=FontSize.md,
-        ~margin="0 auto",
-        ~display="block",
-        (),
-      );
+    let select = [%cx
+      {|
+      font-size: $(FontSize.md);
+      width: 100%;
+      box-sizing: border-box;
+      background-color: $(Color.lightGray);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+      border: none;
+      padding: $(Gap.md);
+      border-radius: $(BorderRadius.default);
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 30px;
+      background-image:
+          url("data:image/svg+xml,%3Csvg width='36' height='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='%2342484E' stroke-width='2' d='M12.246 14.847l5.826 5.826 5.827-5.826' fill='none' fill-rule='evenodd' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-position: center right;
+      background-size: contain;
+      background-repeat: no-repeat;
+    |}
+    ];
+
+    let checkbox = [%cx
+      {|
+      font-size: $(FontSize.md);
+      margin: 0 auto;
+      display: block;
+    |}
+    ];
   };
 
   module PropBox = {
     [@react.component]
     let make = (~propName: string, ~children) =>
-      <label style=Styles.label>
+      <label className=Css.label>
         <PaddedBox>
           <Stack>
-            <div style=Styles.labelText> propName->React.string </div>
+            <div className=Css.labelText> propName->React.string </div>
             children
           </Stack>
         </PaddedBox>
@@ -581,7 +578,7 @@ module DemoUnitSidebar = {
                   <input
                     type_="text"
                     value
-                    style=Styles.textInput
+                    className=Css.textInput
                     onChange={event =>
                       onStringChange(
                         propName,
@@ -591,7 +588,7 @@ module DemoUnitSidebar = {
                   />
                 | Some(options) =>
                   <select
-                    style=Styles.select
+                    className=Css.select
                     onChange={event => {
                       let value = event->React.Event.Form.target##value;
 
@@ -621,7 +618,7 @@ module DemoUnitSidebar = {
                  min={string_of_int(min)}
                  max={string_of_int(max)}
                  value={string_of_int(value)}
-                 style=Styles.textInput
+                 className=Css.textInput
                  onChange={event =>
                    onIntChange(
                      propName,
@@ -641,7 +638,7 @@ module DemoUnitSidebar = {
                  min={string_of_float(min)}
                  max={string_of_float(max)}
                  value={string_of_float(value)}
-                 style=Styles.textInput
+                 className=Css.textInput
                  onChange={event =>
                    onFloatChange(
                      propName,
@@ -659,7 +656,7 @@ module DemoUnitSidebar = {
                <input
                  type_="checkbox"
                  checked
-                 style=Styles.checkbox
+                 className=Css.checkbox
                  onChange={event =>
                    onBoolChange(
                      propName,
@@ -675,6 +672,29 @@ module DemoUnitSidebar = {
 };
 
 module DemoUnit = {
+  module Css = {
+    let container = [%cx
+      {|
+      flex-grow: 1;
+      display: flex;
+      align-items: stretch;
+      flex-direction: row;
+    |}
+    ];
+
+    let contents = [%cx
+      {|
+      flex-grow: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      -webkit-overflow-scrolling: touch;
+    |}
+    ];
+  };
+
   type state = {
     strings:
       Map.String.t(
@@ -690,29 +710,6 @@ module DemoUnit = {
     | SetInt(string, int)
     | SetFloat(string, float)
     | SetBool(string, bool);
-
-  module Styles = {
-    let container =
-      ReactDOM.Style.make(
-        ~flexGrow="1",
-        ~display="flex",
-        ~alignItems="stretch",
-        ~flexDirection="row",
-        (),
-      );
-
-    let contents =
-      ReactDOM.Style.make(
-        ~flexGrow="1",
-        ~overflowY="auto",
-        ~display="flex",
-        ~flexDirection="column",
-        ~alignItems="center",
-        ~justifyContent="center",
-        (),
-      )
-      ->ReactDOM.Style.unsafeAddProp("WebkitOverflowScrolling", "touch");
-  };
 
   let getRightSidebarElement = (): option(Dom.element) =>
     Window.window##parent##document##getElementById(rightSidebarId)
@@ -849,8 +846,8 @@ module DemoUnit = {
       },
     };
 
-    <div name="DemoUnit" style=Styles.container>
-      <div style=Styles.contents> {demoUnit(props)} </div>
+    <div name="DemoUnit" className=Css.container>
+      <div className=Css.contents> {demoUnit(props)} </div>
       {switch (parentWindowRightSidebarElem) {
        | None => React.null
        | Some(element) =>
@@ -877,21 +874,50 @@ module DemoUnit = {
 };
 
 module DemoUnitFrame = {
-  let container = responsiveMode =>
-    ReactDOM.Style.make(
-      ~flex="1",
-      ~display="flex",
-      ~justifyContent="center",
-      ~alignItems="center",
-      ~backgroundColor=
+  module Css = {
+    open StyleVars;
+
+    let container = [%cx
+      {|
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 1px;
+      overflow-y: auto;
+  |}
+    ];
+
+    let containerBackground = responsiveMode => {
+      let backgroundColor =
         switch (responsiveMode) {
         | Mobile => Color.midGray
         | Desktop => Color.white
-        },
-      ~height="1px",
-      ~overflowY="auto",
-      (),
-    );
+        };
+      [%cx {|
+        background-color: $(backgroundColor);
+      |}];
+    };
+
+    let iframe = responsiveMode => {
+      let height =
+        switch (responsiveMode) {
+        | Mobile => `px(667)
+        | Desktop => `percent(100.)
+        };
+      let width =
+        switch (responsiveMode) {
+        | Mobile => `px(375)
+        | Desktop => `percent(100.)
+        };
+      [%cx
+       {|
+        border: none;
+        height: $(height);
+        width: $(width);
+      |}];
+    };
+  };
 
   let useFullframeUrl: bool = [%mel.raw
     {js|typeof USE_FULL_IFRAME_URL === "boolean" ? USE_FULL_IFRAME_URL : false|js}
@@ -901,95 +927,86 @@ module DemoUnitFrame = {
   let make =
       (~queryString: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
     let iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
-    <div name="DemoUnitFrame" style={container(responsiveMode)}>
+    <div
+      name="DemoUnitFrame"
+      className={Css.container +++ Css.containerBackground(responsiveMode)}>
       <iframe
+        className={Css.iframe(responsiveMode)}
+        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
         onLoad={event => {
           let iframe = event->React.Event.Synthetic.target;
           let window = iframe##contentWindow;
           onLoad(window);
         }}
-        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
-        style={ReactDOM.Style.make(
-          ~height=
-            switch (responsiveMode) {
-            | Mobile => "667px"
-            | Desktop => "100%"
-            },
-          ~width=
-            switch (responsiveMode) {
-            | Mobile => "375px"
-            | Desktop => "100%"
-            },
-          ~border="none",
-          (),
-        )}
       />
     </div>;
   };
 };
 
 module App = {
-  module Styles = {
-    let app =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flexDirection="row",
-        ~minHeight="100vh",
-        ~alignItems="stretch",
-        ~color=Color.darkGray,
-        (),
-      );
+  module Css = {
+    open StyleVars;
 
-    let main =
-      ReactDOM.Style.make(
-        ~flexGrow="1",
-        ~display="flex",
-        ~flexDirection="column",
-        (),
-      );
+    let app = [%cx
+      {|
+      display: flex;
+      flex-direction: row;
+      min-height: 100vh;
+      align-items: stretch;
+      color: $(Color.darkGray);
+    |}
+    ];
 
-    let empty =
-      ReactDOM.Style.make(
-        ~flexGrow="1",
-        ~display="flex",
-        ~flexDirection="column",
-        ~alignItems="center",
-        ~justifyContent="center",
-        (),
-      );
+    let main = [%cx
+      {|
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    |}
+    ];
 
-    let emptyText =
-      ReactDOM.Style.make(
-        ~fontSize=FontSize.lg,
-        ~color=Color.black40a,
-        ~textAlign="center",
-        (),
-      );
+    let empty = [%cx
+      {|
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    |}
+    ];
 
-    let right =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flexDirection="column",
-        ~width="100%",
-        (),
-      );
+    let emptyText = [%cx
+      {|
+      font-size: $(FontSize.lg);
+      color: $(Color.black40a);
+      text-align: center;
+    |}
+    ];
 
-    let demo =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flex="1",
-        ~flexDirection="row",
-        ~alignItems="stretch",
-        (),
-      );
+    let right = [%cx
+      {|
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    |}
+    ];
 
-    let demoContents =
-      ReactDOM.Style.make(
-        ~display="flex",
-        ~flex="1",
-        ~flexDirection="column",
-        (),
-      );
+    let demo = [%cx
+      {|
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      align-items: stretch;
+    |}
+    ];
+
+    let demoContents = [%cx
+      {|
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+    |}
+    ];
   };
 
   type route =
@@ -1060,19 +1077,15 @@ module App = {
       toggleIsCategoriesCollapsed(_ => !isCategoriesCollapsedByDefault);
       LocalStorage.localStorage->LocalStorage.setItem(
         "isCategoriesCollapsedByDefault",
-        if (!isCategoriesCollapsedByDefault) {
-          "true";
-        } else {
-          "false";
-        },
+        isCategoriesCollapsedByDefault ? "false" : "true",
       );
     };
 
-    <div name="App" style=Styles.app>
+    <div name="App" className=Css.app>
       {switch (route) {
        | Unit(urlSearchParams, demoName) =>
          let demoUnit = Demos.findDemo(urlSearchParams, demoName, demos);
-         <div style=Styles.main>
+         <div className=Css.main>
            {demoUnit
             ->Option.map(demoUnit => <DemoUnit demoUnit />)
             ->Option.getWithDefault("Demo not found"->React.string)}
@@ -1085,7 +1098,7 @@ module App = {
              isCategoriesCollapsedByDefault
              onToggleCollapsedCategoriesByDefault
            />
-           <div name="Content" style=Styles.right>
+           <div name="Content" className=Css.right>
              <TopPanel
                isSidebarHidden={!showRightSidebar}
                responsiveMode
@@ -1100,8 +1113,8 @@ module App = {
                }}
                onSetResponsiveMode
              />
-             <div name="Demo" style=Styles.demo>
-               <div style=Styles.demoContents>
+             <div name="Demo" className=Css.demo>
+               <div className=Css.demoContents>
                  <DemoUnitFrame
                    key={"DemoUnitFrame" ++ iframeKey}
                    queryString
@@ -1111,14 +1124,12 @@ module App = {
                    }
                  />
                </div>
-               {if (showRightSidebar) {
-                  <Sidebar
-                    key={"Sidebar" ++ iframeKey}
-                    innerContainerId=rightSidebarId
-                  />;
-                } else {
-                  React.null;
-                }}
+               {showRightSidebar
+                  ? <Sidebar
+                      key={"Sidebar" ++ iframeKey}
+                      innerContainerId=rightSidebarId
+                    />
+                  : React.null}
              </div>
            </div>
          </>
@@ -1131,8 +1142,8 @@ module App = {
              isCategoriesCollapsedByDefault
              onToggleCollapsedCategoriesByDefault
            />
-           <div style=Styles.empty>
-             <div style=Styles.emptyText> "Pick a demo"->React.string </div>
+           <div className=Css.empty>
+             <div className=Css.emptyText> "Pick a demo"->React.string </div>
            </div>
          </>
        }}
