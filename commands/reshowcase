@@ -41,31 +41,36 @@ if (task !== "build" && task !== "start" && task !== "generate-demo") {
 }
 
 if (task == "generate-demo") {
-  console.log(`
+  const prefix = "--examples-path=";
+  const examplesPathValue = process.argv.find((item) => item.startsWith(prefix))?.replace(prefix, "");
+  const examplesPath = toAbsolutePath(examplesPathValue);
+
+  function readJSFilesRecursively(dir, code = "", level) {
+    const files = fs.readdirSync(dir);
+
+    return files.map(file => {
+      const filePath = path.join(dir, file);
+      const fileName = path.basename(filePath);
+      const stat = fs.statSync(filePath);
+
+      if (stat.isDirectory() && !fileName.startsWith(".")) {
+        const categoryString = `addCategory("${fileName}", ({addDemo, addCategory: _}) => {
+          ${readJSFilesRecursively(filePath, code, level + 1)}
+        })`;
+        return level === 0 ? `demo(({addDemo: _, addCategory}) => ${categoryString} );` : categoryString;
+      } else if (filePath.endsWith('.re')) {
+        return `addDemo("${fileName.replace(/\.re$/, "")}", _ => React.null);`
+      }
+    }).join("\n")
+  };
+
+  const code = readJSFilesRecursively(examplesPath, "", 0)
+
+
+  console.log(`// generated from ${examplesPath}
 open Reshowcase.Entry;
-
-// - we compile every file as separate bundle
-// - reshowcase looks at folder structure
-// - picks up each file and creates category-demo
-
-demo(({addDemo: _, addCategory}) =>
-  addCategory("Buttons", ({addDemo, addCategory: _}) => {
-    addDemo("Buttons/Normal", _ => React.null);
-    addDemo("Buttons/Huge", _ => React.null);
-  })
-);
-
-demo(({addDemo: _, addCategory}) =>
-  addCategory("----------- 111", ({addDemo: _, addCategory}) => {
-    addCategory("Headings", ({addDemo, addCategory: _}) => {
-      addDemo("H1", _ => React.null);
-      addDemo("H2", _ => React.null);
-    })
-  })
-);
-
-start();
-`)
+${code}
+start();`)
 
   process.exit(0);
 }
@@ -137,7 +142,7 @@ const watchPlugin = {
 };
 
 // entryPoint passed to htmlPlugin must be relative to the current working directory
-const demoEntry = path.relative(process.cwd(), "/Users/rusty/code/tools/reshowcase/_build/default/example/example/example/Demo.js");
+const demoEntry = path.relative(process.cwd(), "/Users/rusty/code/tools/reshowcase/_build/default/example/example/example/Demo__.js");
 
 function readJSFilesRecursively(dir, fileList = []) {
     const files = fs.readdirSync(dir);
