@@ -226,7 +226,11 @@ if (isBuild) {
       process.exit(1);
     })
     .then((ctx) => {
-      return ctx.serve({ servedir: outputPath })
+      return ctx.serve({
+        servedir: outputPath,
+        // ensure that esbuild doesn't take server's port
+        port: port + 1,
+      })
     })
     .then(esbuildServer => {
       const server = http.createServer((req, res) => {
