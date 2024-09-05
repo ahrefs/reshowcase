@@ -108,7 +108,23 @@ const watchPlugin = {
 };
 
 // entryPoint passed to htmlPlugin must be relative to the current working directory
-const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
+const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath).replace(/^\//, "");
+
+let getCustomDemotemplate = () => {
+  let customTemplate = process.argv.find((item) => {
+    return item.startsWith("--template=")
+  });
+
+  console.log(customTemplate);
+
+  let smth = customTemplate ? path.join(
+      process.cwd(),
+      customTemplate.replace(/--template=/, "")
+    )
+  : path.join(__dirname, "./demo-template.html");
+  console.log("------", smth);
+  return smth;
+}
 
 const defaultConfig = {
   entryPoints: [entryPath],
@@ -156,16 +172,7 @@ const defaultConfig = {
         {
           filename: "./demo/index.html",
           entryPoints: [entryPathRelativeToCwd],
-          htmlTemplate: process.argv.find((item) =>
-            item.startsWith("--template=")
-          )
-            ? path.join(
-                process.cwd(),
-                process.argv
-                  .find((item) => item.startsWith("--template="))
-                  .replace(/--template=/, "")
-              )
-            : path.join(__dirname, "./demo-template.html"),
+          htmlTemplate: getCustomDemotemplate(),
           scriptLoading: "module",
         },
       ],
