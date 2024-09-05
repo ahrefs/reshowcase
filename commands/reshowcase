@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const esbuild = require("esbuild");
+const http = require("http");
 const { htmlPlugin } = require("@craftamap/esbuild-plugin-html");
 
 const toAbsolutePath = (filepath) => {
@@ -190,9 +191,11 @@ const getPort = () => {
   }
 };
 
+const {pathRewrites, ...esCustomConfig} = customConfig;
+
 const config = {
   ...defaultConfig,
-  ...customConfig,
+  ...esCustomConfig,
   define: { ...defaultConfig.define, ...(customConfig.define || {}) },
   plugins: [...defaultConfig.plugins, ...(customConfig.plugins || [])],
 };
@@ -211,9 +214,7 @@ if (isBuild) {
       process.exit(1);
     });
 } else {
-  const port = getPort();
-  const durationLabel = "[Reshowcase] Watch and serve started. Duration";
-  console.time(durationLabel);
+  const clientPort = getPort();
 
   esbuild
     .context(config)
@@ -225,11 +226,53 @@ if (isBuild) {
       process.exit(1);
     })
     .then((ctx) => {
-      return ctx.serve({ port: port, servedir: outputPath });
+      return ctx.serve({ servedir: outputPath })
     })
-    .then((_serveResult) => {
-      console.timeEnd(durationLabel);
-      console.error("[Reshowcase] Watch mode started on port:", port);
+    .then((s) => {
+      const server = http.createServer((req, res) => {
+        let changeOrigin = false;
+        let host = s.host;
+        let port = s.port;
+
+        pathRewrites?.forEach(rewrite => {
+          if (req.url.startsWith(rewrite.context)) {
+            const url = new URL(rewrite.target);
+            host = url.hostname;
+            port = url.port;
+            changeOrigin = rewrite.changeOrigin;
+          }
+        });
+
+        const proxyReq = http.request({
+          hostname: host,
+          port: port,
+          path: req.url,
+          method: req.method,
+          headers: {
+            ...req.headers,
+            ...(changeOrigin ? { host: `${host}:${port}` } : {})
+          },
+        }, proxyRes => {
+          res.writeHead(proxyRes.statusCode, proxyRes.headers)
+          proxyRes.pipe(res, { end: true })
+        })
+
+        proxyReq.on("error", err => {
+          console.error("Proxy request error:", err);
+          res.writeHead(500, { "Content-Type": "text/plain" });
+          res.end("Internal Server Error");
+        });
+
+        req.pipe(proxyReq, { end: true })
+      })
+
+      server.listen(clientPort, error => {
+        if (error) {
+          return console.error(error)
+        }
+
+        console.log(`[Reshowcase] Server listening on port ${clientPort}`)
+      })
     })
     .catch((error) => {
       console.error("[Reshowcase] Esbuild serve start failed:", error);
