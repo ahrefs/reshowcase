@@ -233,6 +233,7 @@ if (isBuild) {
         let options = {
           path: req.url,
           method: req.method,
+          headers: req.headers,
         };
 
         const rewrite = pathRewrites?.find(rewrite => req.url.startsWith(rewrite.context))
@@ -240,14 +241,16 @@ if (isBuild) {
         if (rewrite) {
           if (rewrite.socketPath) {
             options.socketPath = rewrite.socketPath;
+            console.info(`forwarding ${req.url} to ${options.socketPath}`)
           } else {
             const url = new URL(rewrite.target);
             options.host = url.hostname;
             options.port = url.port;
             options.headers = {
-              ...req.headers,
+              ...options.headers,
               ...(rewrite.changeOrigin ? { host: `${options.host}:${options.port}` } : {})
             };
+            console.info(`forwarding ${req.url} to ${options.host}:${options.port}`);
           }
         } else {
           options.host = esbuildServer.host;
