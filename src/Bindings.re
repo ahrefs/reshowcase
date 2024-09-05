@@ -11,11 +11,9 @@ module URLSearchParams = {
 
   let toArray = (t, ()) => {
     let array = [||];
-    t->(
-         forEach((value, key) =>
-           Js.Array.push(array, ~value=(key, value))->ignore
-         )
-       );
+    t->forEach((value, key) =>
+      Js.Array.push(array, ~value=(key, value))->ignore
+    );
     array;
   };
 };
@@ -55,4 +53,15 @@ module LocalStorage = {
   [@mel.send] external setItem: (t, string, string) => unit = "setItem";
   [@mel.send] external removeItem: (t, string) => unit = "removeItem";
   external localStorage: t = "localStorage";
+};
+
+module Element = {
+  type t = Dom.element;
+
+  type options = {
+    behavior: string,
+    block: string,
+  };
+
+  [@mel.send] external scrollIntoView: (t, options) => unit = "scrollIntoView";
 };
