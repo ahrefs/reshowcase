@@ -230,29 +230,31 @@ if (isBuild) {
     })
     .then((s) => {
       const server = http.createServer((req, res) => {
-        let changeOrigin = false;
-        let host = s.host;
-        let port = s.port;
-
-        pathRewrites?.forEach(rewrite => {
-          if (req.url.startsWith(rewrite.context)) {
-            const url = new URL(rewrite.target);
-            host = url.hostname;
-            port = url.port;
-            changeOrigin = rewrite.changeOrigin;
-          }
-        });
-
-        const proxyReq = http.request({
-          hostname: host,
-          port: port,
+        let options = {
           path: req.url,
           method: req.method,
-          headers: {
-            ...req.headers,
-            ...(changeOrigin ? { host: `${host}:${port}` } : {})
-          },
-        }, proxyRes => {
+        };
+
+        const rewrite = pathRewrites?.find(rewrite => req.url.startsWith(rewrite.context))
+
+        if (rewrite) {
+          if (rewrite.socketPath) {
+            options.socketPath = rewrite.socketPath;
+          } else {
+            const url = new URL(rewrite.target);
+            options.host = url.hostname;
+            options.port = url.port;
+            options.headers = {
+              ...req.headers,
+              ...(rewrite.changeOrigin ? { host: `${options.host}:${options.port}` } : {})
+            };
+          }
+        } else {
+          options.host = s.host;
+          options.port = s.port;
+        }
+
+        const proxyReq = http.request(options, proxyRes => {
           res.writeHead(proxyRes.statusCode, proxyRes.headers)
           proxyRes.pipe(res, { end: true })
         })
