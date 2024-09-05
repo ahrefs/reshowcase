@@ -214,7 +214,7 @@ if (isBuild) {
       process.exit(1);
     });
 } else {
-  const clientPort = getPort();
+  const port = getPort();
 
   esbuild
     .context(config)
@@ -228,7 +228,7 @@ if (isBuild) {
     .then((ctx) => {
       return ctx.serve({ servedir: outputPath })
     })
-    .then((s) => {
+    .then(esbuildServer => {
       const server = http.createServer((req, res) => {
         let options = {
           path: req.url,
@@ -250,8 +250,8 @@ if (isBuild) {
             };
           }
         } else {
-          options.host = s.host;
-          options.port = s.port;
+          options.host = esbuildServer.host;
+          options.port = esbuildServer.port;
         }
 
         const proxyReq = http.request(options, proxyRes => {
@@ -268,12 +268,12 @@ if (isBuild) {
         req.pipe(proxyReq, { end: true })
       })
 
-      server.listen(clientPort, error => {
+      server.listen(port, error => {
         if (error) {
           return console.error(error)
         }
 
-        console.log(`[Reshowcase] Server listening on port ${clientPort}`)
+        console.log(`[Reshowcase] Server listening on port ${port}`)
       })
     })
     .catch((error) => {
