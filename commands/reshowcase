@@ -256,7 +256,7 @@ if (isBuild) {
               ...options.headers,
               ...(rewrite.changeOrigin ? { host: `${options.host}:${options.port}` } : {})
             };
-            console.info(`forwarding ${req.url} to ${options.host}:${options.port}`);
+            console.info(`[reshowcase] forwarding ${req.url} to ${options.host}:${options.port}`);
           }
         } else {
           options.host = esbuildServer.host;
