@@ -201,7 +201,7 @@ const config = {
 };
 
 if (isBuild) {
-  const durationLabel = "[Reshowcase] Build finished. Duration";
+  const durationLabel = "[reshowcase] Build finished. Duration";
   console.time(durationLabel);
 
   esbuild
@@ -210,7 +210,7 @@ if (isBuild) {
       console.timeEnd(durationLabel);
     })
     .catch((error) => {
-      console.error("[Reshowcase] Esbuild build failed:", error);
+      console.error("[reshowcase] Esbuild build failed:", error);
       process.exit(1);
     });
 } else {
@@ -222,7 +222,7 @@ if (isBuild) {
       return ctx.watch().then(() => ctx);
     })
     .catch((error) => {
-      console.error("[Reshowcase] Esbuild watch start failed:", error);
+      console.error("[reshowcase] Esbuild watch start failed:", error);
       process.exit(1);
     })
     .then((ctx) => {
@@ -245,7 +245,7 @@ if (isBuild) {
         if (rewrite) {
           if (rewrite.socketPath) {
             options.socketPath = rewrite.socketPath;
-            console.info(`forwarding ${req.url} to ${options.socketPath}`)
+            console.info(`[reshowcase] forwarding ${req.url} to ${options.socketPath}`)
           } else {
             const url = new URL(rewrite.target);
             options.host = url.hostname;
@@ -267,7 +267,7 @@ if (isBuild) {
         })
 
         proxyReq.on("error", err => {
-          console.error("Proxy request error:", err);
+          console.error("[reshowcase] Proxy request error:", err);
           res.writeHead(500, { "Content-Type": "text/plain" });
           res.end("Internal Server Error");
         });
@@ -277,14 +277,14 @@ if (isBuild) {
 
       server.listen(port, error => {
         if (error) {
-          return console.error(error)
+          return console.error(`[reshowcase] ${error}`)
         }
 
-        console.log(`[Reshowcase] Server listening on port ${port}`)
+        console.log(`[reshowcase] Server listening on port ${port}`)
       })
     })
     .catch((error) => {
-      console.error("[Reshowcase] Esbuild serve start failed:", error);
+      console.error("[reshowcase] Esbuild serve start failed:", error);
       process.exit(1);
     });
 }
