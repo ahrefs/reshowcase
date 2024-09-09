@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const esbuild = require("esbuild");
+const http = require("http");
 const { htmlPlugin } = require("@craftamap/esbuild-plugin-html");
 
 const toAbsolutePath = (filepath) => {
@@ -102,7 +103,7 @@ const customConfig = (() => {
 const watchPlugin = {
   name: "watchPlugin",
   setup: (build) => {
-    build.onEnd((_buildResult) => console.log("[Esbuild] Rebuild finished!"));
+    build.onEnd((_buildResult) => console.log("[esbuild] Rebuild finished!"));
   },
 };
 
@@ -190,15 +191,17 @@ const getPort = () => {
   }
 };
 
+const {pathRewrites, ...esCustomConfig} = customConfig;
+
 const config = {
   ...defaultConfig,
-  ...customConfig,
+  ...esCustomConfig,
   define: { ...defaultConfig.define, ...(customConfig.define || {}) },
   plugins: [...defaultConfig.plugins, ...(customConfig.plugins || [])],
 };
 
 if (isBuild) {
-  const durationLabel = "[Reshowcase] Build finished. Duration";
+  const durationLabel = "[reshowcase] Build finished. Duration";
   console.time(durationLabel);
 
   esbuild
@@ -207,13 +210,13 @@ if (isBuild) {
       console.timeEnd(durationLabel);
     })
     .catch((error) => {
-      console.error("[Reshowcase] Esbuild build failed:", error);
+      console.error("[reshowcase] Esbuild build failed:", error);
       process.exit(1);
     });
 } else {
-  const port = getPort();
-  const durationLabel = "[Reshowcase] Watch and serve started. Duration";
+  const durationLabel = "[reshowcase] Watch and serve started. Duration";
   console.time(durationLabel);
+  const port = getPort();
 
   esbuild
     .context(config)
@@ -221,18 +224,70 @@ if (isBuild) {
       return ctx.watch().then(() => ctx);
     })
     .catch((error) => {
-      console.error("[Reshowcase] Esbuild watch start failed:", error);
+      console.error("[reshowcase] Esbuild watch start failed:", error);
       process.exit(1);
     })
     .then((ctx) => {
-      return ctx.serve({ port: port, servedir: outputPath });
+      return ctx.serve({
+        servedir: outputPath,
+        // ensure that esbuild doesn't take server's port
+        port: port + 1,
+      })
     })
-    .then((_serveResult) => {
-      console.timeEnd(durationLabel);
-      console.error("[Reshowcase] Watch mode started on port:", port);
+    .then(esbuildServer => {
+      const server = http.createServer((req, res) => {
+        let options = {
+          path: req.url,
+          method: req.method,
+          headers: req.headers,
+        };
+
+        const rewrite = pathRewrites?.find(rewrite => req.url.startsWith(rewrite.context))
+
+        if (rewrite) {
+          if (rewrite.socketPath) {
+            options.socketPath = rewrite.socketPath;
+            console.info(`[reshowcase] forwarding ${req.url} to ${options.socketPath}`)
+          } else {
+            const url = new URL(rewrite.target);
+            options.host = url.hostname;
+            options.port = url.port;
+            options.headers = {
+              ...options.headers,
+              ...(rewrite.changeOrigin ? { host: `${options.host}:${options.port}` } : {})
+            };
+            console.info(`[reshowcase] forwarding ${req.url} to ${options.host}:${options.port}`);
+          }
+        } else {
+          options.host = esbuildServer.host;
+          options.port = esbuildServer.port;
+        }
+
+        const proxyReq = http.request(options, proxyRes => {
+          res.writeHead(proxyRes.statusCode, proxyRes.headers)
+          proxyRes.pipe(res, { end: true })
+        })
+
+        proxyReq.on("error", err => {
+          console.error("[reshowcase] Proxy request error:", err);
+          res.writeHead(500, { "Content-Type": "text/plain" });
+          res.end("Internal Server Error");
+        });
+
+        req.pipe(proxyReq, { end: true })
+      })
+
+      server.listen(port, error => {
+        if (error) {
+          return console.error(`[reshowcase] ${error}`)
+        } else {
+          console.timeEnd(durationLabel);
+          console.log(`[reshowcase] http://localhost:${port}`)
+        }
+      })
     })
     .catch((error) => {
-      console.error("[Reshowcase] Esbuild serve start failed:", error);
+      console.error("[reshowcase] Esbuild serve start failed:", error);
       process.exit(1);
     });
 }
