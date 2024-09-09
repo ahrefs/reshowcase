@@ -103,7 +103,7 @@ const customConfig = (() => {
 const watchPlugin = {
   name: "watchPlugin",
   setup: (build) => {
-    build.onEnd((_buildResult) => console.log("[Esbuild] Rebuild finished!"));
+    build.onEnd((_buildResult) => console.log("[esbuild] Rebuild finished!"));
   },
 };
 
@@ -214,6 +214,8 @@ if (isBuild) {
       process.exit(1);
     });
 } else {
+  const durationLabel = "[reshowcase] Watch and serve started. Duration";
+  console.time(durationLabel);
   const port = getPort();
 
   esbuild
@@ -278,9 +280,10 @@ if (isBuild) {
       server.listen(port, error => {
         if (error) {
           return console.error(`[reshowcase] ${error}`)
+        } else {
+          console.timeEnd(durationLabel);
+          console.log(`[reshowcase] http://localhost:${port}`)
         }
-
-        console.log(`[reshowcase] Server listening on port ${port}`)
       })
     })
     .catch((error) => {
