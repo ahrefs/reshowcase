@@ -1,6 +1,7 @@
 project_name = reshowcase
 
 DUNE = opam exec -- dune
+BUILD_DIR = _build/default
 
 .DEFAULT_GOAL := help
 
@@ -55,7 +56,11 @@ test: ## Run tests
 
 .PHONY: start-example
 start-example: ## Runs the example in watch mode
-	$(DUNE) build -w @start-example --no-buffer # --no-buffer so that reshowcase output is shown
+	$(DUNE) build -w example --no-buffer # --no-buffer so that reshowcase output is shown
+
+.PHONY: serve-example
+serve-example: ## Serves example on given port
+	$(BUILD_DIR)/commands/reshowcase start --entry=./$(BUILD_DIR)/example/example/example/Demo.js -port=8000
 
 .PHONY: build-example
 build-example: ## Builds the example
