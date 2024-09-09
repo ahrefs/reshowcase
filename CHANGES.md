@@ -1,3 +1,7 @@
+## 5.5.0 (2025-09-09)
+
+- Use `esbuild` instead of `webpack`: ([@denis-ok](https://github.com/denis-ok), [@denis-ok](https://github.com/rusty-key), [@jchavarri](https://github.com/jchavarri): https://github.com/ahrefs/reshowcase/pull/19)
+
 ## 5.4.0 (2024-08-02)
 
 - Upgrade `reason-react` to `0.14` (thanks [@jchavarri](https://github.com/jchavarri)) ([914d280](https://github.com/ahrefs/reshowcase/pull/18))
