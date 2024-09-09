@@ -59,17 +59,6 @@ opam pin add reshowcase.dev git+https://github.com/ahrefs/reshowcase.git#main
 
 This will make the NodeJS script `reshowcase` available in your opam switch.
 
-To make sure this script works, add the following dependencies to your application `package.json`:
-
-```json
-  "devDependencies": {
-    "copy-webpack-plugin": "^11.0.0",
-    "html-webpack-plugin": "^5.5.0",
-    "webpack": "^5.76.1",
-    "webpack-dev-server": "^4.11.1",
-  }
-```
-
 ## Usage
 
 ### To start / develop:
@@ -84,6 +73,6 @@ $ reshowcase start --entry=path/to/Demo.js
 $ reshowcase build --entry=path/to/Demo.js --output=path/to/bundle
 ```
 
-If you need custom webpack options, create the `.reshowcase/config.js` and export the webpack config, plugins and modules will be merged.
+If you need custom esbuild options, create the `.reshowcase/config.js` and export the esbuild config. Plugins and modules will be merged.
 
 If you need a custom template, pass `--template=./path/to/template.html`.
