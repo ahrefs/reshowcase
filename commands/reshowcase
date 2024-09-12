@@ -110,7 +110,7 @@ const compiler = webpack({
   entry: {
     index: entryPath,
   },
-  output: {
+  output: config.output || {
     path: outputPath,
     filename: "reshowcase[fullhash].js",
     globalObject: "this",
