@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 
-const webpack = require("webpack");
-const WebpackDevServer = require("webpack-dev-server");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const child_process = require("child_process");
+const esbuild = require("esbuild");
+const http = require("http");
+const { htmlPlugin } = require("@craftamap/esbuild-plugin-html");
 
 const toAbsolutePath = (filepath) => {
   if (path.isAbsolute(filepath)) {
@@ -77,7 +75,7 @@ const outputPath = (() => {
   }
 })();
 
-const config = (() => {
+const customConfig = (() => {
   const configDir = path.join(process.cwd(), ".reshowcase");
 
   if (!fs.existsSync(configDir)) {
@@ -102,108 +100,228 @@ const config = (() => {
   }
 })();
 
-const compiler = webpack({
-  // https://github.com/webpack/webpack-dev-server/issues/2758#issuecomment-813135032
-  // target: "web" (probably) can be removed after upgrading to webpack-dev-server v4
-  target: "web",
-  mode: isBuild ? "production" : "development",
-  entry: {
-    index: entryPath,
+const watchPlugin = {
+  name: "watchPlugin",
+  setup: (build) => {
+    build.onEnd((_buildResult) => console.log("[esbuild] Rebuild finished!"));
   },
-  output: {
-    path: outputPath,
-    filename: "reshowcase[fullhash].js",
-    globalObject: "this",
-    chunkLoadingGlobal: "reshowcase__d",
+};
+
+// entryPoint passed to htmlPlugin must be relative to the current working directory
+const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
+
+const defaultConfig = {
+  entryPoints: [entryPath],
+  entryNames: "[name]-[hash]",
+  assetNames: "[name]-[hash]",
+  chunkNames: "[name]-[hash]",
+  bundle: true,
+  outdir: outputPath,
+  publicPath: "/",
+  format: "esm",
+  minify: isBuild,
+  metafile: true,
+  splitting: true,
+  treeShaking: true,
+  logLevel: "warning",
+  loader: Object.fromEntries(
+    [
+      ".css",
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".svg",
+      ".ico",
+      ".avif",
+      ".webp",
+      ".woff",
+      ".woff2",
+      ".json",
+      ".mp4",
+    ].map((ext) => [ext, "file"])
+  ),
+  define: {
+    USE_FULL_IFRAME_URL: JSON.stringify(isBuild ? useFullframeUrl : true),
   },
-  module: config.module,
   plugins: [
-    ...(config.plugins ? config.plugins : []),
-    new CopyWebpackPlugin({
-      patterns: [{ from: path.join(__dirname, "./favicon.png"), to: "" }],
-    }),
-    new HtmlWebpackPlugin({
-      filename: "index.html",
-      template: path.join(__dirname, "./ui-template.html"),
-    }),
-    new HtmlWebpackPlugin({
-      filename: "./demo/index.html",
-      template: process.argv.find((item) => item.startsWith("--template="))
-        ? path.join(
-            process.cwd(),
-            process.argv
-              .find((item) => item.startsWith("--template="))
-              .replace(/--template=/, "")
+    htmlPlugin({
+      files: [
+        {
+          filename: "index.html",
+          entryPoints: [entryPathRelativeToCwd],
+          htmlTemplate: path.join(__dirname, "./ui-template.html"),
+          scriptLoading: "module",
+        },
+        {
+          filename: "./demo/index.html",
+          entryPoints: [entryPathRelativeToCwd],
+          htmlTemplate: process.argv.find((item) =>
+            item.startsWith("--template=")
           )
-        : path.join(__dirname, "./demo-template.html"),
+            ? path.join(
+                process.cwd(),
+                process.argv
+                  .find((item) => item.startsWith("--template="))
+                  .replace(/--template=/, "")
+              )
+            : path.join(__dirname, "./demo-template.html"),
+          scriptLoading: "module",
+        },
+      ],
     }),
-    new webpack.DefinePlugin({
-      USE_FULL_IFRAME_URL: JSON.stringify(useFullframeUrl),
-    }),
+    ...(isBuild ? [] : [watchPlugin]),
   ],
-});
+};
+
+const getPort = () => {
+  const defaultPort = 8000;
+  const prefix = "--port=";
+  const arg = process.argv.find((item) => item.startsWith(prefix));
+  if (arg === undefined) {
+    return defaultPort;
+  } else {
+    const portStr = arg.replace(prefix, "");
+    if (portStr === "") {
+      return defaultPort;
+    } else {
+      const parsed = parseInt(portStr, 10);
+      return isNaN(parsed) ? defaultPort : parsed;
+    }
+  }
+};
+
+const {pathRewrites, ...esCustomConfig} = customConfig;
+
+const config = {
+  ...defaultConfig,
+  ...esCustomConfig,
+  define: { ...defaultConfig.define, ...(customConfig.define || {}) },
+  plugins: [...defaultConfig.plugins, ...(customConfig.plugins || [])],
+};
 
 if (isBuild) {
-  console.log("Building Reshowcase bundle...");
-  compiler.run((err, stats) => {
-    // https://webpack.js.org/api/node/#error-handling
-    if (err) {
-      console.error("Build failed. Webpack fatal errors:\n", err);
+  const durationLabel = "[reshowcase] Build finished. Duration";
+  console.time(durationLabel);
+
+  esbuild
+    .build(config)
+    .then((_buildResult) => {
+      console.timeEnd(durationLabel);
+    })
+    .catch((error) => {
+      console.error("[reshowcase] Esbuild build failed:", error);
       process.exit(1);
-    } else {
-      const info = stats.toJson();
-      if (stats.hasErrors && info.errors.length > 0) {
-        console.error(
-          "Build failed. Webpack complilation errors:\n",
-          info.errors
-        );
-        process.exit(1);
-      } else {
-        console.log(
-          stats.toString({ assets: true, chunks: true, colors: true })
-        );
-        console.log("Reshowcase build finished successfully.");
-      }
-    }
-  });
-} else {
-  const port = parseInt(
-    process.argv.find((item) => item.startsWith("--port="))
-      ? process.argv
-          .find((item) => item.startsWith("--port="))
-          .replace(/--port=/, "")
-      : 9000,
-    10
-  );
-
-  const server = new WebpackDevServer(
-    {
-      compress: true,
-      port: port,
-      historyApiFallback: {
-        index: "/index.html",
-      },
-      devMiddleware: {
-        publicPath: "/",
-        stats: "errors-warnings",
-      },
-      ...(config.devServer || {}),
-    },
-    compiler
-  );
-
-  ["SIGINT", "SIGTERM"].forEach((signal) => {
-    process.on(signal, () => {
-      if (server) {
-        server.stopCallback(() => {
-          console.log("Webpack DevServer has stopped!");
-          process.exit();
-        });
-      } else {
-        process.exit();
-      }
     });
-  });
+} else {
+  const durationLabel = "[reshowcase] Watch and serve started. Duration";
+  console.time(durationLabel);
+  const port = getPort();
 
-  server.startCallback(() => console.log("Webpack DevServer has started!"));
+  esbuild
+    .context(config)
+    .then((ctx) => {
+      return ctx.watch().then(() => ctx);
+    })
+    .catch((error) => {
+      console.error("[reshowcase] Esbuild watch start failed:", error);
+      process.exit(1);
+    })
+    .then((ctx) => {
+      const server = ctx.serve({
+        servedir: outputPath,
+        // ensure that esbuild doesn't take server's port
+        port: port + 1,
+      });
+      return {esbuildServer: server, esbuildCtx: ctx}
+    })
+    .then(({esbuildServer, esbuildCtx}) => {
+      const server = http.createServer((req, res) => {
+        let options = {
+          path: req.url,
+          method: req.method,
+          headers: req.headers,
+        };
+
+        const rewrite = pathRewrites?.find(rewrite => req.url.startsWith(rewrite.context))
+
+        if (rewrite) {
+          if (rewrite.socketPath) {
+            options.socketPath = rewrite.socketPath;
+            console.info(`[reshowcase] forwarding ${req.url} to ${options.socketPath}`)
+          } else {
+            const url = new URL(rewrite.target);
+            options.host = url.hostname;
+            options.port = url.port;
+            options.headers = {
+              ...options.headers,
+              ...(rewrite.changeOrigin ? { host: `${options.host}:${options.port}` } : {})
+            };
+            console.info(`[reshowcase] forwarding ${req.url} to ${options.host}:${options.port}`);
+          }
+        } else {
+          options.host = esbuildServer.host;
+          options.port = esbuildServer.port;
+        }
+
+        const proxyReq = http.request(options, proxyRes => {
+          res.writeHead(proxyRes.statusCode, proxyRes.headers)
+          proxyRes.pipe(res, { end: true })
+        })
+
+        proxyReq.on("error", err => {
+          console.error("[reshowcase] Proxy request error:", err);
+          res.writeHead(500, { "Content-Type": "text/plain" });
+          res.end("Internal Server Error");
+        });
+
+        req.pipe(proxyReq, { end: true })
+      })
+
+      server.listen(port, error => {
+        if (error) {
+          return console.error(`[reshowcase] ${error}`)
+        } else {
+          console.timeEnd(durationLabel);
+          console.log(`[reshowcase] Server started at: http://localhost:${port}`)
+        }
+      });
+
+      const shutdown = () => {
+        console.log('[reshowcase] Received shutdown signal, shutting down gracefully...');
+        server.close((err) => {
+          if (err) {
+            console.error('[reshowcase] Error shutting down node server:', err);
+            process.exit(1);
+          }
+        });
+
+        if (!esbuildCtx) {
+          console.log('[reshowcase] Server shut down gracefully');
+          process.exit(0);
+        }
+
+        esbuildCtx.dispose()
+          .then(() => {
+            console.log('[reshowcase] Server shut down gracefully');
+            process.exit(0);
+          }).catch((err) => {
+            console.error('[reshowcase] Error shutting down esbuild server:', err);
+            process.exit(1);
+          });
+
+        setTimeout(() => {
+          console.error('[reshowcase] Forcing shutdown due to timeout');
+          process.exit(1);
+        }, 5000);
+      };
+
+      // Handle termination signals
+      process.on('SIGTERM', shutdown);
+      process.on('SIGINT', shutdown);
+    })
+    .catch((error) => {
+      console.error("[reshowcase] Esbuild serve start failed:", error);
+      process.exit(1);
+    });
 }
