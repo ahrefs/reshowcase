@@ -283,7 +283,7 @@ if (isBuild) {
           return console.error(`[reshowcase] ${error}`)
         } else {
           console.timeEnd(durationLabel);
-          console.log(`[reshowcase] http://localhost:${port}`)
+          console.log(`[reshowcase] Server started at: http://localhost:${port}`)
         }
       });
 
