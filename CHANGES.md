@@ -1,6 +1,6 @@
 ## 5.5.0 (2025-09-09)
 
-- Use `esbuild` instead of `webpack`: ([@denis-ok](https://github.com/denis-ok), [@denis-ok](https://github.com/rusty-key), [@jchavarri](https://github.com/jchavarri): https://github.com/ahrefs/reshowcase/pull/19)
+- Use `esbuild` instead of `webpack`: ([@denis-ok](https://github.com/denis-ok), [@rusty-key](https://github.com/rusty-key), [@jchavarri](https://github.com/jchavarri): https://github.com/ahrefs/reshowcase/pull/19)
 
 ## 5.4.0 (2024-08-02)
 
