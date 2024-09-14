@@ -60,7 +60,7 @@ start-example: ## Runs the example in watch mode
 
 .PHONY: serve-example
 serve-example: ## Serves example on given port
-	$(BUILD_DIR)/commands/reshowcase start --entry=./$(BUILD_DIR)/example/example/example/Demo.js -port=8000
+	$(BUILD_DIR)/commands/reshowcase start --entry=./$(BUILD_DIR)/example/example/example/Demo.js
 
 .PHONY: build-example
 build-example: ## Builds the example
