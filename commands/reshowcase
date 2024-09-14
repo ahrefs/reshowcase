@@ -221,6 +221,7 @@ if (isBuild) {
   esbuild
     .context(config)
     .then((ctx) => {
+      exbuildCtx = ctx;
       return ctx.watch().then(() => ctx);
     })
     .catch((error) => {
@@ -228,13 +229,14 @@ if (isBuild) {
       process.exit(1);
     })
     .then((ctx) => {
-      return ctx.serve({
+      let server = ctx.serve({
         servedir: outputPath,
         // ensure that esbuild doesn't take server's port
         port: port + 1,
-      })
+      });
+      return {esbuildServer: server, esbuildCtx: ctx}
     })
-    .then(esbuildServer => {
+    .then(({esbuildServer, esbuildCtx}) => {
       const server = http.createServer((req, res) => {
         let options = {
           path: req.url,
@@ -284,7 +286,40 @@ if (isBuild) {
           console.timeEnd(durationLabel);
           console.log(`[reshowcase] http://localhost:${port}`)
         }
-      })
+      });
+
+      const shutdown = () => {
+        console.log('[reshowcase] Received shutdown signal, shutting down gracefully...');
+        server.close((err) => {
+          if (err) {
+            console.error('[reshowcase] Error shutting down node server:', err);
+            process.exit(1);
+          }
+        });
+
+        if (!esbuildCtx) {
+          console.log('[reshowcase] Server shut down gracefully');
+          process.exit(0);
+        }
+
+        esbuildCtx.dispose()
+          .then(() => {
+            console.log('[reshowcase] Server shut down gracefully');
+            process.exit(0);
+          }).catch((err) => {
+            console.error('[reshowcase] Error shutting down esbuild server:', err);
+            process.exit(1);
+          });
+
+        setTimeout(() => {
+          console.error('[reshowcase] Forcing shutdown due to timeout');
+          process.exit(1);
+        }, 5000);
+      };
+
+      // Handle termination signals
+      process.on('SIGTERM', shutdown);
+      process.on('SIGINT', shutdown);
     })
     .catch((error) => {
       console.error("[reshowcase] Esbuild serve start failed:", error);
