@@ -59,6 +59,13 @@ opam pin add reshowcase.dev git+https://github.com/ahrefs/reshowcase.git#main
 
 This will make the NodeJS script `reshowcase` available in your opam switch.
 
+To make sure this script works, add the following dependencies to your application `package.json`:
+```json
+  "devDependencies": {
+    "@craftamap/esbuild-plugin-html": "https://github.com/denis-ok/esbuild-plugin-html#79f512f447eb98efa6b6786875f617a095eaaf09"
+  }
+```
+
 ## Usage
 
 ### To start / develop:
