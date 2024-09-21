@@ -233,7 +233,7 @@ if (isBuild) {
         // ensure that esbuild doesn't take server's port
         port: port + 1,
       });
-      return {esbuildServer: server, esbuildCtx: ctx}
+      return server.then(esbuildServer => ({esbuildServer, esbuildCtx: ctx}));
     })
     .then(({esbuildServer, esbuildCtx}) => {
       const server = http.createServer((req, res) => {
@@ -243,12 +243,12 @@ if (isBuild) {
           headers: req.headers,
         };
 
-        const rewrite = pathRewrites?.find(rewrite => req.url.startsWith(rewrite.context))
+        const rewrite = pathRewrites?.find(rewrite => req.url.startsWith(rewrite.context));
 
         if (rewrite) {
           if (rewrite.socketPath) {
             options.socketPath = rewrite.socketPath;
-            console.info(`[reshowcase] forwarding ${req.url} to ${options.socketPath}`)
+            console.info(`[reshowcase] forwarding ${req.url} to ${options.socketPath}`);
           } else {
             const url = new URL(rewrite.target);
             options.host = url.hostname;
@@ -265,9 +265,9 @@ if (isBuild) {
         }
 
         const proxyReq = http.request(options, proxyRes => {
-          res.writeHead(proxyRes.statusCode, proxyRes.headers)
-          proxyRes.pipe(res, { end: true })
-        })
+          res.writeHead(proxyRes.statusCode, proxyRes.headers);
+          proxyRes.pipe(res, { end: true });
+        });
 
         proxyReq.on("error", err => {
           console.error("[reshowcase] Proxy request error:", err);
