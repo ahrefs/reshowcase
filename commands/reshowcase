@@ -103,7 +103,7 @@ const customConfig = (() => {
 const watchPlugin = {
   name: "watchPlugin",
   setup: (build) => {
-    build.onEnd((_buildResult) => console.log("[esbuild] Rebuild finished!"));
+    build.onEnd((_buildResult) => console.log("[reshowcase] Rebuild finished!"));
   },
 };
 
