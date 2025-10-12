@@ -10,13 +10,14 @@ homepage: "https://github.com/ahrefs/reshowcase"
 doc: "https://github.com/ahrefs/reshowcase"
 bug-reports: "https://github.com/ahrefs/reshowcase/issues"
 depends: [
-  "dune" {>= "3.8"}
+  "dune" {>= "3.16"}
   "ocaml"
-  "melange" {>= "3.0.0"}
-  "reason" {>= "3.10.0"}
-  "reason-react" {>= "0.14.0"}
-  "reason-react-ppx" {>= "0.14.0"}
-  "styled-ppx"
+  "melange" {>= "5.0.1"}
+  "reason" {>= "3.11.0"}
+  "reason-react" {>= "0.16.0"}
+  "reason-react-ppx" {>= "0.16.0"}
+  "server-reason-react" {>= "0.3.1"}
+  "styled-ppx" {>= "0.60.4"}
   "ocaml-lsp-server" {with-test}
   "opam-check-npm-deps" {with-test}
   "odoc" {with-doc}
@@ -40,4 +41,8 @@ depexts: [
   ["esbuild"] {npm-version = "^0.21.3"}
   ["esbuild-plugin-copy"] {npm-version = "^2.1.1"}
   ["@craftamap/esbuild-plugin-html"] {npm-version = "^0.6.1"}
+]
+pin-depends: [
+  ["styled-ppx.dev" "git+https://github.com/davesnx/styled-ppx.git#aa0d3c533ea88418cd0fb82e13adbc59b6d4dfd3"]
+  ["server-reason-react.0.3.1" "git+https://github.com/ml-in-barcelona/server-reason-react#ce006ee5ad5562eee617a4c713b1efa317dc2aab"]
 ]

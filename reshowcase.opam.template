@@ -1,4 +1,9 @@
 depexts: [
   ["esbuild"] {npm-version = "^0.21.3"}
-  # @craftamap/esbuild-plugin-html
+  ["esbuild-plugin-copy"] {npm-version = "^2.1.1"}
+  ["@craftamap/esbuild-plugin-html"] {npm-version = "^0.6.1"}
+]
+pin-depends: [
+  ["styled-ppx.dev" "git+https://github.com/davesnx/styled-ppx.git#aa0d3c533ea88418cd0fb82e13adbc59b6d4dfd3"]
+  ["server-reason-react.0.3.1" "git+https://github.com/ml-in-barcelona/server-reason-react#ce006ee5ad5562eee617a4c713b1efa317dc2aab"]
 ]
