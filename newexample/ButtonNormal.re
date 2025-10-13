@@ -1,4 +1,5 @@
 let modulePath = Reshowcase.Utils.getFilepath();
+let demoName = "Normal";
 
 let spaceConcat = (x1, x2) =>
   switch (x1, x2) {

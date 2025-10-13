@@ -1,4 +1,5 @@
 let modulePath = Reshowcase.Utils.getFilepath();
+let demoName = "H1";
 
 module Css = {
   let h1Size = size => {

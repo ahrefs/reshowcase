@@ -1,4 +1,5 @@
 let modulePath = Reshowcase.Utils.getFilepath();
+let demoName = "Code example";
 
 module Css = {
   let code = [%cx
