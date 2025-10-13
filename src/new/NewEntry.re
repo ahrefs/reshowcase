@@ -12,6 +12,7 @@ if (!(root == null)) {
 |j};
 
 let makeMainTemplate = (~filepath: string, ~items: array(NewEntity.item)) => {
+  // We also call JSON.stringify below because the data interpolated to js file as a normal js object
   let itemsJsonString = items->NewEntity.items_to_json_string;
   {j|
 import * as Demo from "$(filepath)";
@@ -20,7 +21,7 @@ import * as JsxRuntime from "react/jsx-runtime";
 
 const root = document.querySelector("#root");
 
-const itemsJsonString = $(itemsJsonString);
+const itemsJsonString = JSON.stringify($(itemsJsonString));
 
 if (!(root == null)) {
   const root1 = Client.createRoot(root);
@@ -103,7 +104,8 @@ let entriesOutputDir = "/Users/denstr/projects/reshowcase/build";
 let esbuildOutputDir = Path.join2(entriesOutputDir, "esbuild");
 
 let start = (~items: array(NewEntity.item)) => {
-  let _demos = extractDemos(~items);
+  let demos = extractDemos(~items);
+  Js.log2("!!! demos:\n", Util.inspect(demos->Array.of_list));
 
   let mainEntryModulePath = NewReshowcaseUi2.modulePath;
 
@@ -134,17 +136,16 @@ let start = (~items: array(NewEntity.item)) => {
   let mainRenderedPage: RenderedPage.t = {
     path: ["./"],
     entryPath: mainEntryJsPath,
-    htmlTemplatePath: mainEntryHtmlPath,
   };
 
   let _ =
-    Esbuild.build(
+    Esbuild.watchAndServe(
       ~outputDir=esbuildOutputDir,
       ~projectRootDir="",
       ~globalEnvValues=[||],
       ~renderedPages=[|mainRenderedPage|],
       ~logLevel=Esbuild.LogLevel.Debug,
-      // ~port=8000,
+      ~port=8000,
       (),
     );
 

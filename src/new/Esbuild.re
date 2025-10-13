@@ -91,6 +91,17 @@ module LogLevel = {
     };
 };
 
+let htmlTemplate = {js|<!DOCTYPE html>
+<html>
+<head>
+  <title>Reshowcase</title>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+|js};
+
 let makeConfig =
     (
       ~mode: Bundler.mode,
@@ -166,24 +177,19 @@ let makeConfig =
                            {
                              HtmlPlugin.filename: pagePath ++ "/index.html",
                              entryPoints: [|entryPathRelativeToProjectRoot|],
-                             htmlTemplate: renderedPage.htmlTemplatePath,
+                             htmlTemplate,
                              scriptLoading: "module",
                            };
                          },
                        _,
                      );
 
+    // TODO Remove hardcoded
     let htmlPluginFiles = [|
       {
-        HtmlPlugin.filename: "./index.html",
+        HtmlPlugin.filename: "index.html",
         entryPoints: [|"build/main.js"|],
-        htmlTemplate: {js|<!DOCTYPE html>
-<html>
-  <body>
-    <div id="roooooot"></div>
-  </body>
-</html>
-|js},
+        htmlTemplate,
         scriptLoading: "module",
       },
     |];

@@ -17,16 +17,17 @@ external catch:
 let seqRun = (functions: array(unit => Js.Promise.t('a))) => {
   Js.Array.reduce(
     functions,
-    ~f=(acc, func) => {
-      switch (acc) {
-      | [] => [func()]
-      | [promise, ...rest] => [
-          promise->flatMap(_ => func()),
-          promise,
-          ...rest,
-        ]
-      }
-    },
+    ~f=
+      (acc, func) => {
+        switch (acc) {
+        | [] => [func()]
+        | [promise, ...rest] => [
+            promise->flatMap(_ => func()),
+            promise,
+            ...rest,
+          ]
+        }
+      },
     ~init=[],
   )
   ->Belt.List.toArray
@@ -45,14 +46,21 @@ module Result = {
     promises->map(promises => {
       let (oks, errors) =
         promises->Js.Array.reduce(
-          ~f=((oks, errors), result) =>
-            switch (result) {
-            | Ok(ok) => (Js.Array.concat(~other=oks, [|ok|]), errors)
-            | Error(error) => (oks, Js.Array.concat(~other=errors, [|error|]))
-            },
-          ~init=([||], [||]),
-          _
-        );
+                    ~f=
+                      ((oks, errors), result) =>
+                        switch (result) {
+                        | Ok(ok) => (
+                            Js.Array.concat(~other=oks, [|ok|]),
+                            errors,
+                          )
+                        | Error(error) => (
+                            oks,
+                            Js.Array.concat(~other=errors, [|error|]),
+                          )
+                        },
+                    ~init=([||], [||]),
+                    _,
+                  );
 
       switch (errors) {
       | [||] => Ok(oks)
