@@ -70,24 +70,12 @@ module TopPanel = {
     let rightSection = [%cx {|
       display: flex;
     |}];
-
-    let sidebarIcon = [%cx
-      {|
-      transition: 200ms ease-in-out transform;
-    |}
-    ];
-
-    let sidebarIconActive = [%cx {|
-      transform: rotate(180deg)
-    |}];
   };
 
   [@react.component]
   let make =
       (
-        ~isSidebarHidden: bool,
         ~responsiveMode: responsiveMode,
-        ~onRightSidebarToggle: unit => unit,
         ~onSetResponsiveMode: (responsiveMode => responsiveMode) => unit,
       ) =>
     <div className=Css.panel>
@@ -122,31 +110,9 @@ module TopPanel = {
           </div>
         </PaddedBox>
       </div>
-      <div className=Css.rightSection>
-        <PaddedBox gap=Md>
-          <div className=Css.buttonGroup>
-            <button
-              title={isSidebarHidden ? "Show sidebar" : "Hide sidebar"}
-              className={Css.button +++ Css.buttonSquare}
-              onClick={event => {
-                event->React.Event.Mouse.preventDefault;
-                onRightSidebarToggle();
-              }}>
-              <div
-                className={
-                  Css.sidebarIcon
-                  +++ Css.sidebarIconActive->Cn.ifTrue(!isSidebarHidden)
-                }>
-                Icon.sidebar
-              </div>
-            </button>
-          </div>
-        </PaddedBox>
-      </div>
+      <div className=Css.rightSection />
     </div>;
 };
-
-let rightSidebarId = "rightSidebar";
 
 module SidebarLink = {
   module Css = {
@@ -667,9 +633,6 @@ module App = {
       | _ => Home
       };
 
-    let (loadedIframeWindow: option(Js.t('a)), setLoadedIframeWindow) =
-      React.useState(() => None);
-
     let (iframeKey, setIframeKey) =
       React.useState(() => Js.Date.now()->Float.toString);
 
@@ -680,26 +643,8 @@ module App = {
       },
       [|url|],
     );
-    let (showRightSidebar, toggleShowRightSidebar) =
-      React.useState(() =>
-        LocalStorage.localStorage
-        ->LocalStorage.getItem("sidebar")
-        ->Option.isSome
-      );
 
     let (responsiveMode, onSetResponsiveMode) = React.useState(() => Desktop);
-
-    React.useEffect1(
-      () => {
-        if (showRightSidebar) {
-          LocalStorage.localStorage->LocalStorage.setItem("sidebar", "1");
-        } else {
-          LocalStorage.localStorage->LocalStorage.removeItem("sidebar");
-        };
-        None;
-      },
-      [|showRightSidebar|],
-    );
     let (isCategoriesCollapsedByDefault, toggleIsCategoriesCollapsed) =
       React.useState(() =>
         switch (
@@ -738,37 +683,16 @@ module App = {
              onToggleCollapsedCategoriesByDefault
            />
            <div name="Content" className=Css.right>
-             <TopPanel
-               isSidebarHidden={!showRightSidebar}
-               responsiveMode
-               onRightSidebarToggle={() => {
-                 toggleShowRightSidebar(_ => !showRightSidebar);
-                 switch (loadedIframeWindow) {
-                 | Some(window) when !showRightSidebar =>
-                   Window.postMessage(window, RightSidebarDisplayed)
-                 | None
-                 | _ => ()
-                 };
-               }}
-               onSetResponsiveMode
-             />
+             <TopPanel responsiveMode onSetResponsiveMode />
              <div name="Demo" className=Css.demo>
                <div className=Css.demoContents>
                  <DemoUnitFrame
                    key={"DemoUnitFrame" ++ iframeKey}
                    queryString
                    responsiveMode
-                   onLoad={iframeWindow =>
-                     setLoadedIframeWindow(_ => Some(iframeWindow))
-                   }
+                   onLoad={_iframeWindow => ()}
                  />
                </div>
-               {showRightSidebar
-                  ? <Sidebar
-                      key={"Sidebar" ++ iframeKey}
-                      innerContainerId=rightSidebarId
-                    />
-                  : React.null}
              </div>
            </div>
          </>
