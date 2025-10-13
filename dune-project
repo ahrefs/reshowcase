@@ -38,6 +38,8 @@
    (>= 0.3.1))
   (styled-ppx
    (>= 0.60.4))
+  (ocamlformat
+   (>= 0.27.0))
   (ocaml-lsp-server :with-test)
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   ))

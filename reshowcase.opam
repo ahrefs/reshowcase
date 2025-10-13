@@ -18,6 +18,7 @@ depends: [
   "reason-react-ppx" {>= "0.16.0"}
   "server-reason-react" {>= "0.3.1"}
   "styled-ppx" {>= "0.60.4"}
+  "ocamlformat" {>= "0.27.0"}
   "ocaml-lsp-server" {with-test}
   "opam-check-npm-deps" {with-test}
   "odoc" {with-doc}
