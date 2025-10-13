@@ -12,7 +12,7 @@ let inspect = value =>
   inspect(
     value,
     {
-      depth: 5,
+      depth: 20,
       colors: true,
     },
   );
