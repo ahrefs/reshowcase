@@ -5,6 +5,14 @@ type options = {
   colors: bool,
 };
 
-[@mel.module "node:util"] external inspect: ('a, options) => string = "inspect";
+[@mel.module "node:util"]
+external inspect: ('a, options) => string = "inspect";
 
-let inspect = value => inspect(value, {depth: 5, colors: true});
+let inspect = value =>
+  inspect(
+    value,
+    {
+      depth: 5,
+      colors: true,
+    },
+  );

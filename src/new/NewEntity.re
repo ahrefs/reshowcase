@@ -5,9 +5,8 @@ type demo = {
 
 type category = {
   name: string,
-  demos: array(demo),
-};
-
-type t =
+  items: array(item),
+}
+and item =
   | Demo(demo)
   | Category(category);

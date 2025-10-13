@@ -1,41 +1,41 @@
-let demos: array(Reshowcase.NewEntity.t) = [|
+let items: array(Reshowcase.NewEntity.item) = [|
   Category({
     name: "Buttons",
-    demos: [|
-      {
+    items: [|
+      Demo({
         name: ButtonNormal.demoName,
         modulePath: ButtonNormal.modulePath,
-      },
-      {
+      }),
+      Demo({
         name: ButtonHuge.demoName,
         modulePath: ButtonHuge.modulePath,
-      },
+      }),
     |],
   }),
   Category({
     name: "Headings",
-    demos: [|
-      {
+    items: [|
+      Demo({
         name: H1.demoName,
         modulePath: H1.modulePath,
-      },
-      {
+      }),
+      Demo({
         name: H2.demoName,
         modulePath: H2.modulePath,
-      },
+      }),
     |],
   }),
   Category({
     name: "Text",
-    demos: [|
-      {
+    items: [|
+      Demo({
         name: Paragraph.demoName,
         modulePath: Paragraph.modulePath,
-      },
-      {
+      }),
+      Demo({
         name: Italic.demoName,
         modulePath: Italic.modulePath,
-      },
+      }),
     |],
   }),
   Demo({
@@ -44,21 +44,21 @@ let demos: array(Reshowcase.NewEntity.t) = [|
   }),
   Category({
     name: "Test search",
-    demos: [|
-      {
+    items: [|
+      Demo({
         name: OneTwoThreeFour.demoName,
         modulePath: OneTwoThreeFour.modulePath,
-      },
-      {
+      }),
+      Demo({
         name: OneTwoThreeFive.demoName,
         modulePath: OneTwoThreeFive.modulePath,
-      },
-      {
+      }),
+      Demo({
         name: OneTwoFourSeven.demoName,
         modulePath: OneTwoFourSeven.modulePath,
-      },
+      }),
     |],
   }),
 |];
 
-Reshowcase.NewEntry.start(~demos);
+Reshowcase.NewEntry.start(~items);
