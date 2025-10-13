@@ -16,7 +16,6 @@ depends: [
   "reason" {>= "3.10.0"}
   "reason-react" {>= "0.14.0"}
   "reason-react-ppx" {>= "0.14.0"}
-  "styled-ppx"
   "ocaml-lsp-server" {with-test}
   "opam-check-npm-deps" {with-test}
   "odoc" {with-doc}
@@ -37,7 +36,6 @@ build: [
 ]
 dev-repo: "git+https://github.com/ahrefs/reshowcase.git"
 depexts: [
-  ["esbuild"] {npm-version = "^0.21.3"}
-  ["esbuild-plugin-copy"] {npm-version = "^2.1.1"}
+  ["esbuild"] {npm-version = "^0.25.0"}
   ["@craftamap/esbuild-plugin-html"] {npm-version = "^0.6.1"}
 ]
