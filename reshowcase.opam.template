@@ -1,6 +1,5 @@
 depexts: [
   ["esbuild"] {npm-version = "^0.25.0"}
-  ["esbuild-plugin-copy"] {npm-version = "^2.1.1"}
   ["@craftamap/esbuild-plugin-html"] {npm-version = "^0.6.1"}
 ]
 pin-depends: [
