@@ -1,4 +1,4 @@
-(lang dune 3.8)
+(lang dune 3.16)
 
 (using melange 0.1)
 
@@ -27,13 +27,17 @@
  (depends
   ocaml
   (melange
-   (>= 3.0.0))
+   (>= 5.0.1))
   (reason
-   (>= 3.10.0))
+   (>= 3.11.0))
   (reason-react
-   (>= 0.14.0))
+   (>= 0.16.0))
   (reason-react-ppx
-   (>= 0.14.0))
+   (>= 0.16.0))
+  (server-reason-react
+   (>= 0.3.1))
+  (styled-ppx
+   (>= 0.60.4))
   (ocaml-lsp-server :with-test)
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   ))

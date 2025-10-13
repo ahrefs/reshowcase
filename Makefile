@@ -14,7 +14,7 @@ help: ## Print this help message
 
 .PHONY: create-switch
 create-switch: ## Create opam switch
-	opam switch create . 5.1.1 -y --deps-only
+	opam switch create . 5.2.0 -y --deps-only
 
 .PHONY: init
 init: create-switch install ## Configure everything to develop this repository in local
@@ -61,6 +61,11 @@ start-example: ## Runs the example in watch mode
 .PHONY: serve-example
 serve-example: ## Serves example on given port
 	$(BUILD_DIR)/commands/reshowcase start --entry=./$(BUILD_DIR)/example/example/example/Demo.js
+
+.PHONY: serve-example
+build-example-ok:
+	rm -rf build
+	$(BUILD_DIR)/commands/reshowcase build --entry=./$(BUILD_DIR)/example/example/example/Demo.js --output=./build
 
 .PHONY: build-example
 build-example: ## Builds the example
