@@ -73,13 +73,23 @@ let extractDemos = (~items: array(NewEntity.item)): list(extractedDemo) => {
 
 let start = (~items: array(NewEntity.item)) => {
   let demos = extractDemos(~items);
-  let finalFilepaths =
-    demos->Belt.List.map(extractedDemo =>
-      targetPathToFilepath(extractedDemo.targetPath)
-    );
-  Js.log2("!!! demos:\n", Util.inspect(demos));
-  Js.log2(
-    "!!! finalFilepaths:\n",
-    Util.inspect(finalFilepaths->Belt.List.toArray),
-  );
+
+  let () = {
+    demos->Belt.List.forEach(extractedDemo => {
+      let prefix = "/Users/denstr/projects/reshowcase/build";
+      let finalFilepath = Path.join2(prefix, targetPathToFilepath(extractedDemo.targetPath));
+      let template = makeDemoTemplate(~filepath=extractedDemo.filepath);
+      let () = Fs.mkDirSync(Path.dirname(finalFilepath), {recursive: true});
+      Fs.writeFileSync(
+        ~path=finalFilepath,
+        ~data=template,
+      );
+    });
+  };
+
+  // Js.log2("!!! demos:\n", Util.inspect(demos));
+  // Js.log2(
+  //   "!!! finalFilepaths:\n",
+  //   Util.inspect(finalFilepaths->Belt.List.toArray),
+  // );
 };

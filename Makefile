@@ -72,4 +72,5 @@ build-example: ## Builds the example
 	$(DUNE) build @build-example
 
 run:
+	rm -rf build
 	node ./_build/default/newexample/newexample/newexample/NewDemo.js
