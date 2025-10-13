@@ -70,3 +70,6 @@ build-example-ok:
 .PHONY: build-example
 build-example: ## Builds the example
 	$(DUNE) build @build-example
+
+run:
+	node ./_build/default/newexample/newexample/newexample/NewDemo.js

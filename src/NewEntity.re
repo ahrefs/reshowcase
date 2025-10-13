@@ -5,7 +5,7 @@ type demo = {
 
 type category = {
   name: string,
-  demos: list(demo),
+  demos: array(demo),
 };
 
 type t =
