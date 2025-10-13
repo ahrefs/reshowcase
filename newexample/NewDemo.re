@@ -5,11 +5,11 @@ let demos: list(Reshowcase.NewEntity.t) = [
     demos: [
       {
         name: "Normal",
-        modulePath: "ButtonNormal",
+        modulePath: ButtonNormal.modulePath,
       },
       {
         name: "Huge",
-        modulePath: "ButtonHuge",
+        modulePath: ButtonHuge.modulePath,
       },
     ],
   }),
@@ -18,11 +18,11 @@ let demos: list(Reshowcase.NewEntity.t) = [
     demos: [
       {
         name: "H1",
-        modulePath: "H1",
+        modulePath: H1.modulePath,
       },
       {
         name: "H2",
-        modulePath: "H2",
+        modulePath: H2.modulePath,
       },
     ],
   }),
@@ -31,32 +31,32 @@ let demos: list(Reshowcase.NewEntity.t) = [
     demos: [
       {
         name: "Paragraph",
-        modulePath: "Paragraph",
+        modulePath: Paragraph.modulePath,
       },
       {
         name: "Italic",
-        modulePath: "Italic",
+        modulePath: Italic.modulePath,
       },
     ],
   }),
   Demo({
     name: "Code example",
-    modulePath: "CodeExample",
+    modulePath: CodeExample.modulePath,
   }),
   Category({
     name: "Test search",
     demos: [
       {
         name: "OneTwoThreeFour",
-        modulePath: "OneTwoThreeFour",
+        modulePath: OneTwoThreeFour.modulePath,
       },
       {
         name: "OneTwoThreeFive",
-        modulePath: "OneTwoThreeFive",
+        modulePath: OneTwoThreeFive.modulePath,
       },
       {
         name: "OneTwoFourSeven",
-        modulePath: "OneTwoFourSeven",
+        modulePath: OneTwoFourSeven.modulePath,
       },
     ],
   }),

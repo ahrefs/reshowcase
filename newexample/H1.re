@@ -1,3 +1,5 @@
+let modulePath = Reshowcase.Utils.getFilepath();
+
 module Css = {
   let h1Size = size => {
     let fontSize = `px(size);
