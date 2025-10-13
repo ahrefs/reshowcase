@@ -28,6 +28,8 @@
   ocaml
   (melange
    (>= 5.0.1))
+  (melange-json
+   (>= 2.0.0))
   (reason
    (>= 3.11.0))
   (reason-react

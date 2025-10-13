@@ -5,133 +5,138 @@ module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;
 
-module App = {
-  module Css = {
-    open StyleVars;
+module Css = {
+  open StyleVars;
 
-    let app = [%cx
-      {|
+  let app = [%cx
+    {|
       display: flex;
       flex-direction: row;
       min-height: 100vh;
       align-items: stretch;
       color: $(Color.darkGray);
     |}
-    ];
+  ];
 
-    let main = [%cx
-      {|
+  let main = [%cx
+    {|
       flex-grow: 1;
       display: flex;
       flex-direction: column;
     |}
-    ];
+  ];
 
-    let empty = [%cx
-      {|
+  let empty = [%cx
+    {|
       flex-grow: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
     |}
-    ];
+  ];
 
-    let emptyText = [%cx
-      {|
+  let emptyText = [%cx
+    {|
       font-size: $(FontSize.lg);
       color: $(Color.black40a);
       text-align: center;
     |}
-    ];
+  ];
 
-    let right = [%cx
-      {|
+  let right = [%cx
+    {|
       display: flex;
       flex-direction: column;
       width: 100%;
     |}
-    ];
+  ];
 
-    let demo = [%cx
-      {|
+  let demo = [%cx
+    {|
       display: flex;
       flex: 1;
       flex-direction: row;
       align-items: stretch;
     |}
-    ];
+  ];
 
-    let demoContents = [%cx
-      {|
+  let demoContents = [%cx
+    {|
       display: flex;
       flex: 1;
       flex-direction: column;
     |}
-    ];
+  ];
+};
+
+type route =
+  | Demo(list(string))
+  | Home;
+
+[@react.component]
+let make = (~itemsJsonString) => {
+  let items = itemsJsonString->NewEntity.items_of_json_string;
+  let url = ReasonReactRouter.useUrl();
+  let urlSearchParams = url.search->URLSearchParams.make;
+  let route = {
+    switch (url.path) {
+    | [] => Home
+    | pathParts => Demo(pathParts)
+    };
   };
 
-  type route =
-    | Demo(list(string))
-    | Home;
+  let (_iframeKey, setIframeKey) =
+    React.useState(() => Js.Date.now()->Float.toString);
 
-  [@react.component]
-  let make = (~items: array(NewEntity.item)) => {
-    let url = ReasonReactRouter.useUrl();
-    let urlSearchParams = url.search->URLSearchParams.make;
-    let route =
-      {switch (url.path) {
-        | [] => Home
-        | pathParts => Demo(pathParts)
-      }}
+  React.useEffect1(
+    () => {
+      setIframeKey(_ => Js.Date.now()->Float.toString);
+      None;
+    },
+    [|url|],
+  );
 
-    let (_iframeKey, setIframeKey) =
-      React.useState(() => Js.Date.now()->Float.toString);
-
-    React.useEffect1(
-      () => {
-        setIframeKey(_ => Js.Date.now()->Float.toString);
-        None;
-      },
-      [|url|],
+  let (isCategoriesCollapsedByDefault, toggleIsCategoriesCollapsed) =
+    React.useState(() =>
+      switch (
+        LocalStorage.localStorage->LocalStorage.getItem(
+          "isCategoriesCollapsedByDefault",
+        )
+      ) {
+      | Some("true") => true
+      | _ => false
+      }
     );
 
-    let (isCategoriesCollapsedByDefault, toggleIsCategoriesCollapsed) =
-      React.useState(() =>
-        switch (
-          LocalStorage.localStorage->LocalStorage.getItem(
-            "isCategoriesCollapsedByDefault",
-          )
-        ) {
-        | Some("true") => true
-        | _ => false
-        }
-      );
-
-    let onToggleCollapsedCategoriesByDefault = () => {
-      toggleIsCategoriesCollapsed(_ => !isCategoriesCollapsedByDefault);
-      LocalStorage.localStorage->LocalStorage.setItem(
-        "isCategoriesCollapsedByDefault",
-        isCategoriesCollapsedByDefault ? "false" : "true",
-      );
-    };
-
-    <div name="App" className=Css.app>
-      {switch (route) {
-       | Demo(_pathParts) => <div className=Css.main> "Demo"->React.string </div>
-       | Home =>
-         <>
-           <NewDemoListSidebar
-             items
-             urlSearchParams
-             isCategoriesCollapsedByDefault
-             onToggleCollapsedCategoriesByDefault
-           />
-           <div className=Css.empty>
-             <div className=Css.emptyText> "Pick a demo"->React.string </div>
-           </div>
-         </>
-       }}
-    </div>;
+  let onToggleCollapsedCategoriesByDefault = () => {
+    toggleIsCategoriesCollapsed(_ => !isCategoriesCollapsedByDefault);
+    LocalStorage.localStorage->LocalStorage.setItem(
+      "isCategoriesCollapsedByDefault",
+      isCategoriesCollapsedByDefault ? "false" : "true",
+    );
   };
+
+  <div name="App" className=Css.app>
+    {switch (route) {
+     | Demo(_pathParts) =>
+       <div className=Css.main> "Demo"->React.string </div>
+     | Home =>
+       <>
+         <NewDemoListSidebar
+           items
+           urlSearchParams
+           isCategoriesCollapsedByDefault
+           onToggleCollapsedCategoriesByDefault
+         />
+         <div className=Css.empty>
+           <div className=Css.emptyText> "Pick a demo"->React.string </div>
+         </div>
+       </>
+     }}
+  </div>;
 };
+
+let modulePath = Utils.getFilepath();
+
+// let render = (itemsJsonString: string) => <App itemsJsonString />;

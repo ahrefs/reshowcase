@@ -11,6 +11,33 @@ if (!(root == null)) {
 }
 |j};
 
+let makeMainTemplate = (~filepath: string, ~items: array(NewEntity.item)) => {
+  let itemsJsonString = items->NewEntity.items_to_json_string;
+  {j|
+import * as Demo from "$(filepath)";
+import * as Client from "react-dom/client";
+import * as JsxRuntime from "react/jsx-runtime";
+
+const root = document.querySelector("#root");
+
+const itemsJsonString = $(itemsJsonString);
+
+if (!(root == null)) {
+  const root1 = Client.createRoot(root);
+  root1.render(JsxRuntime.jsx(Demo.make, {itemsJsonString: itemsJsonString}));
+}
+|j};
+};
+
+let htmlTemplate = {js|
+<!DOCTYPE html>
+<html>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+|js};
+
 type extractedDemo = {
   filepath: string,
   targetPath: list(string),
@@ -71,22 +98,57 @@ let extractDemos = (~items: array(NewEntity.item)): list(extractedDemo) => {
   extractWithPath(~path=[], ~items);
 };
 
+let entriesOutputDir = "/Users/denstr/projects/reshowcase/build";
+
+let esbuildOutputDir = Path.join2(entriesOutputDir, "esbuild");
+
 let start = (~items: array(NewEntity.item)) => {
-  let demos = extractDemos(~items);
+  let _demos = extractDemos(~items);
+
+  let mainEntryModulePath = NewReshowcaseUi2.modulePath;
+
+  let mainEntryJsPath = Path.join2(entriesOutputDir, "main.js");
+  let mainEntryHtmlPath = Path.join2(entriesOutputDir, "index.html");
 
   let () = {
-    demos->Belt.List.forEach(extractedDemo => {
-      let prefix = "/Users/denstr/projects/reshowcase/build";
-      let finalFilepath = Path.join2(prefix, targetPathToFilepath(extractedDemo.targetPath));
-      let template = makeDemoTemplate(~filepath=extractedDemo.filepath);
-      let () = Fs.mkDirSync(Path.dirname(finalFilepath), {recursive: true});
-      Fs.writeFileSync(
-        ~path=finalFilepath,
-        ~data=template,
-      );
-    });
+    let mainEntryTemplate =
+      makeMainTemplate(~filepath=mainEntryModulePath, ~items);
+    let () = Fs.mkDirSync(entriesOutputDir, {recursive: true});
+    Fs.writeFileSync(~path=mainEntryJsPath, ~data=mainEntryTemplate);
+    Fs.writeFileSync(~path=mainEntryHtmlPath, ~data=htmlTemplate);
   };
 
+  // let () = {
+  //   demos->Belt.List.forEach(extractedDemo => {
+  //     let finalFilepath =
+  //       Path.join2(
+  //         entriesOutputDir,
+  //         targetPathToFilepath(extractedDemo.targetPath),
+  //       );
+  //     let template = makeDemoTemplate(~filepath=extractedDemo.filepath);
+  //     let () = Fs.mkDirSync(Path.dirname(finalFilepath), {recursive: true});
+  //     Fs.writeFileSync(~path=finalFilepath, ~data=template);
+  //   });
+  // };
+
+  let mainRenderedPage: RenderedPage.t = {
+    path: ["./"],
+    entryPath: mainEntryJsPath,
+    htmlTemplatePath: mainEntryHtmlPath,
+  };
+
+  let _ =
+    Esbuild.build(
+      ~outputDir=esbuildOutputDir,
+      ~projectRootDir="",
+      ~globalEnvValues=[||],
+      ~renderedPages=[|mainRenderedPage|],
+      ~logLevel=Esbuild.LogLevel.Debug,
+      // ~port=8000,
+      (),
+    );
+
+  ();
   // Js.log2("!!! demos:\n", Util.inspect(demos));
   // Js.log2(
   //   "!!! finalFilepaths:\n",
