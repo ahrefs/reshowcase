@@ -1,4 +1,4 @@
 depexts: [
   ["esbuild"] {npm-version = "^0.25.0"}
-  # @craftamap/esbuild-plugin-html
+  ["@craftamap/esbuild-plugin-html"] {npm-version = "^0.6.1"}
 ]
