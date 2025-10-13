@@ -5,3 +5,19 @@
  (libraries melange.belt reason-react styled-ppx.melange)
  (public_name reshowcase)
  (modes melange))
+
+(melange.emit
+ (target browser)
+ (alias browser)
+ (libraries reshowcase)
+ (preprocess
+  (pps melange.ppx reason-react-ppx))
+ (modules)
+ (module_systems es6))
+
+(melange.emit
+ (target node)
+ (alias node)
+ (libraries reshowcase)
+ (modules)
+ (module_systems (commonjs mjs)))
