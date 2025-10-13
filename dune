@@ -1,4 +1,4 @@
-(dirs commands example src tests)
+(dirs commands example newexample src tests)
 
 (install
  (section bin)

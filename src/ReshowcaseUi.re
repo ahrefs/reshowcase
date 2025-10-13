@@ -915,7 +915,8 @@ module DemoUnitFrame = {
         border: none;
         height: $(height);
         width: $(width);
-      |}];
+      |}
+      ];
     };
   };
 
