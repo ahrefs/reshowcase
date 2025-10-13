@@ -1,6 +1,5 @@
-open Reshowcase.NewEntry;
 
-let demos: list(t) = [
+let demos: list(Reshowcase.NewEntity.t) = [
   Category({
     name: "Buttons",
     demos: [
@@ -63,4 +62,4 @@ let demos: list(t) = [
   }),
 ];
 
-start(~demos);
+Reshowcase.NewEntry.start(~demos);
