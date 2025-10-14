@@ -252,82 +252,93 @@ type route =
   | Demo(list(string))
   | Home;
 
-[@react.component]
-let make = (~itemsJsonString) => {
-  let items = itemsJsonString->NewEntity.items_of_json_string;
-  let url = ReasonReactRouter.useUrl();
-  let route = {
-    switch (url.path) {
-    | [] => Home
-    | pathParts => Demo(pathParts)
+module App = {
+  [@react.component]
+  let make = (~itemsJsonString) => {
+    let items = itemsJsonString->NewEntity.items_of_json_string;
+    let url = ReasonReactRouter.useUrl();
+    let route = {
+      switch (url.path) {
+      | [] => Home
+      | pathParts => Demo(pathParts)
+      };
     };
-  };
 
-  let (iframeKey, setIframeKey) =
-    React.useState(() => Js.Date.now()->Float.toString);
+    let (iframeKey, setIframeKey) =
+      React.useState(() => Js.Date.now()->Float.toString);
 
-  React.useEffect1(
-    () => {
-      setIframeKey(_ => Js.Date.now()->Float.toString);
-      None;
-    },
-    [|url|],
-  );
-
-  let (isCategoriesCollapsedByDefault, toggleIsCategoriesCollapsed) =
-    React.useState(() =>
-      switch (
-        LocalStorage.localStorage->LocalStorage.getItem(
-          "isCategoriesCollapsedByDefault",
-        )
-      ) {
-      | Some("true") => true
-      | _ => false
-      }
+    React.useEffect1(
+      () => {
+        setIframeKey(_ => Js.Date.now()->Float.toString);
+        None;
+      },
+      [|url|],
     );
 
-  let onToggleCollapsedCategoriesByDefault = () => {
-    toggleIsCategoriesCollapsed(_ => !isCategoriesCollapsedByDefault);
-    LocalStorage.localStorage->LocalStorage.setItem(
-      "isCategoriesCollapsedByDefault",
-      isCategoriesCollapsedByDefault ? "false" : "true",
-    );
-  };
+    let (isCategoriesCollapsedByDefault, toggleIsCategoriesCollapsed) =
+      React.useState(() =>
+        switch (
+          LocalStorage.localStorage->LocalStorage.getItem(
+            "isCategoriesCollapsedByDefault",
+          )
+        ) {
+        | Some("true") => true
+        | _ => false
+        }
+      );
 
-  let (responsiveMode, onSetResponsiveMode) = React.useState(() => Desktop);
+    let onToggleCollapsedCategoriesByDefault = () => {
+      toggleIsCategoriesCollapsed(_ => !isCategoriesCollapsedByDefault);
+      LocalStorage.localStorage->LocalStorage.setItem(
+        "isCategoriesCollapsedByDefault",
+        isCategoriesCollapsedByDefault ? "false" : "true",
+      );
+    };
 
-  <div name="App" className=Css.app>
-    <>
-      <NewDemoListSidebar
-        items
-        isCategoriesCollapsedByDefault
-        onToggleCollapsedCategoriesByDefault
-      />
-      {switch (route) {
-       | Home =>
-         <div className=Css.empty>
-           <div className=Css.emptyText> "Pick a demo"->React.string </div>
-         </div>
-       | Demo(pathParts) =>
-         let demoPath = "/" ++ String.concat("/", pathParts);
-         <div name="Content" className=Css.right>
-           <TopPanel responsiveMode onSetResponsiveMode />
-           <div name="Demo" className=Css.demo>
-             <div className=Css.demoContents>
-               <DemoUnitFrame
-                 key={"DemoUnitFrame" ++ iframeKey}
-                 path=demoPath
-                 responsiveMode
-                 onLoad={_iframeWindow => ()}
-               />
-             </div>
+    let (responsiveMode, onSetResponsiveMode) = React.useState(() => Desktop);
+
+    <div name="App" className=Css.app>
+      <>
+        <NewDemoListSidebar
+          items
+          isCategoriesCollapsedByDefault
+          onToggleCollapsedCategoriesByDefault
+        />
+        {switch (route) {
+         | Home =>
+           <div className=Css.empty>
+             <div className=Css.emptyText> "Pick a demo"->React.string </div>
            </div>
-         </div>;
-       }}
-    </>
-  </div>;
+         | Demo(pathParts) =>
+           let demoPath = "/" ++ String.concat("/", pathParts);
+           let iframePath = demoPath ++ "/iframe";
+           <div name="Content" className=Css.right>
+             <TopPanel responsiveMode onSetResponsiveMode />
+             <div name="Demo" className=Css.demo>
+               <div className=Css.demoContents>
+                 <DemoUnitFrame
+                   key={"DemoUnitFrame" ++ iframeKey}
+                   path=iframePath
+                   responsiveMode
+                   onLoad={_iframeWindow => ()}
+                 />
+               </div>
+             </div>
+           </div>;
+         }}
+      </>
+    </div>;
+  };
 };
 
-let modulePath = Utils.getFilepath();
+[@react.component]
+let make = (~itemsJsonString) =>
+  <ReasonReactErrorBoundary
+    fallback={error => {
+      Js.log(error);
+      <h1> {React.string("Something went wrong")} </h1>;
+    }}>
+    <App itemsJsonString />
+  </ReasonReactErrorBoundary>;
 
-// let render = (itemsJsonString: string) => <App itemsJsonString />;
+let modulePath = Utils.getFilepath();

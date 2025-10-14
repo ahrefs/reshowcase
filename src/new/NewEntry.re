@@ -104,7 +104,7 @@ let start = (~items: array(NewEntity.item)) => {
   let mainEntryTemplate =
     makeMainTemplate(~filepath=mainEntryModulePath, ~items);
 
-  let mainRenderedPage: RenderedPage.t = {
+  let mainRenderedPageRoot: RenderedPage.t = {
     path: "/",
     entryPath: mainEntryJsPath,
   };
@@ -113,28 +113,40 @@ let start = (~items: array(NewEntity.item)) => {
   let () = Fs.writeFileSync(~path=mainEntryJsPath, ~data=mainEntryTemplate);
 
   let demosRenderedPages = {
-    demos->Belt.List.map(extractedDemo => {
-      let demoEntryJsPath =
-        Path.join2(
-          entriesOutputDir,
-          demoTargetPathToJsEntryPath(extractedDemo.targetPath),
-        );
-      let template = makeDemoTemplate(~filepath=extractedDemo.filepath);
-      let () =
-        Fs.mkDirSync(Path.dirname(demoEntryJsPath), {recursive: true});
-      let () = Fs.writeFileSync(~path=demoEntryJsPath, ~data=template);
-      let renderedPage: RenderedPage.t = {
-        path: extractedDemo.targetPath->targetPathToPath,
-        entryPath: demoEntryJsPath,
-      };
+    demos
+    ->Belt.List.map(extractedDemo => {
+        let demoEntryJsPath =
+          Path.join2(
+            entriesOutputDir,
+            demoTargetPathToJsEntryPath(extractedDemo.targetPath),
+          );
+        let template = makeDemoTemplate(~filepath=extractedDemo.filepath);
+        let () =
+          Fs.mkDirSync(Path.dirname(demoEntryJsPath), {recursive: true});
+        let () = Fs.writeFileSync(~path=demoEntryJsPath, ~data=template);
 
-      renderedPage;
-    });
+        let demoPath = extractedDemo.targetPath->targetPathToPath;
+
+        // Generate index.html (main app) for this demo path
+        let mainAppRenderedPage: RenderedPage.t = {
+          path: demoPath,
+          entryPath: mainEntryJsPath,
+        };
+
+        // Generate iframe.html (demo only) for this demo path
+        let iframeRenderedPage: RenderedPage.t = {
+          path: Path.join2(demoPath, "iframe"),
+          entryPath: demoEntryJsPath,
+        };
+
+        [mainAppRenderedPage, iframeRenderedPage];
+      })
+    ->Belt.List.flatten;
   };
 
   let renderedPages =
     Belt.Array.concat(
-      [|mainRenderedPage|],
+      [|mainRenderedPageRoot|],
       demosRenderedPages->Array.of_list,
     );
 
