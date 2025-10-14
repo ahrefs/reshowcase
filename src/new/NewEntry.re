@@ -40,7 +40,9 @@ let htmlTemplate = {js|
 |js};
 
 type extractedDemo = {
+  // original path to the compiled demo module
   filepath: string,
+  // path segments according to the structure defined by user (category names + demo name as the last segment)
   targetPath: list(string),
 };
 
@@ -56,15 +58,17 @@ let slugify = text => {
   ->replaceByRe([%re "/--+/g"], "-"); // Replace multiple `-` with single `-`
 };
 
-let targetPathToFilepath = targetPath => {
-  let path =
-    targetPath
-    ->List.rev
-    ->Belt.List.map(slugify)
-    ->Belt.List.toArray
-    ->Js.Array.join(~sep="/", _);
+let targetPathToPath = targetPath => {
+  targetPath
+  ->List.rev
+  ->Belt.List.map(slugify)
+  ->Belt.List.toArray
+  ->Js.Array.join(~sep="/", _);
+};
 
-  path ++ ".js";
+let demoTargetPathToJsEntryPath = targetPath => {
+  let path = targetPathToPath(targetPath);
+  Path.join2(path, "demo.js");
 };
 
 let extractDemos = (~items: array(NewEntity.item)): list(extractedDemo) => {
@@ -105,45 +109,64 @@ let esbuildOutputDir = Path.join2(entriesOutputDir, "esbuild");
 
 let start = (~items: array(NewEntity.item)) => {
   let demos = extractDemos(~items);
-  Js.log2("!!! demos:\n", Util.inspect(demos->Array.of_list));
+  // Js.log2("!!! extracted demos:\n", Util.inspect(demos->Array.of_list));
 
   let mainEntryModulePath = NewReshowcaseUi2.modulePath;
-
   let mainEntryJsPath = Path.join2(entriesOutputDir, "main.js");
-  let mainEntryHtmlPath = Path.join2(entriesOutputDir, "index.html");
-
-  let () = {
-    let mainEntryTemplate =
-      makeMainTemplate(~filepath=mainEntryModulePath, ~items);
-    let () = Fs.mkDirSync(entriesOutputDir, {recursive: true});
-    Fs.writeFileSync(~path=mainEntryJsPath, ~data=mainEntryTemplate);
-    Fs.writeFileSync(~path=mainEntryHtmlPath, ~data=htmlTemplate);
-  };
-
-  // let () = {
-  //   demos->Belt.List.forEach(extractedDemo => {
-  //     let finalFilepath =
-  //       Path.join2(
-  //         entriesOutputDir,
-  //         targetPathToFilepath(extractedDemo.targetPath),
-  //       );
-  //     let template = makeDemoTemplate(~filepath=extractedDemo.filepath);
-  //     let () = Fs.mkDirSync(Path.dirname(finalFilepath), {recursive: true});
-  //     Fs.writeFileSync(~path=finalFilepath, ~data=template);
-  //   });
-  // };
+  let mainEntryTemplate =
+    makeMainTemplate(~filepath=mainEntryModulePath, ~items);
 
   let mainRenderedPage: RenderedPage.t = {
-    path: ["./"],
+    path: "/",
     entryPath: mainEntryJsPath,
   };
+
+  let () = Fs.mkDirSync(entriesOutputDir, {recursive: true});
+  let () = Fs.writeFileSync(~path=mainEntryJsPath, ~data=mainEntryTemplate);
+
+  let demosRenderedPages = {
+    demos->Belt.List.map(extractedDemo => {
+      let demoEntryJsPath =
+        Path.join2(
+          entriesOutputDir,
+          demoTargetPathToJsEntryPath(extractedDemo.targetPath),
+        );
+      let template = makeDemoTemplate(~filepath=extractedDemo.filepath);
+      let () =
+        Fs.mkDirSync(Path.dirname(demoEntryJsPath), {recursive: true});
+      let () = Fs.writeFileSync(~path=demoEntryJsPath, ~data=template);
+      let renderedPage: RenderedPage.t = {
+        path: extractedDemo.targetPath->targetPathToPath,
+        entryPath: demoEntryJsPath,
+      };
+
+      renderedPage;
+    });
+  };
+
+  let renderedPages =
+    Belt.Array.concat(
+      [|mainRenderedPage|],
+      demosRenderedPages->Array.of_list,
+    );
+
+  // let _ =
+  //   Esbuild.build(
+  //     ~outputDir=esbuildOutputDir,
+  //     ~projectRootDir="",
+  //     ~globalEnvValues=[||],
+  //     ~renderedPages,
+  //     ~logLevel=Esbuild.LogLevel.Debug,
+  //     // ~port=8000,
+  //     (),
+  //   );
 
   let _ =
     Esbuild.watchAndServe(
       ~outputDir=esbuildOutputDir,
       ~projectRootDir="",
       ~globalEnvValues=[||],
-      ~renderedPages=[|mainRenderedPage|],
+      ~renderedPages,
       ~logLevel=Esbuild.LogLevel.Debug,
       ~port=8000,
       (),

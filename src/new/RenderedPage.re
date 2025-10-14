@@ -1,4 +1,4 @@
 type t = {
-  path: list(string),
+  path: string,
   entryPath: string,
 };

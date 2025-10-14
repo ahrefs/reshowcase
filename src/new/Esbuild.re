@@ -159,14 +159,14 @@ let makeConfig =
   "plugins": {
     // entryPoint must be relative path to the root of user's project
     // filename field, which if actually a path will be relative to "outdir".
-    let _htmlPluginFiles =
+    let htmlPluginFiles =
       renderedPages->Js.Array.map(
                        ~f=
                          (renderedPage: RenderedPage.t) => {
-                           let pagePath =
-                             renderedPage.path
-                             ->Array.of_list
-                             ->Js.Array.join(~sep="/", _);
+                          //  let pagePath =
+                          //    renderedPage.path
+                          //    ->Array.of_list
+                          //    ->Js.Array.join(~sep="/", _);
 
                            let entryPathRelativeToProjectRoot =
                              Path.relative(
@@ -175,7 +175,7 @@ let makeConfig =
                              );
 
                            {
-                             HtmlPlugin.filename: pagePath ++ "/index.html",
+                             HtmlPlugin.filename: Path.join2(renderedPage.path, "index.html"),
                              entryPoints: [|entryPathRelativeToProjectRoot|],
                              htmlTemplate,
                              scriptLoading: "module",
@@ -184,19 +184,21 @@ let makeConfig =
                        _,
                      );
 
-    // TODO Remove hardcoded
-    let htmlPluginFiles = [|
-      {
-        HtmlPlugin.filename: "index.html",
-        entryPoints: [|"build/main.js"|],
-        htmlTemplate,
-        scriptLoading: "module",
-      },
-    |];
+    // Js.log2("!!! _htmlPluginFiles:", _htmlPluginFiles);
+
+    // // TODO Remove hardcoded
+    // let htmlPluginFiles = [|
+    //   {
+    //     HtmlPlugin.filename: "index.html",
+    //     entryPoints: [|"build/main.js"|],
+    //     htmlTemplate,
+    //     scriptLoading: "module",
+    //   },
+    // |];
 
     let htmlPlugin = HtmlPlugin.make(. {files: htmlPluginFiles});
 
-    Js.log2("!!! htmlPluginFiles:", htmlPluginFiles);
+    // Js.log2("!!! htmlPluginFiles:", htmlPluginFiles);
 
     switch (mode) {
     | Build => [|htmlPlugin|]
