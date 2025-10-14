@@ -166,18 +166,13 @@ module DemoUnitFrame = {
   ];
 
   [@react.component]
-  let make =
-      (~queryString: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
-    let _ = queryString;
-
-    let iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
-
+  let make = (~path: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
     <div
       name="DemoUnitFrame"
       className={Css.container +++ Css.containerBackground(responsiveMode)}>
       <iframe
         className={Css.iframe(responsiveMode)}
-        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
+        src=path
         onLoad={event => {
           let iframe = event->React.Event.Synthetic.target;
           let window = iframe##contentWindow;
@@ -308,26 +303,27 @@ let make = (~itemsJsonString) => {
         isCategoriesCollapsedByDefault
         onToggleCollapsedCategoriesByDefault
       />
-      {switch (route) {
-       | Home =>
-         <div className=Css.empty>
-           <div className=Css.emptyText> "Pick a demo"->React.string </div>
-         </div>
-       | Demo(_pathParts) =>
-         <div name="Content" className=Css.right>
-           <TopPanel responsiveMode onSetResponsiveMode />
-           <div name="Demo" className=Css.demo>
-             <div className=Css.demoContents>
-               <DemoUnitFrame
-                 key={"DemoUnitFrame" ++ iframeKey}
-                 queryString=""
-                 responsiveMode
-                 onLoad={_iframeWindow => ()}
-               />
-             </div>
-           </div>
-         </div>
-       }}
+       {switch (route) {
+        | Home =>
+          <div className=Css.empty>
+            <div className=Css.emptyText> "Pick a demo"->React.string </div>
+          </div>
+        | Demo(pathParts) =>
+          let demoPath = "/" ++ String.concat("/", pathParts);
+          <div name="Content" className=Css.right>
+            <TopPanel responsiveMode onSetResponsiveMode />
+            <div name="Demo" className=Css.demo>
+              <div className=Css.demoContents>
+                <DemoUnitFrame
+                  key={"DemoUnitFrame" ++ iframeKey}
+                  path=demoPath
+                  responsiveMode
+                  onLoad={_iframeWindow => ()}
+                />
+              </div>
+            </div>
+          </div>;
+        }}
     </>
   </div>;
 };

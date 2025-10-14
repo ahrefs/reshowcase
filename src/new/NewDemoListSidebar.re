@@ -5,20 +5,6 @@ module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;
 
-// Should be reused
-let replaceByRe = (s, regexp, replacement) =>
-  Js.String.replaceByRe(~regexp, ~replacement, s);
-
-// Should be reused
-let slugify = text => {
-  text
-  ->Js.String.toLowerCase
-  ->Js.String.trim
-  ->replaceByRe([%re "/\\s+/g"], "-")
-  ->replaceByRe([%re "/[^\\w-]+/g"], "")
-  ->replaceByRe([%re "/--+/g"], "-");
-};
-
 module SidebarLink = {
   module Css = {
     open StyleVars;
@@ -232,7 +218,7 @@ let renderMenu =
           if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
             let fullPath =
               Belt.List.concat(categoryPath, [demoName])
-              ->Belt.List.map(slugify)
+              ->Belt.List.map(Utils.slugify)
               ->Belt.List.toArray
               ->Js.Array.join(~sep="/", _);
             let href = "/" ++ fullPath;
@@ -264,7 +250,7 @@ let renderMenu =
             let currentPath = Belt.List.concat(categoryPath, [categoryName]);
             let currentPathString =
               currentPath
-              ->Belt.List.map(slugify)
+              ->Belt.List.map(Utils.slugify)
               ->Belt.List.toArray
               ->Js.Array.join(~sep="/", _);
 

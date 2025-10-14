@@ -46,22 +46,10 @@ type extractedDemo = {
   targetPath: list(string),
 };
 
-let replaceByRe = (s, regexp, replacement) =>
-  Js.String.replaceByRe(~regexp, ~replacement, s);
-
-let slugify = text => {
-  text
-  ->Js.String.toLowerCase
-  ->Js.String.trim
-  ->replaceByRe([%re "/\\s+/g"], "-") // Replace spaces with `-`
-  ->replaceByRe([%re "/[^\\w-]+/g"], "") // Remove all non-word chars
-  ->replaceByRe([%re "/--+/g"], "-"); // Replace multiple `-` with single `-`
-};
-
 let targetPathToPath = targetPath => {
   targetPath
   ->List.rev
-  ->Belt.List.map(slugify)
+  ->Belt.List.map(Utils.slugify)
   ->Belt.List.toArray
   ->Js.Array.join(~sep="/", _);
 };
