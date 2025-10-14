@@ -36,6 +36,15 @@ let items: array(Reshowcase.NewEntity.item) = [|
         name: Italic.demoName,
         modulePath: Italic.modulePath,
       }),
+      Category({
+        name: "Nested Text",
+        items: [|
+          Demo({
+            name: Italic.demoName,
+            modulePath: Italic.modulePath,
+          }),
+        |],
+      }),
     |],
   }),
   Demo({

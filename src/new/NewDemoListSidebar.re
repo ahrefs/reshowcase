@@ -5,6 +5,20 @@ module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;
 
+// Should be reused
+let replaceByRe = (s, regexp, replacement) =>
+  Js.String.replaceByRe(~regexp, ~replacement, s);
+
+// Should be reused
+let slugify = text => {
+  text
+  ->Js.String.toLowerCase
+  ->Js.String.trim
+  ->replaceByRe([%re "/\\s+/g"], "-")
+  ->replaceByRe([%re "/[^\\w-]+/g"], "")
+  ->replaceByRe([%re "/--+/g"], "-");
+};
+
 module SidebarLink = {
   module Css = {
     open StyleVars;
@@ -29,9 +43,8 @@ module SidebarLink = {
   [@react.component]
   let make = (~activeDomRef=?, ~href, ~text: React.element) => {
     let url = ReasonReactRouter.useUrl();
-    let path = String.concat("/", url.path);
-    let isActive =
-      Js.String.endsWith(~suffix=href, path ++ "?" ++ url.search);
+    let currentPath = "/" ++ String.concat("/", url.path);
+    let isActive = currentPath == href;
 
     <a
       ref=?{isActive ? activeDomRef : None}
@@ -191,7 +204,6 @@ let rec isNestedEntityMatchSearch =
 let renderMenu =
     (
       ~isCategoriesCollapsedByDefault: bool,
-      ~urlSearchParams: URLSearchParams.t,
       ~searchString,
       items: array(NewEntity.item),
     ) => {
@@ -201,7 +213,7 @@ let renderMenu =
           (
             ~parentCategoryMatchedSearch: bool,
             ~nestingLevel,
-            ~categoryQuery,
+            ~categoryPath: list(string),
             items: array(NewEntity.item),
           ) => {
     items
@@ -218,13 +230,17 @@ let renderMenu =
             searchString == "" || searchMatchingTerms->Belt.Array.size > 0;
 
           if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
+            let fullPath =
+              Belt.List.concat(categoryPath, [demoName])
+              ->Belt.List.map(slugify)
+              ->Belt.List.toArray
+              ->Js.Array.join(~sep="/", _);
+            let href = "/" ++ fullPath;
+
             <SidebarLink
               activeDomRef=activeElementRef
               key=demoName
-              href={
-                ("?demo=" ++ demoName->Js.Global.encodeURIComponent)
-                ++ categoryQuery
-              }
+              href
               text={<HighlightTerms text=demoName terms=searchMatchingTerms />}
             />;
           } else {
@@ -245,16 +261,18 @@ let renderMenu =
                 || isNestedEntityMatchSearch(items, searchString)
               )
               || parentCategoryMatchedSearch) {
-            let levelStr = Int.toString(nestingLevel);
-            let categoryQueryKey = {js|category|js} ++ levelStr;
-            let isCategoryInQuery =
-              switch (urlSearchParams->URLSearchParams.get(categoryQueryKey)) {
-              | Some(value)
-                  when value->Js.Global.decodeURIComponent == categoryName =>
-                true
-              | Some(_)
-              | None => false
-              };
+            let currentPath = Belt.List.concat(categoryPath, [categoryName]);
+            let currentPathString =
+              currentPath
+              ->Belt.List.map(slugify)
+              ->Belt.List.toArray
+              ->Js.Array.join(~sep="/", _);
+
+            let isCategoryInCurrentPath = {
+              let url = ReasonReactRouter.useUrl();
+              let urlPath = "/" ++ String.concat("/", url.path);
+              Js.String.startsWith(~prefix="/" ++ currentPathString, urlPath);
+            };
 
             <PaddedBox key=categoryName padding=LeftRight>
               <Collapsible
@@ -267,7 +285,7 @@ let renderMenu =
                   </div>
                 }
                 isDefaultOpen={
-                  isCategoryInQuery || !isCategoriesCollapsedByDefault
+                  isCategoryInCurrentPath || !isCategoriesCollapsedByDefault
                 }
                 isForceOpen={searchString != ""}>
                 <PaddedBox padding=LeftRight>
@@ -275,12 +293,7 @@ let renderMenu =
                      ~parentCategoryMatchedSearch=
                        isEntityNameMatchSearch || parentCategoryMatchedSearch,
                      ~nestingLevel=nestingLevel + 1,
-                     ~categoryQuery=
-                       (
-                         (({js|&category|js} ++ levelStr) ++ {js|=|js})
-                         ++ categoryName->Js.Global.encodeURIComponent
-                       )
-                       ++ categoryQuery,
+                     ~categoryPath=currentPath,
                      items,
                    )}
                 </PaddedBox>
@@ -297,7 +310,7 @@ let renderMenu =
   renderMenu(
     ~parentCategoryMatchedSearch=false,
     ~nestingLevel=0,
-    ~categoryQuery="",
+    ~categoryPath=[],
     items,
   );
 };
@@ -305,7 +318,6 @@ let renderMenu =
 [@react.component]
 let make =
     (
-      ~urlSearchParams: URLSearchParams.t,
       ~items: array(NewEntity.item),
       ~isCategoriesCollapsedByDefault: bool,
       ~onToggleCollapsedCategoriesByDefault: unit => unit,
@@ -351,7 +363,6 @@ let make =
          ~isCategoriesCollapsedByDefault,
          ~searchString=
            filterValue->Option.mapWithDefault("", Js.String.toLowerCase),
-         ~urlSearchParams,
          items,
        )}
     </PaddedBox>

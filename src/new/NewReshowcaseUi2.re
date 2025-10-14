@@ -1,9 +1,192 @@
 open Belt;
-// open Prelude;
-// open Layout;
+open Prelude;
+open Layout;
 module URLSearchParams = Bindings.URLSearchParams;
 module Window = Bindings.Window;
 module LocalStorage = Bindings.LocalStorage;
+
+type responsiveMode =
+  | Mobile
+  | Desktop;
+
+module TopPanel = {
+  module Css = {
+    open StyleVars;
+
+    let panel = [%cx
+      {|
+      display: flex;
+      justify-content: flex-end;
+      border-bottom: 1px solid $(Color.midGray);
+    |}
+    ];
+
+    let buttonGroup = [%cx
+      {|
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      border-radius: $(BorderRadius.default);
+    |}
+    ];
+
+    let button = [%cx
+      {|
+      height: 32px;
+      width: 48px;
+      cursor: pointer;
+      font-size: $(FontSize.sm);
+      background-color: $(Color.lightGray);
+      color: $(Color.darkGray);
+      border: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    |}
+    ];
+
+    let buttonSquare = [%cx {|
+      width: 32px;
+    |}];
+
+    let buttonActive = [%cx
+      {|
+      background-color: $(Color.blue);
+      color: $(Color.white);
+    |}
+    ];
+
+    let middleSection = [%cx
+      {|
+      display: flex;
+      flex: 1;
+      justify-content: center;
+    |}
+    ];
+
+    let rightSection = [%cx {|
+      display: flex;
+    |}];
+  };
+
+  [@react.component]
+  let make =
+      (
+        ~responsiveMode: responsiveMode,
+        ~onSetResponsiveMode: (responsiveMode => responsiveMode) => unit,
+      ) =>
+    <div className=Css.panel>
+      <div className=Css.rightSection />
+      <div className=Css.middleSection>
+        <PaddedBox gap=Md>
+          <div className=Css.buttonGroup>
+            <button
+              title="Show in desktop mode"
+              className={
+                Css.button
+                +++ Css.buttonActive->Cn.ifTrue(responsiveMode == Desktop)
+              }
+              onClick={event => {
+                event->React.Event.Mouse.preventDefault;
+                onSetResponsiveMode(_ => Desktop);
+              }}>
+              Icon.desktop
+            </button>
+            <button
+              title="Show in mobile mode"
+              className={
+                Css.button
+                +++ Css.buttonActive->Cn.ifTrue(responsiveMode == Mobile)
+              }
+              onClick={event => {
+                event->React.Event.Mouse.preventDefault;
+                onSetResponsiveMode(_ => Mobile);
+              }}>
+              Icon.mobile
+            </button>
+          </div>
+        </PaddedBox>
+      </div>
+      <div className=Css.rightSection />
+    </div>;
+};
+
+module DemoUnitFrame = {
+  module Css = {
+    open StyleVars;
+
+    let container = [%cx
+      {|
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 1px;
+      overflow-y: auto;
+  |}
+    ];
+
+    let containerBackground = responsiveMode => {
+      let backgroundColor =
+        switch (responsiveMode) {
+        | Mobile => Color.midGray
+        | Desktop => Color.white
+        };
+      [%cx {|
+        background-color: $(backgroundColor);
+      |}];
+    };
+
+    let iframe = responsiveMode => {
+      let height =
+        switch (responsiveMode) {
+        | Mobile => `px(667)
+        | Desktop => `percent(100.)
+        };
+      let width =
+        switch (responsiveMode) {
+        | Mobile => `px(375)
+        | Desktop => `percent(100.)
+        };
+      [%cx
+       {|
+        border: none;
+        height: $(height);
+        width: $(width);
+      |}
+      ];
+    };
+  };
+
+  let useFullframeUrl: bool = [%mel.raw
+    {js|typeof USE_FULL_IFRAME_URL === "boolean" ? USE_FULL_IFRAME_URL : false|js}
+  ];
+
+  [@react.component]
+  let make =
+      (~queryString: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
+    let _ = queryString;
+
+    let iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
+
+    <div
+      name="DemoUnitFrame"
+      className={Css.container +++ Css.containerBackground(responsiveMode)}>
+      <iframe
+        className={Css.iframe(responsiveMode)}
+        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
+        onLoad={event => {
+          let iframe = event->React.Event.Synthetic.target;
+          let window = iframe##contentWindow;
+          onLoad(window);
+        }}
+      />
+    </div>;
+  };
+};
 
 module Css = {
   open StyleVars;
@@ -78,7 +261,6 @@ type route =
 let make = (~itemsJsonString) => {
   let items = itemsJsonString->NewEntity.items_of_json_string;
   let url = ReasonReactRouter.useUrl();
-  let urlSearchParams = url.search->URLSearchParams.make;
   let route = {
     switch (url.path) {
     | [] => Home
@@ -86,7 +268,7 @@ let make = (~itemsJsonString) => {
     };
   };
 
-  let (_iframeKey, setIframeKey) =
+  let (iframeKey, setIframeKey) =
     React.useState(() => Js.Date.now()->Float.toString);
 
   React.useEffect1(
@@ -117,23 +299,36 @@ let make = (~itemsJsonString) => {
     );
   };
 
+  let (responsiveMode, onSetResponsiveMode) = React.useState(() => Desktop);
+
   <div name="App" className=Css.app>
-    {switch (route) {
-     | Demo(_pathParts) =>
-       <div className=Css.main> "Demo"->React.string </div>
-     | Home =>
-       <>
-         <NewDemoListSidebar
-           items
-           urlSearchParams
-           isCategoriesCollapsedByDefault
-           onToggleCollapsedCategoriesByDefault
-         />
+    <>
+      <NewDemoListSidebar
+        items
+        isCategoriesCollapsedByDefault
+        onToggleCollapsedCategoriesByDefault
+      />
+      {switch (route) {
+       | Home =>
          <div className=Css.empty>
            <div className=Css.emptyText> "Pick a demo"->React.string </div>
          </div>
-       </>
-     }}
+       | Demo(_pathParts) =>
+         <div name="Content" className=Css.right>
+           <TopPanel responsiveMode onSetResponsiveMode />
+           <div name="Demo" className=Css.demo>
+             <div className=Css.demoContents>
+               <DemoUnitFrame
+                 key={"DemoUnitFrame" ++ iframeKey}
+                 queryString=""
+                 responsiveMode
+                 onLoad={_iframeWindow => ()}
+               />
+             </div>
+           </div>
+         </div>
+       }}
+    </>
   </div>;
 };
 
