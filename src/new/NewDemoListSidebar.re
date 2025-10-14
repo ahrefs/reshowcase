@@ -191,6 +191,7 @@ let renderMenu =
     (
       ~isCategoriesCollapsedByDefault: bool,
       ~searchString,
+      ~url: ReasonReactRouter.url,
       items: array(NewEntity.item),
     ) => {
   let activeElementRef = UseScrollIntoView.use();
@@ -255,7 +256,6 @@ let renderMenu =
               ->Js.Array.join(~sep="/", _);
 
             let isCategoryInCurrentPath = {
-              let url = ReasonReactRouter.useUrl();
               let urlPath = "/" ++ String.concat("/", url.path);
               Js.String.startsWith(~prefix="/" ++ currentPathString, urlPath);
             };
@@ -305,6 +305,7 @@ let renderMenu =
 let make =
     (
       ~items: array(NewEntity.item),
+      ~url: ReasonReactRouter.url,
       ~isCategoriesCollapsedByDefault: bool,
       ~onToggleCollapsedCategoriesByDefault: unit => unit,
     ) => {
@@ -349,6 +350,7 @@ let make =
          ~isCategoriesCollapsedByDefault,
          ~searchString=
            filterValue->Option.mapWithDefault("", Js.String.toLowerCase),
+         ~url,
          items,
        )}
     </PaddedBox>

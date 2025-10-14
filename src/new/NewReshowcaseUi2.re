@@ -301,6 +301,7 @@ module App = {
       <>
         <NewDemoListSidebar
           items
+          url
           isCategoriesCollapsedByDefault
           onToggleCollapsedCategoriesByDefault
         />
