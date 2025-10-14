@@ -303,27 +303,27 @@ let make = (~itemsJsonString) => {
         isCategoriesCollapsedByDefault
         onToggleCollapsedCategoriesByDefault
       />
-       {switch (route) {
-        | Home =>
-          <div className=Css.empty>
-            <div className=Css.emptyText> "Pick a demo"->React.string </div>
-          </div>
-        | Demo(pathParts) =>
-          let demoPath = "/" ++ String.concat("/", pathParts);
-          <div name="Content" className=Css.right>
-            <TopPanel responsiveMode onSetResponsiveMode />
-            <div name="Demo" className=Css.demo>
-              <div className=Css.demoContents>
-                <DemoUnitFrame
-                  key={"DemoUnitFrame" ++ iframeKey}
-                  path=demoPath
-                  responsiveMode
-                  onLoad={_iframeWindow => ()}
-                />
-              </div>
-            </div>
-          </div>;
-        }}
+      {switch (route) {
+       | Home =>
+         <div className=Css.empty>
+           <div className=Css.emptyText> "Pick a demo"->React.string </div>
+         </div>
+       | Demo(pathParts) =>
+         let demoPath = "/" ++ String.concat("/", pathParts);
+         <div name="Content" className=Css.right>
+           <TopPanel responsiveMode onSetResponsiveMode />
+           <div name="Demo" className=Css.demo>
+             <div className=Css.demoContents>
+               <DemoUnitFrame
+                 key={"DemoUnitFrame" ++ iframeKey}
+                 path=demoPath
+                 responsiveMode
+                 onLoad={_iframeWindow => ()}
+               />
+             </div>
+           </div>
+         </div>;
+       }}
     </>
   </div>;
 };
