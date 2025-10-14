@@ -70,4 +70,4 @@ let items: array(Reshowcase.NewEntity.item) = [|
   }),
 |];
 
-let () = Reshowcase.NewEntry.start(~items, ~mode=Watch);
+let () = Reshowcase.NewEntry.start(~items, ~mode=Watch, ());

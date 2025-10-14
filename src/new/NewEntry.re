@@ -95,7 +95,13 @@ let entriesOutputDir = "/Users/denstr/projects/reshowcase/build";
 
 let esbuildOutputDir = Path.join2(entriesOutputDir, "esbuild");
 
-let start = (~mode: Bundler.mode, ~items: array(NewEntity.item)) => {
+let start =
+    (
+      ~mode: Bundler.mode,
+      ~items: array(NewEntity.item),
+      ~demoHtmlTemplatePath: option(string)=?,
+      (),
+    ) => {
   let demos = extractDemos(~items);
   // Js.log2("!!! extracted demos:\n", Util.inspect(demos->Array.of_list));
 
@@ -165,6 +171,7 @@ let start = (~mode: Bundler.mode, ~items: array(NewEntity.item)) => {
           ~globalEnvValues,
           ~entries,
           ~logLevel,
+          ~demoHtmlTemplatePath?,
           (),
         );
       ();
@@ -177,6 +184,7 @@ let start = (~mode: Bundler.mode, ~items: array(NewEntity.item)) => {
           ~entries,
           ~logLevel,
           ~port,
+          ~demoHtmlTemplatePath?,
           (),
         );
       ();

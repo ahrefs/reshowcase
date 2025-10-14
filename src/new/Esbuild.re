@@ -122,6 +122,7 @@ let makeHtmlTemplate = (~withHotReloadScript) => {
 
 let makeConfig =
     (
+      ~demoHtmlTemplatePath: option(string),
       ~mode: Bundler.mode,
       ~outputDir: string,
       ~projectRootDir: string,
@@ -131,94 +132,111 @@ let makeConfig =
       ~logLevel: LogLevel.t,
       ~logLimit: int,
     ) => {
-  // https://esbuild.github.io/api/
+  {
+    // https://esbuild.github.io/api/
 
-  "entryPoints":
-    entries->Js.Array.map(~f=(page: Entry.t) => page.entryPath, _),
-  "entryNames": Bundler.assetsDirname ++ "/" ++ "js/[dir]/[name]-[hash]",
-  "chunkNames": Bundler.assetsDirname ++ "/" ++ "js/_chunks/[name]-[hash]",
-  "assetNames": Bundler.assetsDirname ++ "/" ++ "[name]-[hash]",
-  "outdir": Bundler.getOutputDir(~outputDir),
-  "publicPath": "/",
-  // TODO Look at this
-  "format": "esm",
-  "bundle": true,
-  "minify": {
-    switch (mode) {
-    | Build => true
-    | Watch => false
-    };
-  },
-  "metafile": true,
-  "splitting": true,
-  "treeShaking": true,
-  "logLimit": logLimit,
-  "logLevel": logLevel->LogLevel.toString,
-  "logOverride": {
-    let logOverride: Js.Dict.t(string) =
-      logOverride
-      ->Js.Dict.entries
-      ->Js.Array.map(
-          ~f=((error, logLevel)) => (error, logLevel->LogLevel.toString),
-          _,
-        )
+    "entryPoints":
+      entries->Js.Array.map(~f=(page: Entry.t) => page.entryPath, _),
+    "entryNames": Bundler.assetsDirname ++ "/" ++ "js/[dir]/[name]-[hash]",
+    "chunkNames": Bundler.assetsDirname ++ "/" ++ "js/_chunks/[name]-[hash]",
+    "assetNames": Bundler.assetsDirname ++ "/" ++ "[name]-[hash]",
+    "outdir": Bundler.getOutputDir(~outputDir),
+    "publicPath": "/",
+    // TODO Look at this
+    "format": "esm",
+    "bundle": true,
+    "minify": {
+      switch (mode) {
+      | Build => true
+      | Watch => false
+      };
+    },
+    "metafile": true,
+    "splitting": true,
+    "treeShaking": true,
+    "logLimit": logLimit,
+    "logLevel": logLevel->LogLevel.toString,
+    "logOverride": {
+      let logOverride: Js.Dict.t(string) =
+        logOverride
+        ->Js.Dict.entries
+        ->Js.Array.map(
+            ~f=((error, logLevel)) => (error, logLevel->LogLevel.toString),
+            _,
+          )
+        ->Js.Dict.fromArray;
+      logOverride;
+    },
+    "define": Bundler.getGlobalEnvValuesDict(globalEnvValues),
+    "loader": {
+      Bundler.assetFileExtensionsWithoutCss
+      ->Js.Array.map(~f=ext => {("." ++ ext, "file")}, _)
       ->Js.Dict.fromArray;
-    logOverride;
-  },
-  "define": Bundler.getGlobalEnvValuesDict(globalEnvValues),
-  "loader": {
-    Bundler.assetFileExtensionsWithoutCss
-    ->Js.Array.map(~f=ext => {("." ++ ext, "file")}, _)
-    ->Js.Dict.fromArray;
-  },
-  "plugins": {
-    // entryPoint must be relative path to the root of user's project
-    // filename field, which if actually a path will be relative to "outdir".
-    let htmlPluginFiles =
-      entries-> //  let pagePath =
-//    renderedPage.path
-                                   //    ->Array.of_list
-                                   //    ->Js.Array.join(~sep="/", _);
-                                   Js.Array.map(
-                                     ~f=
-                                       (renderedPage: Entry.t) => {
-                                         let entryPathRelativeToProjectRoot =
-                                           Path.relative(
-                                             ~from=projectRootDir,
-                                             ~to_=renderedPage.entryPath,
-                                           );
+    },
+    "plugins": {
+      // entryPoint must be relative path to the root of user's project
+      // filename field, which if actually a path will be relative to "outdir".
+      let htmlPluginFiles =
+        entries->Js.Array.map(
+                   ~f=
+                     (renderedPage: Entry.t) => {
+                       let entryPathRelativeToProjectRoot =
+                         Path.relative(
+                           ~from=projectRootDir,
+                           ~to_=renderedPage.entryPath,
+                         );
 
-                                         {
-                                           HtmlPlugin.filename:
-                                             Path.join2(
-                                               renderedPage.path,
-                                               "index.html",
-                                             ),
-                                           entryPoints: [|
-                                             entryPathRelativeToProjectRoot,
-                                           |],
-                                           htmlTemplate:
-                                             makeHtmlTemplate(
-                                               ~withHotReloadScript={
-                                                 switch (mode) {
-                                                 | Watch => true
-                                                 | Build => false
-                                                 };
-                                               },
-                                             ),
-                                           scriptLoading: "module",
-                                         };
-                                       },
-                                     _,
-                                   );
+                       let isDemoEntry =
+                         Js.String.includes(
+                           ~search="iframe",
+                           renderedPage.path,
+                         );
 
-    let htmlPlugin = HtmlPlugin.make(. {files: htmlPluginFiles});
+                       let htmlTemplate =
+                         switch (isDemoEntry) {
+                         | false =>
+                           makeHtmlTemplate(
+                             ~withHotReloadScript={
+                               switch (mode) {
+                               | Watch => true
+                               | Build => false
+                               };
+                             },
+                           )
+                         | true =>
+                           let demoHtmlTemplate =
+                             switch (demoHtmlTemplatePath) {
+                             | None => None
+                             | Some(path) =>
+                               Some(Fs.readFileSyncAsUtf8(path))
+                             };
 
-    switch (mode) {
-    | Build => [|htmlPlugin|]
-    | Watch => [|htmlPlugin, Plugin.watchModePlugin|]
-    };
-  },
+                           switch (demoHtmlTemplate) {
+                           | Some(html) => html
+                           | None =>
+                             makeHtmlTemplate(~withHotReloadScript=false)
+                           };
+                         };
+
+                       {
+                         HtmlPlugin.filename:
+                           Path.join2(renderedPage.path, "index.html"),
+                         entryPoints: [|entryPathRelativeToProjectRoot|],
+                         htmlTemplate,
+                         scriptLoading: "module",
+                       };
+                     },
+                   _,
+                 );
+
+      let htmlPlugin = HtmlPlugin.make(. {files: htmlPluginFiles});
+
+      switch (mode) {
+      | Build => [|htmlPlugin|]
+      | Watch => [|htmlPlugin, Plugin.watchModePlugin|]
+      };
+    },
+  };
 };
 
 let build =
@@ -229,6 +247,7 @@ let build =
       ~entries: array(Entry.t),
       ~logLevel: LogLevel.t=Warning,
       ~logOverride: Js.Dict.t(LogLevel.t)=Js.Dict.empty(),
+      ~demoHtmlTemplatePath: option(string)=?,
       (),
     )
     : Js.Promise.t(unit) => {
@@ -244,6 +263,7 @@ let build =
       ~logLevel,
       ~logOverride,
       ~logLimit=10,
+      ~demoHtmlTemplatePath,
     );
 
   let startTime = Performance.now();
@@ -279,6 +299,7 @@ let watchAndServe =
       ~logLevel: LogLevel.t=Warning,
       ~logOverride: Js.Dict.t(LogLevel.t)=Js.Dict.empty(),
       ~logLimit=10,
+      ~demoHtmlTemplatePath: option(string)=?,
       (),
     )
     : Promise.t(serveResult) => {
@@ -292,6 +313,7 @@ let watchAndServe =
       ~logLevel,
       ~logOverride,
       ~logLimit,
+      ~demoHtmlTemplatePath,
     );
   Js.log("[Esbuild] Starting esbuild...");
   let watchDurationLabel = "[Esbuild] Watch mode started! Duration";
