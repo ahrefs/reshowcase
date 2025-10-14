@@ -95,7 +95,7 @@ let entriesOutputDir = "/Users/denstr/projects/reshowcase/build";
 
 let esbuildOutputDir = Path.join2(entriesOutputDir, "esbuild");
 
-let start = (~items: array(NewEntity.item)) => {
+let start = (~mode: Bundler.mode, ~items: array(NewEntity.item)) => {
   let demos = extractDemos(~items);
   // Js.log2("!!! extracted demos:\n", Util.inspect(demos->Array.of_list));
 
@@ -148,28 +148,40 @@ let start = (~items: array(NewEntity.item)) => {
   let entries =
     Belt.Array.concat([|mainEntry|], demosEntries->Array.of_list);
 
-  // let _ =
-  //   Esbuild.build(
-  //     ~outputDir=esbuildOutputDir,
-  //     ~projectRootDir="",
-  //     ~globalEnvValues=[||],
-  //     ~entries,
-  //     ~logLevel=Esbuild.LogLevel.Debug,
-  //     // ~port=8000,
-  //     (),
-  //   );
+  let () = {
+    let outputDir = esbuildOutputDir;
+    let projectRootDir = "";
+    let globalEnvValues = [||];
+    let entries = entries;
+    let logLevel = Esbuild.LogLevel.Debug;
+    let port = 8000;
 
-  let _ =
-    Esbuild.watchAndServe(
-      ~outputDir=esbuildOutputDir,
-      ~projectRootDir="",
-      ~globalEnvValues=[||],
-      ~entries,
-      ~logLevel=Esbuild.LogLevel.Debug,
-      ~port=8000,
-      (),
-    );
-
+    switch (mode) {
+    | Build =>
+      let _promise: Js.promise(unit) =
+        Esbuild.build(
+          ~outputDir,
+          ~projectRootDir,
+          ~globalEnvValues,
+          ~entries,
+          ~logLevel,
+          (),
+        );
+      ();
+    | Watch =>
+      let _promise: Js.promise(Esbuild.serveResult) =
+        Esbuild.watchAndServe(
+          ~outputDir,
+          ~projectRootDir,
+          ~globalEnvValues,
+          ~entries,
+          ~logLevel,
+          ~port,
+          (),
+        );
+      ();
+    };
+  };
   ();
   // Js.log2("!!! demos:\n", Util.inspect(demos));
   // Js.log2(
