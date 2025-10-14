@@ -98,16 +98,27 @@ module LogLevel = {
     };
 };
 
-let htmlTemplate = {js|<!DOCTYPE html>
+let hotReloadScript = {js|
+<script>
+new EventSource("/esbuild").addEventListener("change", () => location.reload())
+</script>
+|js};
+
+let makeHtmlTemplate = (~withHotReloadScript) => {
+  let hotReloadScript = withHotReloadScript ? hotReloadScript : "";
+
+  {j|<!DOCTYPE html>
 <html>
 <head>
+  $(hotReloadScript)
   <title>Reshowcase</title>
 </head>
   <body>
     <div id="root"></div>
   </body>
 </html>
-|js};
+|j};
+};
 
 let makeConfig =
     (
@@ -186,7 +197,15 @@ let makeConfig =
                                            entryPoints: [|
                                              entryPathRelativeToProjectRoot,
                                            |],
-                                           htmlTemplate,
+                                           htmlTemplate:
+                                             makeHtmlTemplate(
+                                               ~withHotReloadScript={
+                                                 switch (mode) {
+                                                 | Watch => true
+                                                 | Build => false
+                                                 };
+                                               },
+                                             ),
                                            scriptLoading: "module",
                                          };
                                        },
