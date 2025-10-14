@@ -8,6 +8,13 @@ type buildResult = {
   metafile: Js.Json.t,
 };
 
+module Entry = {
+  type t = {
+    path: string,
+    entryPath: string,
+  };
+};
+
 module Plugin = {
   // https://esbuild.github.io/plugins/#on-start
 
@@ -108,7 +115,7 @@ let makeConfig =
       ~outputDir: string,
       ~projectRootDir: string,
       ~globalEnvValues: array((string, string)),
-      ~renderedPages: array(RenderedPage.t),
+      ~entries: array(Entry.t),
       ~logOverride: Js.Dict.t(LogLevel.t),
       ~logLevel: LogLevel.t,
       ~logLimit: int,
@@ -116,10 +123,7 @@ let makeConfig =
   // https://esbuild.github.io/api/
 
   "entryPoints":
-    renderedPages->Js.Array.map(
-                     ~f=(page: RenderedPage.t) => page.entryPath,
-                     _,
-                   ),
+    entries->Js.Array.map(~f=(page: Entry.t) => page.entryPath, _),
   "entryNames": Bundler.assetsDirname ++ "/" ++ "js/[dir]/[name]-[hash]",
   "chunkNames": Bundler.assetsDirname ++ "/" ++ "js/_chunks/[name]-[hash]",
   "assetNames": Bundler.assetsDirname ++ "/" ++ "[name]-[hash]",
@@ -160,45 +164,36 @@ let makeConfig =
     // entryPoint must be relative path to the root of user's project
     // filename field, which if actually a path will be relative to "outdir".
     let htmlPluginFiles =
-      renderedPages->Js.Array.map(
-                       ~f=
-                         (renderedPage: RenderedPage.t) => {
-                          //  let pagePath =
-                          //    renderedPage.path
-                          //    ->Array.of_list
-                          //    ->Js.Array.join(~sep="/", _);
+      entries-> //  let pagePath =
+//    renderedPage.path
+                                   //    ->Array.of_list
+                                   //    ->Js.Array.join(~sep="/", _);
+                                   Js.Array.map(
+                                     ~f=
+                                       (renderedPage: Entry.t) => {
+                                         let entryPathRelativeToProjectRoot =
+                                           Path.relative(
+                                             ~from=projectRootDir,
+                                             ~to_=renderedPage.entryPath,
+                                           );
 
-                           let entryPathRelativeToProjectRoot =
-                             Path.relative(
-                               ~from=projectRootDir,
-                               ~to_=renderedPage.entryPath,
-                             );
-
-                           {
-                             HtmlPlugin.filename: Path.join2(renderedPage.path, "index.html"),
-                             entryPoints: [|entryPathRelativeToProjectRoot|],
-                             htmlTemplate,
-                             scriptLoading: "module",
-                           };
-                         },
-                       _,
-                     );
-
-    // Js.log2("!!! _htmlPluginFiles:", _htmlPluginFiles);
-
-    // // TODO Remove hardcoded
-    // let htmlPluginFiles = [|
-    //   {
-    //     HtmlPlugin.filename: "index.html",
-    //     entryPoints: [|"build/main.js"|],
-    //     htmlTemplate,
-    //     scriptLoading: "module",
-    //   },
-    // |];
+                                         {
+                                           HtmlPlugin.filename:
+                                             Path.join2(
+                                               renderedPage.path,
+                                               "index.html",
+                                             ),
+                                           entryPoints: [|
+                                             entryPathRelativeToProjectRoot,
+                                           |],
+                                           htmlTemplate,
+                                           scriptLoading: "module",
+                                         };
+                                       },
+                                     _,
+                                   );
 
     let htmlPlugin = HtmlPlugin.make(. {files: htmlPluginFiles});
-
-    // Js.log2("!!! htmlPluginFiles:", htmlPluginFiles);
 
     switch (mode) {
     | Build => [|htmlPlugin|]
@@ -212,7 +207,7 @@ let build =
       ~outputDir: string,
       ~projectRootDir: string,
       ~globalEnvValues: array((string, string)),
-      ~renderedPages: array(RenderedPage.t),
+      ~entries: array(Entry.t),
       ~logLevel: LogLevel.t=Warning,
       ~logOverride: Js.Dict.t(LogLevel.t)=Js.Dict.empty(),
       (),
@@ -226,7 +221,7 @@ let build =
       ~outputDir,
       ~projectRootDir,
       ~globalEnvValues,
-      ~renderedPages,
+      ~entries,
       ~logLevel,
       ~logOverride,
       ~logLimit=10,
@@ -260,7 +255,7 @@ let watchAndServe =
       ~outputDir,
       ~projectRootDir: string,
       ~globalEnvValues: array((string, string)),
-      ~renderedPages: array(RenderedPage.t),
+      ~entries: array(Entry.t),
       ~port: int,
       ~logLevel: LogLevel.t=Warning,
       ~logOverride: Js.Dict.t(LogLevel.t)=Js.Dict.empty(),
@@ -274,7 +269,7 @@ let watchAndServe =
       ~outputDir,
       ~projectRootDir,
       ~globalEnvValues,
-      ~renderedPages,
+      ~entries,
       ~logLevel,
       ~logOverride,
       ~logLimit,

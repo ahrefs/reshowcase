@@ -104,7 +104,7 @@ let start = (~items: array(NewEntity.item)) => {
   let mainEntryTemplate =
     makeMainTemplate(~filepath=mainEntryModulePath, ~items);
 
-  let mainRenderedPageRoot: RenderedPage.t = {
+  let mainEntry: Esbuild.Entry.t = {
     path: "/",
     entryPath: mainEntryJsPath,
   };
@@ -112,7 +112,7 @@ let start = (~items: array(NewEntity.item)) => {
   let () = Fs.mkDirSync(entriesOutputDir, {recursive: true});
   let () = Fs.writeFileSync(~path=mainEntryJsPath, ~data=mainEntryTemplate);
 
-  let demosRenderedPages = {
+  let demosEntries = {
     demos
     ->Belt.List.map(extractedDemo => {
         let demoEntryJsPath =
@@ -120,6 +120,7 @@ let start = (~items: array(NewEntity.item)) => {
             entriesOutputDir,
             demoTargetPathToJsEntryPath(extractedDemo.targetPath),
           );
+
         let template = makeDemoTemplate(~filepath=extractedDemo.filepath);
         let () =
           Fs.mkDirSync(Path.dirname(demoEntryJsPath), {recursive: true});
@@ -128,13 +129,13 @@ let start = (~items: array(NewEntity.item)) => {
         let demoPath = extractedDemo.targetPath->targetPathToPath;
 
         // Generate index.html (main app) for this demo path
-        let mainAppRenderedPage: RenderedPage.t = {
+        let mainAppRenderedPage: Esbuild.Entry.t = {
           path: demoPath,
           entryPath: mainEntryJsPath,
         };
 
         // Generate iframe.html (demo only) for this demo path
-        let iframeRenderedPage: RenderedPage.t = {
+        let iframeRenderedPage: Esbuild.Entry.t = {
           path: Path.join2(demoPath, "iframe"),
           entryPath: demoEntryJsPath,
         };
@@ -144,18 +145,15 @@ let start = (~items: array(NewEntity.item)) => {
     ->Belt.List.flatten;
   };
 
-  let renderedPages =
-    Belt.Array.concat(
-      [|mainRenderedPageRoot|],
-      demosRenderedPages->Array.of_list,
-    );
+  let entries =
+    Belt.Array.concat([|mainEntry|], demosEntries->Array.of_list);
 
   // let _ =
   //   Esbuild.build(
   //     ~outputDir=esbuildOutputDir,
   //     ~projectRootDir="",
   //     ~globalEnvValues=[||],
-  //     ~renderedPages,
+  //     ~entries,
   //     ~logLevel=Esbuild.LogLevel.Debug,
   //     // ~port=8000,
   //     (),
@@ -166,7 +164,7 @@ let start = (~items: array(NewEntity.item)) => {
       ~outputDir=esbuildOutputDir,
       ~projectRootDir="",
       ~globalEnvValues=[||],
-      ~renderedPages,
+      ~entries,
       ~logLevel=Esbuild.LogLevel.Debug,
       ~port=8000,
       (),
