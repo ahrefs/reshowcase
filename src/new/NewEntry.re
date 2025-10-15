@@ -96,6 +96,8 @@ let envOutputDir = Process.env->Js.Dict.get("OUTPUT_DIR");
 let envDemoHtmlTemplatePath =
   Process.env->Js.Dict.get("DEMO_HTML_TEMPLATE_PATH");
 
+let customConfigPath = Process.env->Js.Dict.get("CUSTOM_CONFIG_PATH");
+
 let envPort =
   Process.env->Js.Dict.get("PORT")->Belt.Option.flatMap(int_of_string_opt);
 
@@ -189,6 +191,7 @@ let start =
         Esbuild.build(
           ~outputDir,
           ~projectRootDir,
+          ~customConfigPath,
           ~globalEnvValues,
           ~entries,
           ~logLevel,
@@ -201,6 +204,7 @@ let start =
         Esbuild.watchAndServe(
           ~outputDir,
           ~projectRootDir,
+          ~customConfigPath,
           ~globalEnvValues,
           ~entries,
           ~logLevel,

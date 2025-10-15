@@ -15,6 +15,70 @@ module Entry = {
   };
 };
 
+module CustomConfig = {
+  type t = {
+    define: option(Js.Dict.t(string)),
+    loader: option(Js.Dict.t(string)),
+  };
+
+  [@mel.module "node:fs"]
+  external readdirSync: string => array(string) = "readdirSync";
+
+  let readCustomConfig = (~customConfigPath: string): option(t) =>
+    if (!Fs.existsSync(customConfigPath)) {
+      None;
+    } else {
+      let configFilenames = readdirSync(customConfigPath);
+      let configFilename =
+        configFilenames->Js.Array.find(~f=filename =>
+          filename == "config.cjs" || filename == "config.js"
+        );
+
+      switch (configFilename) {
+      | None => None
+      | Some(filename) =>
+        try({
+          let pathToConfig = Path.join2(customConfigPath, filename);
+
+          let requireConfig = [%mel.raw
+            {|function(path) { return require(path); }|}
+          ];
+
+          let config: Js.t({..}) = requireConfig(. pathToConfig);
+
+          let define =
+            switch (Js.Nullable.toOption(config##define)) {
+            | None => None
+            | Some(defineValue) =>
+              switch (Js.typeof(defineValue)) {
+              | "object" => Some(defineValue)
+              | _ => None
+              }
+            };
+
+          let loader =
+            switch (Js.Nullable.toOption(config##loader)) {
+            | None => None
+            | Some(loaderValue) =>
+              switch (Js.typeof(loaderValue)) {
+              | "object" => Some(loaderValue)
+              | _ => None
+              }
+            };
+
+          Some({
+            define,
+            loader,
+          });
+        }) {
+        | Js.Exn.Error(e) =>
+          Js.Console.error2("Failed to read config:", e);
+          None;
+        }
+      };
+    };
+};
+
 module Plugin = {
   // https://esbuild.github.io/plugins/#on-start
 
@@ -120,6 +184,11 @@ let makeHtmlTemplate = (~withHotReloadScript) => {
 |j};
 };
 
+let mergeDicts = (dict1, dict2) => {
+  Js.Array.concat(~other=Js.Dict.entries(dict2), Js.Dict.entries(dict1))
+  ->Js.Dict.fromArray;
+};
+
 let makeConfig =
     (
       ~demoHtmlTemplatePath: option(string),
@@ -131,7 +200,18 @@ let makeConfig =
       ~logOverride: Js.Dict.t(LogLevel.t),
       ~logLevel: LogLevel.t,
       ~logLimit: int,
+      ~customConfigPath: option(string),
     ) => {
+  let customConfig =
+    switch (customConfigPath) {
+    | None => None
+    | Some(path) =>
+      switch (CustomConfig.readCustomConfig(~customConfigPath=path)) {
+      | None => None
+      | Some(config) => Some(config)
+      }
+    };
+
   {
     // https://esbuild.github.io/api/
 
@@ -167,11 +247,34 @@ let makeConfig =
         ->Js.Dict.fromArray;
       logOverride;
     },
-    "define": Bundler.getGlobalEnvValuesDict(globalEnvValues),
+    "define": {
+      let defaultDefine = Bundler.getGlobalEnvValuesDict(globalEnvValues);
+
+      let customDefine =
+        switch (customConfig) {
+        | None => None
+        | Some(config) => config.define
+        };
+
+      switch (customDefine) {
+      | None => defaultDefine
+      | Some(custom) => mergeDicts(defaultDefine, custom)
+      };
+    },
     "loader": {
-      Bundler.assetFileExtensionsWithoutCss
-      ->Js.Array.map(~f=ext => {("." ++ ext, "file")}, _)
-      ->Js.Dict.fromArray;
+      let customLoader =
+        switch (customConfig) {
+        | None => None
+        | Some(config) => config.loader
+        };
+
+      switch (customLoader) {
+      | Some(loader) => loader
+      | None =>
+        Bundler.assetFileExtensionsWithoutCss
+        ->Js.Array.map(~f=ext => {("." ++ ext, "file")}, _)
+        ->Js.Dict.fromArray
+      };
     },
     "plugins": {
       // entryPoint must be relative path to the root of user's project
@@ -247,6 +350,7 @@ let build =
       ~entries: array(Entry.t),
       ~logLevel: LogLevel.t=Warning,
       ~logOverride: Js.Dict.t(LogLevel.t)=Js.Dict.empty(),
+      ~customConfigPath: option(string),
       ~demoHtmlTemplatePath: option(string)=?,
       (),
     )
@@ -263,6 +367,7 @@ let build =
       ~logLevel,
       ~logOverride,
       ~logLimit=10,
+      ~customConfigPath,
       ~demoHtmlTemplatePath,
     );
 
@@ -299,6 +404,7 @@ let watchAndServe =
       ~logLevel: LogLevel.t=Warning,
       ~logOverride: Js.Dict.t(LogLevel.t)=Js.Dict.empty(),
       ~logLimit=10,
+      ~customConfigPath: option(string),
       ~demoHtmlTemplatePath: option(string)=?,
       (),
     )
@@ -313,6 +419,7 @@ let watchAndServe =
       ~logLevel,
       ~logOverride,
       ~logLimit,
+      ~customConfigPath,
       ~demoHtmlTemplatePath,
     );
   Js.log("[Esbuild] Starting esbuild...");
