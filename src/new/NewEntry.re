@@ -121,7 +121,8 @@ let start =
     ) => {
   let outputDir = envOutputDir->Belt.Option.getWithDefault(outputDir);
   let demos = extractDemos(~items);
-  let esbuildOutputDir = Path.join2(outputDir, "esbuild");
+  // TODO double check this
+  let esbuildOutputDir = outputDir;
 
   let mainEntryModulePath = NewReshowcaseUi2.modulePath;
   let mainEntryJsPath = Path.join2(outputDir, "main.js");

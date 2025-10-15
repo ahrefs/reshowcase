@@ -44,4 +44,5 @@ let getGlobalEnvValuesDict = (globalEnvValues: array((string, string))) => {
   dict;
 };
 
-let getOutputDir = (~outputDir) => Path.join2(outputDir, "public");
+// TODO double check this
+let getOutputDir = (~outputDir) => outputDir;
