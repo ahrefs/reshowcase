@@ -73,4 +73,4 @@ build-example: ## Builds the example
 
 run:
 	rm -rf build
-	node ./_build/default/newexample/newexample/newexample/NewDemo.js
+	commands/reshowcase2 ./_build/default/newexample/newexample/newexample/NewDemo.js

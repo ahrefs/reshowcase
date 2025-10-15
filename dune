@@ -7,6 +7,8 @@
   commands/demo-template.html
   commands/favicon.png
   commands/reshowcase
+  commands/reshowcase2
+  commands/node-loader.js
   commands/ui-template.html))
 
 (rule
