@@ -91,6 +91,8 @@ let extractDemos = (~items: array(NewEntity.item)): list(extractedDemo) => {
   extractWithPath(~path=[], ~items);
 };
 
+let envOutputDir = Process.env->Js.Dict.get("OUTPUT_DIR");
+
 let start =
     (
       ~outputDir: string,
@@ -99,6 +101,7 @@ let start =
       ~demoHtmlTemplatePath: option(string)=?,
       (),
     ) => {
+  let outputDir = envOutputDir->Belt.Option.getWithDefault(outputDir);
   let demos = extractDemos(~items);
   let esbuildOutputDir = Path.join2(outputDir, "esbuild");
 
