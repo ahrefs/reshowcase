@@ -1,4 +1,4 @@
-open Belt;
+// open Belt;
 open Prelude;
 open Layout;
 module URLSearchParams = Bindings.URLSearchParams;
@@ -264,17 +264,6 @@ module App = {
       };
     };
 
-    let (iframeKey, setIframeKey) =
-      React.useState(() => Js.Date.now()->Float.toString);
-
-    React.useEffect1(
-      () => {
-        setIframeKey(_ => Js.Date.now()->Float.toString);
-        None;
-      },
-      [|url|],
-    );
-
     let (isCategoriesCollapsedByDefault, toggleIsCategoriesCollapsed) =
       React.useState(() =>
         switch (
@@ -312,13 +301,13 @@ module App = {
            </div>
          | Demo(pathParts) =>
            let demoPath = "/" ++ String.concat("/", pathParts);
-           let iframePath = demoPath ++ "/iframe";
+           let iframePath = demoPath ++ "/iframe/index.html";
            <div name="Content" className=Css.right>
              <TopPanel responsiveMode onSetResponsiveMode />
              <div name="Demo" className=Css.demo>
                <div className=Css.demoContents>
                  <DemoUnitFrame
-                   key={"DemoUnitFrame" ++ iframeKey}
+                   key=iframePath
                    path=iframePath
                    responsiveMode
                    onLoad={_iframeWindow => ()}
