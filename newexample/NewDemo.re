@@ -3,12 +3,12 @@ let items: array(Reshowcase.NewEntity.item) = [|
     name: "Buttons",
     items: [|
       Demo({
-        name: ButtonNormal.demoName,
-        modulePath: ButtonNormal.modulePath,
+        name: ButtonNormal_Doc.demoName,
+        modulePath: ButtonNormal_Doc.modulePath,
       }),
       Demo({
-        name: ButtonHuge.demoName,
-        modulePath: ButtonHuge.modulePath,
+        name: ButtonHuge_Doc.demoName,
+        modulePath: ButtonHuge_Doc.modulePath,
       }),
     |],
   }),
@@ -16,12 +16,12 @@ let items: array(Reshowcase.NewEntity.item) = [|
     name: "Headings",
     items: [|
       Demo({
-        name: H1.demoName,
-        modulePath: H1.modulePath,
+        name: H1_Doc.demoName,
+        modulePath: H1_Doc.modulePath,
       }),
       Demo({
-        name: H2.demoName,
-        modulePath: H2.modulePath,
+        name: H2_Doc.demoName,
+        modulePath: H2_Doc.modulePath,
       }),
     |],
   }),
@@ -29,45 +29,45 @@ let items: array(Reshowcase.NewEntity.item) = [|
     name: "Text",
     items: [|
       Demo({
-        name: Paragraph.demoName,
-        modulePath: Paragraph.modulePath,
+        name: Paragraph_Doc.demoName,
+        modulePath: Paragraph_Doc.modulePath,
       }),
       Demo({
-        name: Italic.demoName,
-        modulePath: Italic.modulePath,
+        name: Italic_Doc.demoName,
+        modulePath: Italic_Doc.modulePath,
       }),
       Category({
         name: "Nested Text",
         items: [|
           Demo({
-            name: Italic.demoName,
-            modulePath: Italic.modulePath,
+            name: Italic_Doc.demoName,
+            modulePath: Italic_Doc.modulePath,
           }),
         |],
       }),
     |],
   }),
   Demo({
-    name: CodeExample.demoName,
-    modulePath: CodeExample.modulePath,
+    name: CodeExample_Doc.demoName,
+    modulePath: CodeExample_Doc.modulePath,
   }),
   Category({
     name: "Test search",
     items: [|
       Demo({
-        name: OneTwoThreeFour.demoName,
-        modulePath: OneTwoThreeFour.modulePath,
+        name: OneTwoThreeFour_Doc.demoName,
+        modulePath: OneTwoThreeFour_Doc.modulePath,
       }),
       Demo({
-        name: OneTwoThreeFive.demoName,
-        modulePath: OneTwoThreeFive.modulePath,
+        name: OneTwoThreeFive_Doc.demoName,
+        modulePath: OneTwoThreeFive_Doc.modulePath,
       }),
       Demo({
-        name: OneTwoFourSeven.demoName,
-        modulePath: OneTwoFourSeven.modulePath,
+        name: OneTwoFourSeven_Doc.demoName,
+        modulePath: OneTwoFourSeven_Doc.modulePath,
       }),
     |],
   }),
 |];
 
-let () = Reshowcase.NewEntry.start(~items, ~mode=Watch, ());
+let () = Reshowcase.NewEntry.start(~items, ~mode=Build, ());
