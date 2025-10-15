@@ -101,10 +101,19 @@ let customConfigPath = Process.env->Js.Dict.get("CUSTOM_CONFIG_PATH");
 let envPort =
   Process.env->Js.Dict.get("PORT")->Belt.Option.flatMap(int_of_string_opt);
 
+let mode =
+  Process.env->Js.Dict.get("MODE")->Belt.Option.getWithDefault("build");
+
+let mode =
+  switch (mode) {
+  | "build" => Bundler.Build
+  | "watch" => Watch
+  | _ => Build
+  };
+
 let start =
     (
       ~outputDir: string,
-      ~mode: Bundler.mode,
       ~port: option(int)=?,
       ~items: array(NewEntity.item),
       ~demoHtmlTemplatePath: option(string)=?,

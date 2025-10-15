@@ -71,6 +71,10 @@ build-example-ok:
 build-example: ## Builds the example
 	$(DUNE) build @build-example
 
-run:
+run-build:
 	rm -rf build
-	commands/reshowcase2 ./_build/default/newexample/newexample/newexample/NewDemo.js
+	MODE=build commands/reshowcase2 ./_build/default/newexample/newexample/newexample/NewDemo.js
+
+run-watch:
+	rm -rf build
+	MODE=watch commands/reshowcase2 ./_build/default/newexample/newexample/newexample/NewDemo.js
