@@ -39,6 +39,7 @@ module CustomConfig = {
       switch (configFilename) {
       | None => None
       | Some(filename) =>
+        Js.log2("reading custom config from:", filename);
         try({
           let pathToConfig = Path.join2(customConfigPath, filename);
 
@@ -98,7 +99,7 @@ module CustomConfig = {
         | Js.Exn.Error(e) =>
           Js.Console.error2("Failed to read config:", e);
           None;
-        }
+        };
       };
     };
 };
