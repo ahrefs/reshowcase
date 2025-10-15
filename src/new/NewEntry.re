@@ -93,10 +93,17 @@ let extractDemos = (~items: array(NewEntity.item)): list(extractedDemo) => {
 
 let envOutputDir = Process.env->Js.Dict.get("OUTPUT_DIR");
 
+let envDemoHtmlTemplatePath =
+  Process.env->Js.Dict.get("DEMO_HTML_TEMPLATE_PATH");
+
+let envPort =
+  Process.env->Js.Dict.get("PORT")->Belt.Option.flatMap(int_of_string_opt);
+
 let start =
     (
       ~outputDir: string,
       ~mode: Bundler.mode,
+      ~port: option(int)=?,
       ~items: array(NewEntity.item),
       ~demoHtmlTemplatePath: option(string)=?,
       (),
@@ -160,7 +167,21 @@ let start =
     let globalEnvValues = [||];
     let entries = entries;
     let logLevel = Esbuild.LogLevel.Debug;
-    let port = 8000;
+    let port =
+      switch (envPort) {
+      | Some(port) => port
+      | None =>
+        switch (port) {
+        | Some(port) => port
+        | None => 8000
+        }
+      };
+
+    let demoHtmlTemplatePath =
+      switch (envDemoHtmlTemplatePath) {
+      | Some(path) => Some(path)
+      | None => demoHtmlTemplatePath
+      };
 
     switch (mode) {
     | Build =>
