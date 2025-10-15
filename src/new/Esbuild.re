@@ -19,6 +19,7 @@ module CustomConfig = {
   type t = {
     define: option(Js.Dict.t(string)),
     loader: option(Js.Dict.t(string)),
+    publicPath: option(string),
   };
 
   [@mel.module "node:fs"]
@@ -66,9 +67,20 @@ module CustomConfig = {
               }
             };
 
+          let publicPath =
+            switch (Js.Nullable.toOption(config##publicPath)) {
+            | None => None
+            | Some(publicPathValue) =>
+              switch (Js.typeof(publicPathValue)) {
+              | "string" => Some(publicPathValue)
+              | _ => None
+              }
+            };
+
           Some({
             define,
             loader,
+            publicPath,
           });
         }) {
         | Js.Exn.Error(e) =>
@@ -221,7 +233,18 @@ let makeConfig =
     "chunkNames": Bundler.assetsDirname ++ "/" ++ "js/_chunks/[name]-[hash]",
     "assetNames": Bundler.assetsDirname ++ "/" ++ "[name]-[hash]",
     "outdir": Bundler.getOutputDir(~outputDir),
-    "publicPath": "/",
+    "publicPath": {
+      let customPublicPath =
+        switch (customConfig) {
+        | None => None
+        | Some(config) => config.publicPath
+        };
+
+      switch (customPublicPath) {
+      | Some(publicPath) => publicPath
+      | None => "/"
+      };
+    },
     // TODO Look at this
     "format": "esm",
     "bundle": true,
