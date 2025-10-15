@@ -70,4 +70,5 @@ let items: array(Reshowcase.NewEntity.item) = [|
   }),
 |];
 
-let () = Reshowcase.NewEntry.start(~items, ~mode=Build, ());
+let () =
+  Reshowcase.NewEntry.start(~items, ~mode=Watch, ~outputDir="./build", ());

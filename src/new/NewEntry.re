@@ -91,22 +91,19 @@ let extractDemos = (~items: array(NewEntity.item)): list(extractedDemo) => {
   extractWithPath(~path=[], ~items);
 };
 
-let entriesOutputDir = "/Users/denstr/projects/reshowcase/build";
-
-let esbuildOutputDir = Path.join2(entriesOutputDir, "esbuild");
-
 let start =
     (
+      ~outputDir: string,
       ~mode: Bundler.mode,
       ~items: array(NewEntity.item),
       ~demoHtmlTemplatePath: option(string)=?,
       (),
     ) => {
   let demos = extractDemos(~items);
-  // Js.log2("!!! extracted demos:\n", Util.inspect(demos->Array.of_list));
+  let esbuildOutputDir = Path.join2(outputDir, "esbuild");
 
   let mainEntryModulePath = NewReshowcaseUi2.modulePath;
-  let mainEntryJsPath = Path.join2(entriesOutputDir, "main.js");
+  let mainEntryJsPath = Path.join2(outputDir, "main.js");
   let mainEntryTemplate =
     makeMainTemplate(~filepath=mainEntryModulePath, ~items);
 
@@ -115,7 +112,7 @@ let start =
     entryPath: mainEntryJsPath,
   };
 
-  let () = Fs.mkDirSync(entriesOutputDir, {recursive: true});
+  let () = Fs.mkDirSync(outputDir, {recursive: true});
   let () = Fs.writeFileSync(~path=mainEntryJsPath, ~data=mainEntryTemplate);
 
   let demosEntries = {
@@ -123,7 +120,7 @@ let start =
     ->Belt.List.map(extractedDemo => {
         let demoEntryJsPath =
           Path.join2(
-            entriesOutputDir,
+            outputDir,
             demoTargetPathToJsEntryPath(extractedDemo.targetPath),
           );
 
