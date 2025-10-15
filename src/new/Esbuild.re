@@ -46,8 +46,10 @@ module CustomConfig = {
         let pathToConfig = Path.join2(customConfigPath, filename);
 
         import_(pathToConfig)
-        ->Promise.map(config => {
-            Js.log2("!!!Imported data:", config);
+        ->Promise.map(imported => {
+            Js.log2("!!!Imported data:", imported);
+
+            let config = imported##default;
 
             let define =
               switch (Js.Nullable.toOption(config##define)) {
