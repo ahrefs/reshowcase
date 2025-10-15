@@ -20,6 +20,7 @@ module CustomConfig = {
     define: option(Js.Dict.t(string)),
     loader: option(Js.Dict.t(string)),
     publicPath: option(string),
+    minify: option(bool),
   };
 
   [@mel.module "node:fs"]
@@ -77,10 +78,21 @@ module CustomConfig = {
               }
             };
 
+          let minify =
+            switch (Js.Nullable.toOption(config##minify)) {
+            | None => None
+            | Some(minifyValue) =>
+              switch (Js.typeof(minifyValue)) {
+              | "boolean" => Some(minifyValue)
+              | _ => None
+              }
+            };
+
           Some({
             define,
             loader,
             publicPath,
+            minify,
           });
         }) {
         | Js.Exn.Error(e) =>
@@ -249,9 +261,19 @@ let makeConfig =
     "format": "esm",
     "bundle": true,
     "minify": {
-      switch (mode) {
-      | Build => true
-      | Watch => false
+      let customMinify =
+        switch (customConfig) {
+        | None => None
+        | Some(config) => config.minify
+        };
+
+      switch (customMinify) {
+      | Some(minify) => minify
+      | None =>
+        switch (mode) {
+        | Build => true
+        | Watch => false
+        }
       };
     },
     "metafile": true,
