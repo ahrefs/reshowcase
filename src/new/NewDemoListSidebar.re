@@ -192,6 +192,7 @@ let renderMenu =
       ~isCategoriesCollapsedByDefault: bool,
       ~searchString,
       ~url: ReasonReactRouter.url,
+      ~publicPath: string,
       items: array(NewEntity.item),
     ) => {
   let activeElementRef = UseScrollIntoView.use();
@@ -217,12 +218,20 @@ let renderMenu =
             searchString == "" || searchMatchingTerms->Belt.Array.size > 0;
 
           if (isEntityNameMatchSearch || parentCategoryMatchedSearch) {
-            let fullPath =
+            let publicPathSegments =
+              publicPath
+              ->Js.String.split(~sep="/", _)
+              ->Belt.Array.keep(segment => segment != "");
+
+            let demoPathSegments =
               Belt.List.concat(categoryPath, [demoName])
               ->Belt.List.map(Utils.slugify)
-              ->Belt.List.toArray
-              ->Js.Array.join(~sep="/", _);
-            let href = "/" ++ fullPath;
+              ->Belt.List.toArray;
+
+            let fullPathSegments =
+              Belt.Array.concat(publicPathSegments, demoPathSegments);
+
+            let href = "/" ++ Js.Array.join(~sep="/", fullPathSegments);
 
             <SidebarLink
               activeDomRef=activeElementRef
@@ -308,6 +317,7 @@ let make =
       ~url: ReasonReactRouter.url,
       ~isCategoriesCollapsedByDefault: bool,
       ~onToggleCollapsedCategoriesByDefault: unit => unit,
+      ~publicPath: string,
     ) => {
   let (filterValue, setFilterValue) = React.useState(() => None);
   <Sidebar fullHeight=true>
@@ -351,6 +361,7 @@ let make =
          ~searchString=
            filterValue->Option.mapWithDefault("", Js.String.toLowerCase),
          ~url,
+         ~publicPath,
          items,
        )}
     </PaddedBox>

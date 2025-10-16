@@ -227,171 +227,163 @@ let makeConfig =
       ~logOverride: Js.Dict.t(LogLevel.t),
       ~logLevel: LogLevel.t,
       ~logLimit: int,
-      ~customConfigPath: option(string),
+      ~customConfig: option(CustomConfig.t),
     ) => {
-  let customConfigPromise =
-    switch (customConfigPath) {
-    | None => Promise.resolve(None)
-    | Some(path) => CustomConfig.readCustomConfig(~customConfigPath=path)
-    };
+  Js.log2("!!! customConfig:", customConfig);
 
-  customConfigPromise->Promise.map(customConfig => {
-    Js.log2("!!! customConfig:", customConfig);
-    {
-      // https://esbuild.github.io/api/
+  {
+    // https://esbuild.github.io/api/
 
-      "entryPoints":
-        entries->Js.Array.map(~f=(page: Entry.t) => page.entryPath, _),
-      "entryNames": Bundler.assetsDirname ++ "/" ++ "js/[dir]/[name]-[hash]",
-      "chunkNames": Bundler.assetsDirname ++ "/" ++ "js/_chunks/[name]-[hash]",
-      "assetNames": Bundler.assetsDirname ++ "/" ++ "[name]-[hash]",
-      "outdir": Bundler.getOutputDir(~outputDir),
-      "publicPath": {
-        let customPublicPath =
-          switch (customConfig) {
-          | None => None
-          | Some(config) => config.publicPath
-          };
-
-        let publicPath =
-          switch (customPublicPath) {
-          | Some(publicPath) => publicPath
-          | None => "/"
-          };
-
-        Js.log2("!!! publicPath:", publicPath);
-        publicPath;
-      },
-      // TODO Look at this
-      "format": "esm",
-      "bundle": true,
-      "minify": {
-        let customMinify =
-          switch (customConfig) {
-          | None => None
-          | Some(config) => config.minify
-          };
-
-        switch (customMinify) {
-        | Some(minify) => minify
-        | None =>
-          switch (mode) {
-          | Build => true
-          | Watch => false
-          }
+    "entryPoints":
+      entries->Js.Array.map(~f=(page: Entry.t) => page.entryPath, _),
+    "entryNames": Bundler.assetsDirname ++ "/" ++ "js/[dir]/[name]-[hash]",
+    "chunkNames": Bundler.assetsDirname ++ "/" ++ "js/_chunks/[name]-[hash]",
+    "assetNames": Bundler.assetsDirname ++ "/" ++ "[name]-[hash]",
+    "outdir": Bundler.getOutputDir(~outputDir),
+    "publicPath": {
+      let customPublicPath =
+        switch (customConfig) {
+        | None => None
+        | Some(config) => config.publicPath
         };
-      },
-      "metafile": true,
-      "splitting": true,
-      "treeShaking": true,
-      "logLimit": logLimit,
-      "logLevel": logLevel->LogLevel.toString,
-      "logOverride": {
-        let logOverride: Js.Dict.t(string) =
-          logOverride
-          ->Js.Dict.entries
-          ->Js.Array.map(
-              ~f=
-                ((error, logLevel)) => (error, logLevel->LogLevel.toString),
-              _,
-            )
-          ->Js.Dict.fromArray;
-        logOverride;
-      },
-      "define": {
-        let defaultDefine = Bundler.getGlobalEnvValuesDict(globalEnvValues);
 
-        let customDefine =
-          switch (customConfig) {
-          | None => None
-          | Some(config) => config.define
-          };
-
-        switch (customDefine) {
-        | None => defaultDefine
-        | Some(custom) => mergeDicts(defaultDefine, custom)
+      let publicPath =
+        switch (customPublicPath) {
+        | Some(publicPath) => publicPath
+        | None => "/"
         };
-      },
-      "loader": {
-        let customLoader =
-          switch (customConfig) {
-          | None => None
-          | Some(config) => config.loader
-          };
 
-        switch (customLoader) {
-        | Some(loader) => loader
-        | None =>
-          Bundler.assetFileExtensionsWithoutCss
-          ->Js.Array.map(~f=ext => {("." ++ ext, "file")}, _)
-          ->Js.Dict.fromArray
+      Js.log2("!!! publicPath:", publicPath);
+      publicPath;
+    },
+    // TODO Look at this
+    "format": "esm",
+    "bundle": true,
+    "minify": {
+      let customMinify =
+        switch (customConfig) {
+        | None => None
+        | Some(config) => config.minify
         };
-      },
-      "plugins": {
-        // entryPoint must be relative path to the root of user's project
-        // filename field, which if actually a path will be relative to "outdir".
-        let htmlPluginFiles =
-          entries->Js.Array.map(
-                     ~f=
-                       (renderedPage: Entry.t) => {
-                         let entryPathRelativeToProjectRoot =
-                           Path.relative(
-                             ~from=projectRootDir,
-                             ~to_=renderedPage.entryPath,
-                           );
 
-                         let isDemoEntry =
-                           Js.String.includes(
-                             ~search="iframe",
-                             renderedPage.path,
-                           );
-
-                         let htmlTemplate =
-                           switch (isDemoEntry) {
-                           | false =>
-                             makeHtmlTemplate(
-                               ~withHotReloadScript={
-                                 switch (mode) {
-                                 | Watch => true
-                                 | Build => false
-                                 };
-                               },
-                             )
-                           | true =>
-                             let demoHtmlTemplate =
-                               switch (demoHtmlTemplatePath) {
-                               | None => None
-                               | Some(path) =>
-                                 Some(Fs.readFileSyncAsUtf8(path))
-                               };
-
-                             switch (demoHtmlTemplate) {
-                             | Some(html) => html
-                             | None =>
-                               makeHtmlTemplate(~withHotReloadScript=false)
-                             };
-                           };
-
-                         {
-                           HtmlPlugin.filename:
-                             Path.join2(renderedPage.path, "index.html"),
-                           entryPoints: [|entryPathRelativeToProjectRoot|],
-                           htmlTemplate,
-                           scriptLoading: "module",
-                         };
-                       },
-                     _,
-                   );
-
-        let htmlPlugin = HtmlPlugin.make(. {files: htmlPluginFiles});
-
+      switch (customMinify) {
+      | Some(minify) => minify
+      | None =>
         switch (mode) {
-        | Build => [|htmlPlugin|]
-        | Watch => [|htmlPlugin, Plugin.watchModePlugin|]
+        | Build => true
+        | Watch => false
+        }
+      };
+    },
+    "metafile": true,
+    "splitting": true,
+    "treeShaking": true,
+    "logLimit": logLimit,
+    "logLevel": logLevel->LogLevel.toString,
+    "logOverride": {
+      let logOverride: Js.Dict.t(string) =
+        logOverride
+        ->Js.Dict.entries
+        ->Js.Array.map(
+            ~f=((error, logLevel)) => (error, logLevel->LogLevel.toString),
+            _,
+          )
+        ->Js.Dict.fromArray;
+      logOverride;
+    },
+    "define": {
+      let defaultDefine = Bundler.getGlobalEnvValuesDict(globalEnvValues);
+
+      let customDefine =
+        switch (customConfig) {
+        | None => None
+        | Some(config) => config.define
         };
-      },
-    };
-  });
+
+      switch (customDefine) {
+      | None => defaultDefine
+      | Some(custom) => mergeDicts(defaultDefine, custom)
+      };
+    },
+    "loader": {
+      let customLoader =
+        switch (customConfig) {
+        | None => None
+        | Some(config) => config.loader
+        };
+
+      switch (customLoader) {
+      | Some(loader) => loader
+      | None =>
+        Bundler.assetFileExtensionsWithoutCss
+        ->Js.Array.map(~f=ext => {("." ++ ext, "file")}, _)
+        ->Js.Dict.fromArray
+      };
+    },
+    "plugins": {
+      // entryPoint must be relative path to the root of user's project
+      // filename field, which if actually a path will be relative to "outdir".
+      let htmlPluginFiles =
+        entries->Js.Array.map(
+                   ~f=
+                     (renderedPage: Entry.t) => {
+                       let entryPathRelativeToProjectRoot =
+                         Path.relative(
+                           ~from=projectRootDir,
+                           ~to_=renderedPage.entryPath,
+                         );
+
+                       let isDemoEntry =
+                         Js.String.includes(
+                           ~search="iframe",
+                           renderedPage.path,
+                         );
+
+                       let htmlTemplate =
+                         switch (isDemoEntry) {
+                         | false =>
+                           makeHtmlTemplate(
+                             ~withHotReloadScript={
+                               switch (mode) {
+                               | Watch => true
+                               | Build => false
+                               };
+                             },
+                           )
+                         | true =>
+                           let demoHtmlTemplate =
+                             switch (demoHtmlTemplatePath) {
+                             | None => None
+                             | Some(path) =>
+                               Some(Fs.readFileSyncAsUtf8(path))
+                             };
+
+                           switch (demoHtmlTemplate) {
+                           | Some(html) => html
+                           | None =>
+                             makeHtmlTemplate(~withHotReloadScript=false)
+                           };
+                         };
+
+                       {
+                         HtmlPlugin.filename:
+                           Path.join2(renderedPage.path, "index.html"),
+                         entryPoints: [|entryPathRelativeToProjectRoot|],
+                         htmlTemplate,
+                         scriptLoading: "module",
+                       };
+                     },
+                   _,
+                 );
+
+      let htmlPlugin = HtmlPlugin.make(. {files: htmlPluginFiles});
+
+      switch (mode) {
+      | Build => [|htmlPlugin|]
+      | Watch => [|htmlPlugin, Plugin.watchModePlugin|]
+      };
+    },
+  };
 };
 
 let build =
@@ -402,7 +394,7 @@ let build =
       ~entries: array(Entry.t),
       ~logLevel: LogLevel.t=Warning,
       ~logOverride: Js.Dict.t(LogLevel.t)=Js.Dict.empty(),
-      ~customConfigPath: option(string),
+      ~customConfig: option(CustomConfig.t),
       ~demoHtmlTemplatePath: option(string)=?,
       (),
     )
@@ -411,32 +403,32 @@ let build =
 
   let startTime = Performance.now();
 
-  makeConfig(
-    ~mode=Build,
-    ~outputDir,
-    ~projectRootDir,
-    ~globalEnvValues,
-    ~entries,
-    ~logLevel,
-    ~logOverride,
-    ~logLimit=10,
-    ~customConfigPath,
-    ~demoHtmlTemplatePath,
-  )
-  ->Promise.flatMap(config =>
-      esbuild
-      ->build'(config)
-      ->Promise.map(_buildResult => {
-          // let json =
-          //   Js.Json.stringifyAny(_buildResult.metafile)
-          //   ->Belt.Option.getWithDefault("");
-          // Fs.writeFileSync(~path=Path.join2(outputDir, "meta.json"), ~data=json);
-          Js.log2(
-            "[Esbuild] Success! Duration:",
-            Performance.durationSinceStartTime(~startTime),
-          )
-        })
-    )
+  let config =
+    makeConfig(
+      ~mode=Build,
+      ~outputDir,
+      ~projectRootDir,
+      ~globalEnvValues,
+      ~entries,
+      ~logLevel,
+      ~logOverride,
+      ~logLimit=10,
+      ~customConfig,
+      ~demoHtmlTemplatePath,
+    );
+
+  esbuild
+  ->build'(config)
+  ->Promise.map(_buildResult => {
+      // let json =
+      //   Js.Json.stringifyAny(_buildResult.metafile)
+      //   ->Belt.Option.getWithDefault("");
+      // Fs.writeFileSync(~path=Path.join2(outputDir, "meta.json"), ~data=json);
+      Js.log2(
+        "[Esbuild] Success! Duration:",
+        Performance.durationSinceStartTime(~startTime),
+      )
+    })
   ->Promise.catch(error => {
       Js.Console.error2(
         "[Esbuild] Build failed! Promise.catch:",
@@ -456,7 +448,7 @@ let watchAndServe =
       ~logLevel: LogLevel.t=Warning,
       ~logOverride: Js.Dict.t(LogLevel.t)=Js.Dict.empty(),
       ~logLimit=10,
-      ~customConfigPath: option(string),
+      ~customConfig: option(CustomConfig.t),
       ~demoHtmlTemplatePath: option(string)=?,
       (),
     )
@@ -466,62 +458,62 @@ let watchAndServe =
   let serveDurationLabel = "[Esbuild] Serve mode started! Duration";
   Js.Console.timeStart(watchDurationLabel);
 
-  makeConfig(
-    ~mode=Watch,
-    ~outputDir,
-    ~projectRootDir,
-    ~globalEnvValues,
-    ~entries,
-    ~logLevel,
-    ~logOverride,
-    ~logLimit,
-    ~customConfigPath,
-    ~demoHtmlTemplatePath,
-  )
-  ->Promise.flatMap(config => {
-      let contextPromise = esbuild->context(config);
+  let config =
+    makeConfig(
+      ~mode=Watch,
+      ~outputDir,
+      ~projectRootDir,
+      ~globalEnvValues,
+      ~entries,
+      ~logLevel,
+      ~logOverride,
+      ~logLimit,
+      ~customConfig,
+      ~demoHtmlTemplatePath,
+    );
 
-      GracefulShutdown.addTask(() => {
-        Js.log("[Esbuild] Stopping esbuild...");
+  let contextPromise = esbuild->context(config);
 
-        Js.Global.setTimeout(
-          ~f=
-            () => {
-              Js.log("[Esbuild] Failed to gracefully shutdown.");
-              Process.exit(1);
-            },
-          GracefulShutdown.gracefulShutdownTimeout,
-        )
-        ->ignore;
+  GracefulShutdown.addTask(() => {
+    Js.log("[Esbuild] Stopping esbuild...");
 
-        contextPromise
-        ->Promise.flatMap(context => context->dispose())
-        ->Promise.map(() => Js.log("[Esbuild] Stopped successfully"));
-      });
-
-      contextPromise
-      ->Promise.flatMap(context => context->watch())
-      ->Promise.map(() => Js.Console.timeEnd(watchDurationLabel))
-      ->Promise.catch(error => {
-          Js.Console.error2("[Esbuild] Failed to start watch mode:", error);
+    Js.Global.setTimeout(
+      ~f=
+        () => {
+          Js.log("[Esbuild] Failed to gracefully shutdown.");
           Process.exit(1);
+        },
+      GracefulShutdown.gracefulShutdownTimeout,
+    )
+    ->ignore;
+
+    contextPromise
+    ->Promise.flatMap(context => context->dispose())
+    ->Promise.map(() => Js.log("[Esbuild] Stopped successfully"));
+  });
+
+  contextPromise
+  ->Promise.flatMap(context => context->watch())
+  ->Promise.map(() => Js.Console.timeEnd(watchDurationLabel))
+  ->Promise.catch(error => {
+      Js.Console.error2("[Esbuild] Failed to start watch mode:", error);
+      Process.exit(1);
+    })
+  ->Promise.flatMap(() => {
+      Js.Console.timeStart(serveDurationLabel);
+      contextPromise->Promise.flatMap(context =>
+        context->serve({
+          port,
+          servedir: Some(config##outdir),
         })
-      ->Promise.flatMap(() => {
-          Js.Console.timeStart(serveDurationLabel);
-          contextPromise->Promise.flatMap(context =>
-            context->serve({
-              port,
-              servedir: Some(config##outdir),
-            })
-          );
-        })
-      ->Promise.map(serveResult => {
-          Js.Console.timeEnd(serveDurationLabel);
-          serveResult;
-        })
-      ->Promise.catch(error => {
-          Js.Console.error2("[Esbuild] Failed to start serve mode:", error);
-          Process.exit(1);
-        });
+      );
+    })
+  ->Promise.map(serveResult => {
+      Js.Console.timeEnd(serveDurationLabel);
+      serveResult;
+    })
+  ->Promise.catch(error => {
+      Js.Console.error2("[Esbuild] Failed to start serve mode:", error);
+      Process.exit(1);
     });
 };

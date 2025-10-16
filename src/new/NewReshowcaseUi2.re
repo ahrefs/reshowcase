@@ -254,7 +254,7 @@ type route =
 
 module App = {
   [@react.component]
-  let make = (~itemsJsonString) => {
+  let make = (~itemsJsonString, ~publicPath: string) => {
     let items = itemsJsonString->NewEntity.items_of_json_string;
     let url = ReasonReactRouter.useUrl();
     let route = {
@@ -293,6 +293,7 @@ module App = {
           url
           isCategoriesCollapsedByDefault
           onToggleCollapsedCategoriesByDefault
+          publicPath
         />
         {switch (route) {
          | Home =>
@@ -300,8 +301,23 @@ module App = {
              <div className=Css.emptyText> "Pick a demo"->React.string </div>
            </div>
          | Demo(pathParts) =>
-           let demoPath = "/" ++ String.concat("/", pathParts);
-           let iframePath = demoPath ++ "/iframe/index.html";
+           let publicPathSegments =
+             publicPath
+             ->Js.String.split(~sep="/", _)
+             ->Belt.Array.keep(segment => segment != "");
+
+           let fullPathSegments =
+             Belt.Array.concat(
+               publicPathSegments,
+               Belt.List.toArray(pathParts),
+             );
+
+           let iframePathSegments =
+             Belt.Array.concat(fullPathSegments, [|"iframe", "index.html"|]);
+
+           let iframePath =
+             "/" ++ Js.Array.join(~sep="/", iframePathSegments);
+
            <div name="Content" className=Css.right>
              <TopPanel responsiveMode onSetResponsiveMode />
              <div name="Demo" className=Css.demo>
@@ -322,13 +338,13 @@ module App = {
 };
 
 [@react.component]
-let make = (~itemsJsonString) =>
+let make = (~itemsJsonString, ~publicPath) =>
   <ReasonReactErrorBoundary
     fallback={error => {
       Js.log(error);
       <h1> {React.string("Something went wrong")} </h1>;
     }}>
-    <App itemsJsonString />
+    <App itemsJsonString publicPath />
   </ReasonReactErrorBoundary>;
 
 let modulePath = Utils.getFilepath();
