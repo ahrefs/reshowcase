@@ -235,7 +235,8 @@ let makeConfig =
     | Some(path) => CustomConfig.readCustomConfig(~customConfigPath=path)
     };
 
-  customConfigPromise->Promise.map(customConfig =>
+  customConfigPromise->Promise.map(customConfig => {
+    Js.log2("!!! customConfig:", customConfig);
     {
       // https://esbuild.github.io/api/
 
@@ -252,10 +253,14 @@ let makeConfig =
           | Some(config) => config.publicPath
           };
 
-        switch (customPublicPath) {
-        | Some(publicPath) => publicPath
-        | None => "/"
-        };
+        let publicPath =
+          switch (customPublicPath) {
+          | Some(publicPath) => publicPath
+          | None => "/"
+          };
+
+        Js.log2("!!! publicPath:", publicPath);
+        publicPath;
       },
       // TODO Look at this
       "format": "esm",
@@ -385,8 +390,8 @@ let makeConfig =
         | Watch => [|htmlPlugin, Plugin.watchModePlugin|]
         };
       },
-    }
-  );
+    };
+  });
 };
 
 let build =
