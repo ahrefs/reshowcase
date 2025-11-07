@@ -301,19 +301,11 @@ module App = {
              <div className=Css.emptyText> "Pick a demo"->React.string </div>
            </div>
          | Demo(pathParts) =>
-           let publicPathSegments =
-             publicPath
-             ->Js.String.split(~sep="/", _)
-             ->Belt.Array.keep(segment => segment != "");
-
-           let fullPathSegments =
-             Belt.Array.concat(
-               publicPathSegments,
-               Belt.List.toArray(pathParts),
-             );
-
            let iframePathSegments =
-             Belt.Array.concat(fullPathSegments, [|"iframe", "index.html"|]);
+             Belt.Array.concat(
+               Belt.List.toArray(pathParts),
+               [|"iframe", "index.html"|],
+             );
 
            let iframePath =
              "/" ++ Js.Array.join(~sep="/", iframePathSegments);
