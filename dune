@@ -9,6 +9,7 @@
   commands/reshowcase
   commands/reshowcase2
   commands/node-loader.js
+  commands/polyfill.js
   commands/ui-template.html))
 
 (rule
