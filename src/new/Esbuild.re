@@ -195,7 +195,7 @@ new EventSource("/esbuild").addEventListener("change", () => location.reload())
 </script>
 |js};
 
-let makeHtmlTemplate = (~withHotReloadScript) => {
+let makeAppHtmlTemplate = (~withHotReloadScript) => {
   let hotReloadScript = withHotReloadScript ? hotReloadScript : "";
   {j|
 <!DOCTYPE html>
@@ -240,6 +240,26 @@ let makeHtmlTemplate = (~withHotReloadScript) => {
   </body>
 </html>
 |j};
+};
+
+let makeDemoHtmlTemplate = () => {
+  {js|
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title>Reshowcase demo</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+  </head>
+
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+|js};
 };
 
 let mergeDicts = (dict1, dict2) => {
@@ -373,7 +393,7 @@ let makeConfig =
                        let htmlTemplate =
                          switch (isDemoEntry) {
                          | false =>
-                           makeHtmlTemplate(
+                           makeAppHtmlTemplate(
                              ~withHotReloadScript={
                                switch (mode) {
                                | Watch => true
@@ -382,18 +402,10 @@ let makeConfig =
                              },
                            )
                          | true =>
-                           let demoHtmlTemplate =
-                             switch (demoHtmlTemplatePath) {
-                             | None => None
-                             | Some(path) =>
-                               Some(Fs.readFileSyncAsUtf8(path))
-                             };
-
-                           switch (demoHtmlTemplate) {
-                           | Some(html) => html
-                           | None =>
-                             makeHtmlTemplate(~withHotReloadScript=false)
-                           };
+                           switch (demoHtmlTemplatePath) {
+                           | None => makeDemoHtmlTemplate()
+                           | Some(path) => Fs.readFileSyncAsUtf8(path)
+                           }
                          };
 
                        {
