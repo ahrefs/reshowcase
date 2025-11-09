@@ -70,24 +70,12 @@ module TopPanel = {
     let rightSection = [%cx {|
       display: flex;
     |}];
-
-    let sidebarIcon = [%cx
-      {|
-      transition: 200ms ease-in-out transform;
-    |}
-    ];
-
-    let sidebarIconActive = [%cx {|
-      transform: rotate(180deg)
-    |}];
   };
 
   [@react.component]
   let make =
       (
-        ~isSidebarHidden: bool,
         ~responsiveMode: responsiveMode,
-        ~onRightSidebarToggle: unit => unit,
         ~onSetResponsiveMode: (responsiveMode => responsiveMode) => unit,
       ) =>
     <div className=Css.panel>
@@ -122,31 +110,9 @@ module TopPanel = {
           </div>
         </PaddedBox>
       </div>
-      <div className=Css.rightSection>
-        <PaddedBox gap=Md>
-          <div className=Css.buttonGroup>
-            <button
-              title={isSidebarHidden ? "Show sidebar" : "Hide sidebar"}
-              className={Css.button +++ Css.buttonSquare}
-              onClick={event => {
-                event->React.Event.Mouse.preventDefault;
-                onRightSidebarToggle();
-              }}>
-              <div
-                className={
-                  Css.sidebarIcon
-                  +++ Css.sidebarIconActive->Cn.ifTrue(!isSidebarHidden)
-                }>
-                Icon.sidebar
-              </div>
-            </button>
-          </div>
-        </PaddedBox>
-      </div>
+      <div className=Css.rightSection />
     </div>;
 };
-
-let rightSidebarId = "rightSidebar";
 
 module SidebarLink = {
   module Css = {
@@ -472,205 +438,6 @@ module DemoListSidebar = {
   };
 };
 
-module DemoUnitSidebar = {
-  module Css = {
-    open StyleVars;
-
-    let label = [%cx
-      {|
-      display: block;
-      background-color: $(Color.white);
-      border-radius: $(BorderRadius.default);
-      box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.07);
-    |}
-    ];
-
-    let labelText = [%cx
-      {|
-      font-size: $(FontSize.md);
-      text-align: center;
-    |}
-    ];
-
-    let textInput = [%cx
-      {|
-      font-size: $(FontSize.md);
-      width: 100%;
-      box-sizing: border-box;
-      background-color: $(Color.lightGray);
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-      border: none;
-      padding: $(Gap.md);
-      border-radius: $(BorderRadius.default);
-    |}
-    ];
-
-    let select = [%cx
-      {|
-      font-size: $(FontSize.md);
-      width: 100%;
-      box-sizing: border-box;
-      background-color: $(Color.lightGray);
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-      border: none;
-      padding: $(Gap.md);
-      border-radius: $(BorderRadius.default);
-      appearance: none;
-      -webkit-appearance: none;
-      padding-right: 30px;
-      background-image:
-          url("data:image/svg+xml,%3Csvg width='36' height='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='%2342484E' stroke-width='2' d='M12.246 14.847l5.826 5.826 5.827-5.826' fill='none' fill-rule='evenodd' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-position: center right;
-      background-size: contain;
-      background-repeat: no-repeat;
-    |}
-    ];
-
-    let checkbox = [%cx
-      {|
-      font-size: $(FontSize.md);
-      margin: 0 auto;
-      display: block;
-    |}
-    ];
-  };
-
-  module PropBox = {
-    [@react.component]
-    let make = (~propName: string, ~children) =>
-      <label className=Css.label>
-        <PaddedBox>
-          <Stack>
-            <div className=Css.labelText> propName->React.string </div>
-            children
-          </Stack>
-        </PaddedBox>
-      </label>;
-  };
-
-  [@react.component]
-  let make =
-      (
-        ~strings:
-           Map.String.t(
-             (
-               Configs.stringConfig,
-               string,
-               option(array((string, string))),
-             ),
-           ),
-        ~ints: Map.String.t((Configs.numberConfig(int), int)),
-        ~floats: Map.String.t((Configs.numberConfig(float), float)),
-        ~bools: Map.String.t((Configs.boolConfig, bool)),
-        ~onStringChange,
-        ~onIntChange,
-        ~onFloatChange,
-        ~onBoolChange,
-      ) =>
-    <PaddedBox gap=Md>
-      <Stack>
-        {strings
-         ->Map.String.toArray
-         ->Array.map(((propName, (_config, value, options))) =>
-             <PropBox key=propName propName>
-               {switch (options) {
-                | None =>
-                  <input
-                    type_="text"
-                    value
-                    className=Css.textInput
-                    onChange={event =>
-                      onStringChange(
-                        propName,
-                        event->React.Event.Form.target##value,
-                      )
-                    }
-                  />
-                | Some(options) =>
-                  <select
-                    className=Css.select
-                    onChange={event => {
-                      let value = event->React.Event.Form.target##value;
-
-                      onStringChange(propName, value);
-                    }}>
-                    {options
-                     ->Array.map(((key, optionValue)) =>
-                         <option
-                           key
-                           selected={value == optionValue}
-                           value=optionValue>
-                           key->React.string
-                         </option>
-                       )
-                     ->React.array}
-                  </select>
-                }}
-             </PropBox>
-           )
-         ->React.array}
-        {ints
-         ->Map.String.toArray
-         ->Array.map(((propName, ({Configs.min, max, _}, value))) =>
-             <PropBox key=propName propName>
-               <input
-                 type_="number"
-                 min={string_of_int(min)}
-                 max={string_of_int(max)}
-                 value={string_of_int(value)}
-                 className=Css.textInput
-                 onChange={event =>
-                   onIntChange(
-                     propName,
-                     event->React.Event.Form.target##value->int_of_string,
-                   )
-                 }
-               />
-             </PropBox>
-           )
-         ->React.array}
-        {floats
-         ->Map.String.toArray
-         ->Array.map(((propName, ({Configs.min, max, _}, value))) =>
-             <PropBox key=propName propName>
-               <input
-                 type_="number"
-                 min={string_of_float(min)}
-                 max={string_of_float(max)}
-                 value={string_of_float(value)}
-                 className=Css.textInput
-                 onChange={event =>
-                   onFloatChange(
-                     propName,
-                     event->React.Event.Form.target##value->float_of_string,
-                   )
-                 }
-               />
-             </PropBox>
-           )
-         ->React.array}
-        {bools
-         ->Map.String.toArray
-         ->Array.map(((propName, (_config, checked))) =>
-             <PropBox key=propName propName>
-               <input
-                 type_="checkbox"
-                 checked
-                 className=Css.checkbox
-                 onChange={event =>
-                   onBoolChange(
-                     propName,
-                     event->React.Event.Form.target##checked,
-                   )
-                 }
-               />
-             </PropBox>
-           )
-         ->React.array}
-      </Stack>
-    </PaddedBox>;
-};
-
 module DemoUnit = {
   module Css = {
     let container = [%cx
@@ -695,180 +462,17 @@ module DemoUnit = {
     ];
   };
 
-  type state = {
-    strings:
-      Map.String.t(
-        (Configs.stringConfig, string, option(array((string, string)))),
-      ),
-    ints: Map.String.t((Configs.numberConfig(int), int)),
-    floats: Map.String.t((Configs.numberConfig(float), float)),
-    bools: Map.String.t((Configs.boolConfig, bool)),
-  };
-
-  type action =
-    | SetString(string, string)
-    | SetInt(string, int)
-    | SetFloat(string, float)
-    | SetBool(string, bool);
-
-  let getRightSidebarElement = (): option(Dom.element) =>
-    Window.window##parent##document##getElementById(rightSidebarId)
-    ->Js.Nullable.toOption;
-
   [@react.component]
   let make = (~demoUnit: Configs.demoUnitProps => React.element) => {
-    let (parentWindowRightSidebarElem, setParentWindowRightSidebarElem) =
-      React.useState(() => None);
-
-    React.useEffect0(() => {
-      switch (getRightSidebarElement()) {
-      | Some(elem) => setParentWindowRightSidebarElem(_ => Some(elem))
-      | None => ()
-      };
-      None;
-    });
-    React.useEffect0(() => {
-      Window.addMessageListener(event =>
-        if (Window.window##parent === event##source) {
-          let message: string = event##data;
-          switch (message->Window.Message.fromStringOpt) {
-          | Some(RightSidebarDisplayed) =>
-            switch (getRightSidebarElement()) {
-            | Some(elem) => setParentWindowRightSidebarElem(_ => Some(elem))
-            | None => ()
-            }
-          | None => Js.Console.error("Unexpected message received")
-          };
-        }
-      );
-      None;
-    });
-    let (state, dispatch) =
-      React.useReducer(
-        (state, action) =>
-          switch (action) {
-          | SetString(name, newValue) => {
-              ...state,
-              strings:
-                state.strings
-                ->Map.String.update(name, value =>
-                    value->Option.map(((config, _value, options)) =>
-                      (config, newValue, options)
-                    )
-                  ),
-            }
-          | SetInt(name, newValue) => {
-              ...state,
-              ints:
-                state.ints
-                ->Map.String.update(name, value =>
-                    value->Option.map(((config, _value)) =>
-                      (config, newValue)
-                    )
-                  ),
-            }
-          | SetFloat(name, newValue) => {
-              ...state,
-              floats:
-                state.floats
-                ->Map.String.update(name, value =>
-                    value->Option.map(((config, _value)) =>
-                      (config, newValue)
-                    )
-                  ),
-            }
-          | SetBool(name, newValue) => {
-              ...state,
-              bools:
-                state.bools
-                ->Map.String.update(name, value =>
-                    value->Option.map(((config, _value)) =>
-                      (config, newValue)
-                    )
-                  ),
-            }
-          },
-        {
-          let strings = ref(Map.String.empty);
-          let ints = ref(Map.String.empty);
-          let floats = ref(Map.String.empty);
-          let bools = ref(Map.String.empty);
-          let props: Configs.demoUnitProps = {
-            string: (name, ~options=?, config) => {
-              strings :=
-                strings.contents
-                ->Map.String.set(name, (config, config, options));
-              config;
-            },
-            int: (name, config) => {
-              ints :=
-                ints.contents->Map.String.set(name, (config, config.initial));
-              config.initial;
-            },
-            float: (name, config) => {
-              floats :=
-                floats.contents
-                ->Map.String.set(name, (config, config.initial));
-              config.initial;
-            },
-            bool: (name, config) => {
-              bools := bools.contents->Map.String.set(name, (config, config));
-              config;
-            },
-          };
-
-          let _ = demoUnit(props);
-          {
-            strings: strings.contents,
-            ints: ints.contents,
-            floats: floats.contents,
-            bools: bools.contents,
-          };
-        },
-      );
-
     let props: Configs.demoUnitProps = {
-      string: (name, ~options as _=?, _config) => {
-        let (_, value, _) = state.strings->Map.String.getExn(name);
-        value;
-      },
-      int: (name, _config) => {
-        let (_, value) = state.ints->Map.String.getExn(name);
-        value;
-      },
-      float: (name, _config) => {
-        let (_, value) = state.floats->Map.String.getExn(name);
-        value;
-      },
-      bool: (name, _config) => {
-        let (_, value) = state.bools->Map.String.getExn(name);
-        value;
-      },
+      string: (_name, ~options as _=?, config) => config,
+      int: (_name, config) => config.initial,
+      float: (_name, config) => config.initial,
+      bool: (_name, config) => config,
     };
 
     <div name="DemoUnit" className=Css.container>
       <div className=Css.contents> {demoUnit(props)} </div>
-      {switch (parentWindowRightSidebarElem) {
-       | None => React.null
-       | Some(element) =>
-         ReactDOM.createPortal(
-           <DemoUnitSidebar
-             strings={state.strings}
-             ints={state.ints}
-             floats={state.floats}
-             bools={state.bools}
-             onStringChange={(name, value) =>
-               dispatch(SetString(name, value))
-             }
-             onIntChange={(name, value) => dispatch(SetInt(name, value))}
-             onFloatChange={(name, value) =>
-               dispatch(SetFloat(name, value))
-             }
-             onBoolChange={(name, value) => dispatch(SetBool(name, value))}
-           />,
-           element,
-         )
-       }}
     </div>;
   };
 };
@@ -1029,9 +633,6 @@ module App = {
       | _ => Home
       };
 
-    let (loadedIframeWindow: option(Js.t('a)), setLoadedIframeWindow) =
-      React.useState(() => None);
-
     let (iframeKey, setIframeKey) =
       React.useState(() => Js.Date.now()->Float.toString);
 
@@ -1042,26 +643,8 @@ module App = {
       },
       [|url|],
     );
-    let (showRightSidebar, toggleShowRightSidebar) =
-      React.useState(() =>
-        LocalStorage.localStorage
-        ->LocalStorage.getItem("sidebar")
-        ->Option.isSome
-      );
 
     let (responsiveMode, onSetResponsiveMode) = React.useState(() => Desktop);
-
-    React.useEffect1(
-      () => {
-        if (showRightSidebar) {
-          LocalStorage.localStorage->LocalStorage.setItem("sidebar", "1");
-        } else {
-          LocalStorage.localStorage->LocalStorage.removeItem("sidebar");
-        };
-        None;
-      },
-      [|showRightSidebar|],
-    );
     let (isCategoriesCollapsedByDefault, toggleIsCategoriesCollapsed) =
       React.useState(() =>
         switch (
@@ -1100,37 +683,16 @@ module App = {
              onToggleCollapsedCategoriesByDefault
            />
            <div name="Content" className=Css.right>
-             <TopPanel
-               isSidebarHidden={!showRightSidebar}
-               responsiveMode
-               onRightSidebarToggle={() => {
-                 toggleShowRightSidebar(_ => !showRightSidebar);
-                 switch (loadedIframeWindow) {
-                 | Some(window) when !showRightSidebar =>
-                   Window.postMessage(window, RightSidebarDisplayed)
-                 | None
-                 | _ => ()
-                 };
-               }}
-               onSetResponsiveMode
-             />
+             <TopPanel responsiveMode onSetResponsiveMode />
              <div name="Demo" className=Css.demo>
                <div className=Css.demoContents>
                  <DemoUnitFrame
                    key={"DemoUnitFrame" ++ iframeKey}
                    queryString
                    responsiveMode
-                   onLoad={iframeWindow =>
-                     setLoadedIframeWindow(_ => Some(iframeWindow))
-                   }
+                   onLoad={_iframeWindow => ()}
                  />
                </div>
-               {showRightSidebar
-                  ? <Sidebar
-                      key={"Sidebar" ++ iframeKey}
-                      innerContainerId=rightSidebarId
-                    />
-                  : React.null}
              </div>
            </div>
          </>

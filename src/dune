@@ -1,7 +1,18 @@
+(include_subdirs unqualified)
+
 (library
  (name reshowcase)
  (preprocess
-  (pps melange.ppx reason-react-ppx styled-ppx))
- (libraries melange.belt reason-react styled-ppx.melange)
+  (pps melange.ppx melange-json.ppx reason-react-ppx styled-ppx))
+ (libraries melange.belt melange-json reason-react styled-ppx.melange)
  (public_name reshowcase)
  (modes melange))
+
+(melange.emit
+ (target browser)
+ (alias browser)
+ (libraries reshowcase)
+ (preprocess
+  (pps melange.ppx reason-react-ppx))
+ (modules)
+ (module_systems es6))

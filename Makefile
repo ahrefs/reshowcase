@@ -70,3 +70,11 @@ build-example-ok:
 .PHONY: build-example
 build-example: ## Builds the example
 	$(DUNE) build @build-example
+
+run-build:
+	rm -rf build
+	MODE=build commands/reshowcase2 ./_build/default/newexample/newexample/newexample/NewDemo.js
+
+run-watch:
+	rm -rf build
+	MODE=watch commands/reshowcase2 ./_build/default/newexample/newexample/newexample/NewDemo.js

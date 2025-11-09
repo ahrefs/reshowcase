@@ -1,0 +1,5 @@
+#!/bin/bash
+# node_custom_bin
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec node --require "$SCRIPT_DIR/polyfill.js" "$@"

@@ -1,4 +1,4 @@
-(dirs commands example src tests)
+(dirs commands example newexample src tests)
 
 (install
  (section bin)
@@ -7,6 +7,9 @@
   commands/demo-template.html
   commands/favicon.png
   commands/reshowcase
+  commands/reshowcase2
+  commands/node-loader.js
+  commands/polyfill.js
   commands/ui-template.html))
 
 (rule

@@ -4,7 +4,14 @@ external process: 'a = "process";
 [@mel.module] external util: 'a = "util";
 
 let inspect = (value): string =>
-  util##inspect(value, {"compact": false, "depth": 20, "colors": true});
+  util##inspect(
+    value,
+    {
+      "compact": false,
+      "depth": 20,
+      "colors": true,
+    },
+  );
 
 let exitWithError = (): unit => process##exit(1);
 

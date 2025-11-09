@@ -113,7 +113,15 @@ demo(({addDemo: _, addCategory}) =>
     addCategory("Headings", ({addDemo, addCategory: _}) => {
       addDemo("H1", ({string, int, _}) => {
         let size =
-          int("Font size", {min: 0, max: 100, initial: 30, step: 1});
+          int(
+            "Font size",
+            {
+              min: 0,
+              max: 100,
+              initial: 30,
+              step: 1,
+            },
+          );
 
         <h1 className={Css.h1Size(size)}>
           {string("Text", "hello")->React.string}
