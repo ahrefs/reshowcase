@@ -197,13 +197,44 @@ new EventSource("/esbuild").addEventListener("change", () => location.reload())
 
 let makeHtmlTemplate = (~withHotReloadScript) => {
   let hotReloadScript = withHotReloadScript ? hotReloadScript : "";
-
-  {j|<!DOCTYPE html>
+  {j|
+<!DOCTYPE html>
 <html>
-<head>
-  $(hotReloadScript)
-  <title>Reshowcase</title>
-</head>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title>Reshowcase</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <style>
+      html {
+        background-color: #fff;
+      }
+
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+      }
+
+      body {
+        display: flex;
+        height: 100vh;
+        flex-direction: column;
+        overflow-x: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      }
+
+      #root {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+      }
+    </style>
+    $(hotReloadScript)
+  </head>
+
   <body>
     <div id="root"></div>
   </body>
