@@ -5,6 +5,7 @@ type jsError;
 [@mel.get] external getStack: jsError => string = "stack";
 
 external window: _ = "window";
+external process: _ = "process";
 
 // Commented to avoid error in webpack
 // @module("path") external dirnameFromFilepath: string => string = "dirname"
@@ -42,10 +43,10 @@ let getFilepathFromError = jsError => {
 };
 
 let getFilepath = () =>
-  switch (Js.typeof(window) == "undefined") {
+  switch (Js.typeof(process) == "undefined") {
   // Get filepath only in node
-  | false => ""
-  | true => makeError()->getFilepathFromError
+  | true => ""
+  | _false => makeError()->getFilepathFromError
   };
 
 let getDirname = () => makeError()->getFilepathFromError->dirnameFromFilepath;
