@@ -925,19 +925,27 @@ module DemoUnitFrame = {
 
   [@react.component]
   let make =
-      (~queryString: string, ~responsiveMode, ~onLoad: Js.t('a) => unit) => {
-    let iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
+      (
+        ~demoName: string,
+        ~categories,
+        ~responsiveMode,
+        ~onLoad: Js.t('a) => unit,
+      ) => {
+    let _iframePath = if (useFullframeUrl) {"demo/index.html"} else {"demo"};
+    let iframePath =
+      "/" ++ (categories |> String.concat("/")) ++ "/" ++ demoName;
     <div
       name="DemoUnitFrame"
       className={Css.container +++ Css.containerBackground(responsiveMode)}>
       <iframe
         className={Css.iframe(responsiveMode)}
-        src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
+        src=iframePath
         onLoad={event => {
           let iframe = event->React.Event.Synthetic.target;
           let window = iframe##contentWindow;
           onLoad(window);
         }}
+        // src={(iframePath ++ {js|?iframe=true&|js}) ++ queryString}
       />
     </div>;
   };
@@ -1011,20 +1019,43 @@ module App = {
 
   type route =
     | Unit(URLSearchParams.t, string)
-    | Demo(string)
+    | Demo(URLSearchParams.t, string, list(string))
     | Home;
 
   [@react.component]
   let make = (~demos: Demos.t) => {
     let url = ReasonReactRouter.useUrl();
     let urlSearchParams = url.search->URLSearchParams.make;
+
+    let hackyCategories =
+      urlSearchParams
+      ->URLSearchParams.toArray()
+      ->Belt.Array.keepMap(((k, v)) =>
+          switch (k->Js.String.startsWith(~prefix="category")) {
+          | false => None
+          | true =>
+            switch (
+              k
+              ->Js.String.replace(~search="category", ~replacement="")
+              ->Int.fromString
+            ) {
+            | None => None
+            | Some(catLevel) => Some((catLevel, v))
+            }
+          }
+        )
+      ->Belt.List.fromArray
+      ->Belt.List.sort(((cl1, _), (cl2, _)) => cl2 - cl1)
+      ->Belt.List.map(((_c, v)) => v);
+
     let route =
       switch (
         urlSearchParams->URLSearchParams.get("iframe"),
         urlSearchParams->URLSearchParams.get("demo"),
       ) {
       | (Some("true"), Some(demoName)) => Unit(urlSearchParams, demoName)
-      | (_, Some(_)) => Demo(url.search)
+      | (_, Some(demoName)) =>
+        Demo(urlSearchParams, demoName, hackyCategories)
       | _ => Home
       };
 
@@ -1090,7 +1121,7 @@ module App = {
             ->Option.map(demoUnit => <DemoUnit demoUnit />)
             ->Option.getWithDefault("Demo not found"->React.string)}
          </div>;
-       | Demo(queryString) =>
+       | Demo(urlSearchParams, demoName, categories) =>
          <>
            <DemoListSidebar
              demos
@@ -1117,7 +1148,8 @@ module App = {
                <div className=Css.demoContents>
                  <DemoUnitFrame
                    key={"DemoUnitFrame" ++ iframeKey}
-                   queryString
+                   demoName
+                   categories
                    responsiveMode
                    onLoad={iframeWindow =>
                      setLoadedIframeWindow(_ => Some(iframeWindow))
