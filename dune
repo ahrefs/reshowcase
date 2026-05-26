@@ -10,16 +10,29 @@
   commands/ui-template.html))
 
 (rule
+ (target styles.css)
+ (alias build-example)
+ (deps
+  src/HighlightTerms.re.pp.ml
+  src/Layout.re.pp.ml
+  src/ReshowcaseUi.re.pp.ml
+  example/Demo.re.pp.ml)
+ (action
+  (run styled-ppx.generate --output %{target} %{deps})))
+
+(rule
  (alias build-example)
  (deps
   %{bin:demo-template.html}
   %{bin:favicon.png}
   %{bin:reshowcase}
   %{bin:ui-template.html}
+  styles.css
   (alias ./example/example))
  (action
   (run
    %{bin:reshowcase}
    build
    --entry=%{project_root}/example/example/example/Demo.js
+   --styles=%{dep:styles.css}
    --output=%{project_root}/build)))

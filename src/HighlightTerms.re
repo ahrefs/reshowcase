@@ -163,7 +163,7 @@ let getTextParts = (~text, ~terms) => {
 module Css = {
   open StyleVars;
 
-  let highlight = [%cx {|
+  let highlight = [%css {|
     background-color: $(Color.orange);
   |}];
 };
@@ -178,7 +178,7 @@ let make = (~text, ~terms) =>
     |> Array.mapi(~f=(item, index) =>
          switch (item) {
          | Marked(text) =>
-           <mark key={Belt.Int.toString(index)} className=Css.highlight>
+           <mark key={Belt.Int.toString(index)} styles=Css.highlight>
              text->React.string
            </mark>
          | Unmarked(text) =>

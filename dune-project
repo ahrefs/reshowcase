@@ -35,7 +35,7 @@
   (reason-react-ppx
    (>= 0.16.0))
   (server-reason-react
-   (>= 0.3.1))
+   (>= 0.4.1))
   (styled-ppx
    (>= 0.60.4))
   (ocamlformat

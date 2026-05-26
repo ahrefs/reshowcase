@@ -32,6 +32,22 @@ const getRequiredPathValue = (name) => {
   }
 };
 
+const getOptionalPathValue = (name) => {
+  const prefix = `--${name}=`;
+  const arg = process.argv.find((item) => item.startsWith(prefix));
+  if (arg === undefined) {
+    return undefined;
+  } else {
+    const value = arg.replace(prefix, "");
+    if (value === "") {
+      console.error(`${name} path can't be empty`);
+      process.exit(1);
+    } else {
+      return toAbsolutePath(value);
+    }
+  }
+};
+
 const task = process.argv[2];
 
 if (task !== "build" && task !== "start") {
@@ -61,9 +77,15 @@ const useFullframeUrl = (() => {
 const isBuild = task === "build";
 
 const entryPath = getRequiredPathValue("entry");
+const stylesPath = getOptionalPathValue("styles");
 
 if (!fs.existsSync(entryPath)) {
   console.error(`Entry file not found here: ${entryPath}`);
+  process.exit(1);
+}
+
+if (stylesPath !== undefined && !fs.existsSync(stylesPath)) {
+  console.error(`Styles file not found here: ${stylesPath}`);
   process.exit(1);
 }
 
@@ -109,9 +131,13 @@ const watchPlugin = {
 
 // entryPoint passed to htmlPlugin must be relative to the current working directory
 const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
+const entryPoints = stylesPath === undefined ? [entryPath] : [entryPath, stylesPath];
+const entryPointsRelativeToCwd = stylesPath === undefined
+  ? [entryPathRelativeToCwd]
+  : [entryPathRelativeToCwd, path.relative(process.cwd(), stylesPath)];
 
 const defaultConfig = {
-  entryPoints: [entryPath],
+  entryPoints,
   entryNames: "[name]-[hash]",
   assetNames: "[name]-[hash]",
   chunkNames: "[name]-[hash]",
@@ -126,7 +152,6 @@ const defaultConfig = {
   logLevel: "warning",
   loader: Object.fromEntries(
     [
-      ".css",
       ".jpg",
       ".jpeg",
       ".png",
@@ -149,13 +174,13 @@ const defaultConfig = {
       files: [
         {
           filename: "index.html",
-          entryPoints: [entryPathRelativeToCwd],
+          entryPoints: entryPointsRelativeToCwd,
           htmlTemplate: path.join(__dirname, "./ui-template.html"),
           scriptLoading: "module",
         },
         {
           filename: "./demo/index.html",
-          entryPoints: [entryPathRelativeToCwd],
+          entryPoints: entryPointsRelativeToCwd,
           htmlTemplate: process.argv.find((item) =>
             item.startsWith("--template=")
           )

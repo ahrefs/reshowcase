@@ -1,20 +1,15 @@
 open Reshowcase.Entry;
 
-module Cn = {
-  let ifTrue = (cn, x) => x ? cn : "";
+module Styles = {
+  let empty = CSS.make("", []);
+
+  let ifTrue = (styles, x) => x ? styles : empty;
 };
 
-let spaceConcat = (x1, x2) =>
-  switch (x1, x2) {
-  | ("", x)
-  | (x, "") => x
-  | (x1, x2) => x1 ++ " " ++ x2
-  };
-
-let (+++) = spaceConcat;
+let (+++) = CSS.merge;
 
 module Css = {
-  let button = [%cx
+  let button = [%css
     {|
     color: #fff;
     border: none;
@@ -25,31 +20,31 @@ module Css = {
   |}
   ];
 
-  let buttonHuge = [%cx {|
+  let buttonHuge = [%css {|
     padding: 20px;
     font-size: 30px;
   |}];
 
-  let buttonDisabled = [%cx {|
+  let buttonDisabled = [%css {|
     cursor: default;
     opacity: 0.5;
   |}];
 
   let buttonColor = color => {
     let color = `hex(color);
-    [%cx {|
+    [%css {|
       background-color: $(color);
     |}];
   };
 
   let h1Size = size => {
     let fontSize = `px(size);
-    [%cx {|
+    [%css {|
       font-size: $(fontSize);
     |}];
   };
 
-  let code = [%cx
+  let code = [%css
     {|
     white-space: pre;
     padding: 0;
@@ -58,9 +53,9 @@ module Css = {
   ];
 };
 
-demo(({addDemo: _, addCategory}) =>
-  addCategory("Buttons", ({addDemo, addCategory: _}) => {
-    addDemo("Normal", ({string, bool, _}) => {
+demo(({ addDemo: _, addCategory }) =>
+  addCategory("Buttons", ({ addDemo, addCategory: _ }) => {
+    addDemo("Normal", ({ string, bool, _ }) => {
       let disabled = bool("Disabled", false);
       let color =
         string(
@@ -74,15 +69,15 @@ demo(({addDemo: _, addCategory}) =>
         );
       <button
         disabled
-        className={
+        styles={
           Css.button
-          +++ Css.buttonDisabled->Cn.ifTrue(disabled)
+          +++ Css.buttonDisabled->Styles.ifTrue(disabled)
           +++ Css.buttonColor(color)
         }>
         {string("Text", "hello")->React.string}
       </button>;
     });
-    addDemo("Huge", ({string, bool, _}) => {
+    addDemo("Huge", ({ string, bool, _ }) => {
       let disabled = bool("Disabled", false);
       let color =
         string(
@@ -96,10 +91,10 @@ demo(({addDemo: _, addCategory}) =>
         );
       <button
         disabled
-        className={
+        styles={
           Css.button
           +++ Css.buttonHuge
-          +++ Css.buttonDisabled->Cn.ifTrue(disabled)
+          +++ Css.buttonDisabled->Styles.ifTrue(disabled)
           +++ Css.buttonColor(color)
         }>
         {string("Text", "Hello")->React.string}
@@ -108,35 +103,43 @@ demo(({addDemo: _, addCategory}) =>
   })
 );
 
-demo(({addDemo: _, addCategory}) =>
-  addCategory("Typography", ({addDemo: _, addCategory}) => {
-    addCategory("Headings", ({addDemo, addCategory: _}) => {
-      addDemo("H1", ({string, int, _}) => {
+demo(({ addDemo: _, addCategory }) =>
+  addCategory("Typography", ({ addDemo: _, addCategory }) => {
+    addCategory("Headings", ({ addDemo, addCategory: _ }) => {
+      addDemo("H1", ({ string, int, _ }) => {
         let size =
-          int("Font size", {min: 0, max: 100, initial: 30, step: 1});
+          int(
+            "Font size",
+            {
+              min: 0,
+              max: 100,
+              initial: 30,
+              step: 1,
+            },
+          );
 
-        <h1 className={Css.h1Size(size)}>
+        <h1 styles={Css.h1Size(size)}>
           {string("Text", "hello")->React.string}
         </h1>;
       });
-      addDemo("H2", ({string, _}) =>
+      addDemo("H2", ({ string, _ }) =>
         <h2> {string("Text", "hello")->React.string} </h2>
       );
     });
-    addCategory("Text", ({addDemo, addCategory: _}) => {
-      addDemo("Paragraph", ({string, _}) =>
+    addCategory("Text", ({ addDemo, addCategory: _ }) => {
+      addDemo("Paragraph", ({ string, _ }) =>
         <p> {string("Text", "hello")->React.string} </p>
       );
-      addDemo("Italic", ({string, _}) =>
+      addDemo("Italic", ({ string, _ }) =>
         <i> {string("Text", "hello")->React.string} </i>
       );
     });
   })
 );
 
-demo(({addDemo, addCategory: _}) =>
+demo(({ addDemo, addCategory: _ }) =>
   addDemo("Code example", _propsApi =>
-    <code className=Css.code>
+    <code styles=Css.code>
       {js|open Reshowcase.Entry;
 
 demo(({addDemo: _, addCategory}) =>
@@ -146,7 +149,7 @@ demo(({addDemo: _, addCategory}) =>
         let size =
           int("Font size", {min: 0, max: 100, initial: 30, step: 1});
 
-        <h1 className={Css.h1Size(size)}>
+        <h1 styles={Css.h1Size(size)}>
           {string("Text", "hello")->React.string}
         </h1>;
       });
@@ -169,8 +172,8 @@ demo(({addDemo: _, addCategory}) =>
   )
 );
 
-demo(({addDemo: _, addCategory}) =>
-  addCategory("Test search", ({addDemo, addCategory: _}) => {
+demo(({ addDemo: _, addCategory }) =>
+  addCategory("Test search", ({ addDemo, addCategory: _ }) => {
     addDemo("OneTwoThreeFour", _ => React.null);
     addDemo("OneTwoThreeFive", _ => React.null);
     addDemo("OneTwoFourSeven", _ => React.null);

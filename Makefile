@@ -65,7 +65,8 @@ serve-example: ## Serves example on given port
 .PHONY: serve-example
 build-example-ok:
 	rm -rf build
-	$(BUILD_DIR)/commands/reshowcase build --entry=./$(BUILD_DIR)/example/example/example/Demo.js --output=./build
+	$(DUNE) build styles.css
+	$(BUILD_DIR)/commands/reshowcase build --entry=./$(BUILD_DIR)/example/example/example/Demo.js --styles=./$(BUILD_DIR)/styles.css --output=./build
 
 .PHONY: build-example
 build-example: ## Builds the example
