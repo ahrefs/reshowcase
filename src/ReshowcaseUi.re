@@ -611,7 +611,7 @@ module DemoUnitSidebar = {
          ->React.array}
         {ints
          ->Map.String.toArray
-         ->Array.map(((propName, ({Configs.min, max, _}, value))) =>
+         ->Array.map(((propName, ({ Configs.min, max, _ }, value))) =>
              <PropBox key=propName propName>
                <input
                  type_="number"
@@ -631,7 +631,7 @@ module DemoUnitSidebar = {
          ->React.array}
         {floats
          ->Map.String.toArray
-         ->Array.map(((propName, ({Configs.min, max, _}, value))) =>
+         ->Array.map(((propName, ({ Configs.min, max, _ }, value))) =>
              <PropBox key=propName propName>
                <input
                  type_="number"
@@ -915,7 +915,8 @@ module DemoUnitFrame = {
         border: none;
         height: $(height);
         width: $(width);
-      |}];
+      |}
+      ];
     };
   };
 

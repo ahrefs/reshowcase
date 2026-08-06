@@ -103,7 +103,23 @@ const customConfig = (() => {
 const watchPlugin = {
   name: "watchPlugin",
   setup: (build) => {
-    build.onEnd((_buildResult) => console.log("[reshowcase] Rebuild finished!"));
+    const htmlPath = path.join(build.initialOptions.outdir, "index.html");
+
+    build.onEnd(() => {
+      console.log("[reshowcase] Rebuild finished!");
+      if (!fs.existsSync(htmlPath)) {
+        return;
+      }
+      const html = fs.readFileSync(htmlPath, "utf8");
+      const liveReloadScript =
+        "<script>new EventSource('/esbuild').addEventListener('change', () => location.reload());</script>";
+      if (!html.includes(liveReloadScript)) {
+        fs.writeFileSync(
+          htmlPath,
+          html.replace("</head>", `  ${liveReloadScript}\n</head>`)
+        );
+      }
+    });
   },
 };
 

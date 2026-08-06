@@ -53,6 +53,7 @@ watch: ## Watch for the filesystem and rebuild on every change
 .PHONY: test
 test: ## Run tests
 	$(DUNE) build @runtest
+	node --test commands/reshowcase.test.js
 
 .PHONY: start-example
 start-example: ## Runs the example in watch mode
