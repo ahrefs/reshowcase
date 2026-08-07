@@ -58,9 +58,9 @@ module Css = {
   ];
 };
 
-demo(({addDemo: _, addCategory}) =>
-  addCategory("Buttons", ({addDemo, addCategory: _}) => {
-    addDemo("Normal", ({string, bool, _}) => {
+demo(({ addDemo: _, addCategory }) =>
+  addCategory("Buttons", ({ addDemo, addCategory: _ }) => {
+    addDemo("Normal", ({ string, bool, _ }) => {
       let disabled = bool("Disabled", false);
       let color =
         string(
@@ -82,7 +82,7 @@ demo(({addDemo: _, addCategory}) =>
         {string("Text", "hello")->React.string}
       </button>;
     });
-    addDemo("Huge", ({string, bool, _}) => {
+    addDemo("Huge", ({ string, bool, _ }) => {
       let disabled = bool("Disabled", false);
       let color =
         string(
@@ -108,33 +108,41 @@ demo(({addDemo: _, addCategory}) =>
   })
 );
 
-demo(({addDemo: _, addCategory}) =>
-  addCategory("Typography", ({addDemo: _, addCategory}) => {
-    addCategory("Headings", ({addDemo, addCategory: _}) => {
-      addDemo("H1", ({string, int, _}) => {
+demo(({ addDemo: _, addCategory }) =>
+  addCategory("Typography", ({ addDemo: _, addCategory }) => {
+    addCategory("Headings", ({ addDemo, addCategory: _ }) => {
+      addDemo("H1", ({ string, int, _ }) => {
         let size =
-          int("Font size", {min: 0, max: 100, initial: 30, step: 1});
+          int(
+            "Font size",
+            {
+              min: 0,
+              max: 100,
+              initial: 30,
+              step: 1,
+            },
+          );
 
         <h1 className={Css.h1Size(size)}>
           {string("Text", "hello")->React.string}
         </h1>;
       });
-      addDemo("H2", ({string, _}) =>
+      addDemo("H2", ({ string, _ }) =>
         <h2> {string("Text", "hello")->React.string} </h2>
       );
     });
-    addCategory("Text", ({addDemo, addCategory: _}) => {
-      addDemo("Paragraph", ({string, _}) =>
+    addCategory("Text", ({ addDemo, addCategory: _ }) => {
+      addDemo("Paragraph", ({ string, _ }) =>
         <p> {string("Text", "hello")->React.string} </p>
       );
-      addDemo("Italic", ({string, _}) =>
+      addDemo("Italic", ({ string, _ }) =>
         <i> {string("Text", "hello")->React.string} </i>
       );
     });
   })
 );
 
-demo(({addDemo, addCategory: _}) =>
+demo(({ addDemo, addCategory: _ }) =>
   addDemo("Code example", _propsApi =>
     <code className=Css.code>
       {js|open Reshowcase.Entry;
@@ -169,8 +177,8 @@ demo(({addDemo: _, addCategory}) =>
   )
 );
 
-demo(({addDemo: _, addCategory}) =>
-  addCategory("Test search", ({addDemo, addCategory: _}) => {
+demo(({ addDemo: _, addCategory }) =>
+  addCategory("Test search", ({ addDemo, addCategory: _ }) => {
     addDemo("OneTwoThreeFour", _ => React.null);
     addDemo("OneTwoThreeFive", _ => React.null);
     addDemo("OneTwoFourSeven", _ => React.null);

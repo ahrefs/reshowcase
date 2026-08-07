@@ -109,6 +109,11 @@ const watchPlugin = {
 
 // entryPoint passed to htmlPlugin must be relative to the current working directory
 const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
+const liveReloadScript =
+  "<script>new EventSource('/esbuild').addEventListener('change', () => location.reload());</script>";
+const uiTemplate = fs
+  .readFileSync(path.join(__dirname, "./ui-template.html"), "utf8")
+  .replace("<!-- live-reload -->", isBuild ? "" : liveReloadScript);
 
 const defaultConfig = {
   entryPoints: [entryPath],
@@ -150,7 +155,7 @@ const defaultConfig = {
         {
           filename: "index.html",
           entryPoints: [entryPathRelativeToCwd],
-          htmlTemplate: path.join(__dirname, "./ui-template.html"),
+          htmlTemplate: uiTemplate,
           scriptLoading: "module",
         },
         {
