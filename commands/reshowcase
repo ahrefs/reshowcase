@@ -103,28 +103,17 @@ const customConfig = (() => {
 const watchPlugin = {
   name: "watchPlugin",
   setup: (build) => {
-    const htmlPath = path.join(build.initialOptions.outdir, "index.html");
-
-    build.onEnd(() => {
-      console.log("[reshowcase] Rebuild finished!");
-      if (!fs.existsSync(htmlPath)) {
-        return;
-      }
-      const html = fs.readFileSync(htmlPath, "utf8");
-      const liveReloadScript =
-        "<script>new EventSource('/esbuild').addEventListener('change', () => location.reload());</script>";
-      if (!html.includes(liveReloadScript)) {
-        fs.writeFileSync(
-          htmlPath,
-          html.replace("</head>", `  ${liveReloadScript}\n</head>`)
-        );
-      }
-    });
+    build.onEnd((_buildResult) => console.log("[reshowcase] Rebuild finished!"));
   },
 };
 
 // entryPoint passed to htmlPlugin must be relative to the current working directory
 const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
+const liveReloadScript =
+  "<script>new EventSource('/esbuild').addEventListener('change', () => location.reload());</script>";
+const uiTemplate = fs
+  .readFileSync(path.join(__dirname, "./ui-template.html"), "utf8")
+  .replace("<!-- live-reload -->", isBuild ? "" : liveReloadScript);
 
 const defaultConfig = {
   entryPoints: [entryPath],
@@ -166,7 +155,7 @@ const defaultConfig = {
         {
           filename: "index.html",
           entryPoints: [entryPathRelativeToCwd],
-          htmlTemplate: path.join(__dirname, "./ui-template.html"),
+          htmlTemplate: uiTemplate,
           scriptLoading: "module",
         },
         {
