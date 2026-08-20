@@ -5,3 +5,16 @@
  (libraries melange.belt reason-react styled-ppx.melange)
  (public_name reshowcase)
  (modes melange))
+
+(rule
+ (target styles.css)
+ (deps
+  (glob_files *.pp.ml))
+ (action
+  (run styled-ppx.generate --output %{target} %{deps})))
+
+(install
+ (section bin)
+ (package reshowcase)
+ (files
+  (styles.css as reshowcase-ui.css)))

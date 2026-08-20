@@ -32,6 +32,22 @@ const getRequiredPathValue = (name) => {
   }
 };
 
+const getOptionalPathValue = (name) => {
+  const prefix = `--${name}=`;
+  const arg = process.argv.find((item) => item.startsWith(prefix));
+  if (arg === undefined) {
+    return undefined;
+  } else {
+    const value = arg.replace(prefix, "");
+    if (value === "") {
+      console.error(`${name} path can't be empty`);
+      process.exit(1);
+    } else {
+      return toAbsolutePath(value);
+    }
+  }
+};
+
 const task = process.argv[2];
 
 if (task !== "build" && task !== "start") {
@@ -61,9 +77,15 @@ const useFullframeUrl = (() => {
 const isBuild = task === "build";
 
 const entryPath = getRequiredPathValue("entry");
+const stylesPath = getOptionalPathValue("styles");
 
 if (!fs.existsSync(entryPath)) {
   console.error(`Entry file not found here: ${entryPath}`);
+  process.exit(1);
+}
+
+if (stylesPath !== undefined && !fs.existsSync(stylesPath)) {
+  console.error(`Styles file not found here: ${stylesPath}`);
   process.exit(1);
 }
 
@@ -100,6 +122,56 @@ const customConfig = (() => {
   }
 })();
 
+// Reshowcase's own UI styles are statically extracted by styled-ppx at
+// package build time and installed next to this script as reshowcase-ui.css.
+// The html plugin only injects the JS bundle, so this plugin copies the
+// stylesheet to the output dir and links it from the generated HTML pages
+// (both the UI shell and the demo iframe page render reshowcase components).
+const uiCssPlugin = {
+  name: "uiCssPlugin",
+  setup: (build) => {
+    const cssPath = path.join(__dirname, "reshowcase-ui.css");
+    if (!fs.existsSync(cssPath)) {
+      console.warn(
+        "[reshowcase] reshowcase-ui.css not found, UI styles will be missing"
+      );
+      return;
+    }
+    const outdir = build.initialOptions.outdir;
+    const publicPath = (build.initialOptions.publicPath || "").replace(
+      /\/$/,
+      ""
+    );
+
+    build.onEnd(() => {
+      const css = fs.readFileSync(cssPath);
+      const hash = require("crypto")
+        .createHash("sha1")
+        .update(css)
+        .digest("hex")
+        .slice(0, 8);
+      const outName = `reshowcase-ui-${hash}.css`;
+      fs.writeFileSync(path.join(outdir, outName), css);
+      const linkTag = `<link rel="stylesheet" href="${publicPath}/${outName}">`;
+
+      for (const htmlRel of ["index.html", path.join("demo", "index.html")]) {
+        const htmlPath = path.join(outdir, htmlRel);
+        if (!fs.existsSync(htmlPath)) {
+          continue;
+        }
+        const html = fs.readFileSync(htmlPath, "utf8");
+        if (html.includes("reshowcase-ui-")) {
+          continue; // already injected on a previous rebuild
+        }
+        fs.writeFileSync(
+          htmlPath,
+          html.replace("</head>", `  ${linkTag}\n</head>`)
+        );
+      }
+    });
+  },
+};
+
 const watchPlugin = {
   name: "watchPlugin",
   setup: (build) => {
@@ -109,6 +181,11 @@ const watchPlugin = {
 
 // entryPoint passed to htmlPlugin must be relative to the current working directory
 const entryPathRelativeToCwd = path.relative(process.cwd(), entryPath);
+const entryPoints = stylesPath === undefined ? [entryPath] : [entryPath, stylesPath];
+const entryPointsRelativeToCwd =
+  stylesPath === undefined
+    ? [entryPathRelativeToCwd]
+    : [entryPathRelativeToCwd, path.relative(process.cwd(), stylesPath)];
 const liveReloadScript =
   "<script>new EventSource('/esbuild').addEventListener('change', () => location.reload());</script>";
 const uiTemplate = fs
@@ -116,7 +193,7 @@ const uiTemplate = fs
   .replace("<!-- live-reload -->", isBuild ? "" : liveReloadScript);
 
 const defaultConfig = {
-  entryPoints: [entryPath],
+  entryPoints,
   entryNames: "[name]-[hash]",
   assetNames: "[name]-[hash]",
   chunkNames: "[name]-[hash]",
@@ -131,7 +208,6 @@ const defaultConfig = {
   logLevel: "warning",
   loader: Object.fromEntries(
     [
-      ".css",
       ".jpg",
       ".jpeg",
       ".png",
@@ -154,13 +230,13 @@ const defaultConfig = {
       files: [
         {
           filename: "index.html",
-          entryPoints: [entryPathRelativeToCwd],
+          entryPoints: entryPointsRelativeToCwd,
           htmlTemplate: uiTemplate,
           scriptLoading: "module",
         },
         {
           filename: "./demo/index.html",
-          entryPoints: [entryPathRelativeToCwd],
+          entryPoints: entryPointsRelativeToCwd,
           htmlTemplate: process.argv.find((item) =>
             item.startsWith("--template=")
           )
@@ -175,6 +251,7 @@ const defaultConfig = {
         },
       ],
     }),
+    uiCssPlugin,
     ...(isBuild ? [] : [watchPlugin]),
   ],
 };
