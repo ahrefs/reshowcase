@@ -43,6 +43,6 @@ depexts: [
   ["@craftamap/esbuild-plugin-html"] {npm-version = "^0.6.1"}
 ]
 pin-depends: [
-  ["styled-ppx.dev" "git+https://github.com/davesnx/styled-ppx.git#dba7cbe0c1e875e55315728d46c16d7b461bcad7"]
+  ["styled-ppx.dev" "git+https://github.com/davesnx/styled-ppx.git#2a95cd3d8a06ba0c6d8a6bb0b29c079e619ac092"]
   ["server-reason-react.dev" "git+https://github.com/ml-in-barcelona/server-reason-react#555bc3402399eb51edf5b5b67c620bb19d1a5e57"]
 ]

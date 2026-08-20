@@ -1,20 +1,15 @@
 open Reshowcase.Entry;
 
-module Cn = {
-  let ifTrue = (cn, x) => x ? cn : "";
+module Styles = {
+  let empty = CSS.make("", []);
+
+  let ifTrue = (styles, x) => x ? styles : empty;
 };
 
-let spaceConcat = (x1, x2) =>
-  switch (x1, x2) {
-  | ("", x)
-  | (x, "") => x
-  | (x1, x2) => x1 ++ " " ++ x2
-  };
-
-let (+++) = spaceConcat;
+let (+++) = CSS.merge;
 
 module Css = {
-  let button = [%cx
+  let button = [%css
     {|
     color: #fff;
     border: none;
@@ -25,31 +20,31 @@ module Css = {
   |}
   ];
 
-  let buttonHuge = [%cx {|
+  let buttonHuge = [%css {|
     padding: 20px;
     font-size: 30px;
   |}];
 
-  let buttonDisabled = [%cx {|
+  let buttonDisabled = [%css {|
     cursor: default;
     opacity: 0.5;
   |}];
 
   let buttonColor = color => {
     let color = `hex(color);
-    [%cx {|
+    [%css {|
       background-color: $(color);
     |}];
   };
 
   let h1Size = size => {
     let fontSize = `px(size);
-    [%cx {|
+    [%css {|
       font-size: $(fontSize);
     |}];
   };
 
-  let code = [%cx
+  let code = [%css
     {|
     white-space: pre;
     padding: 0;
@@ -74,9 +69,9 @@ demo(({ addDemo: _, addCategory }) =>
         );
       <button
         disabled
-        className={
+        styles={
           Css.button
-          +++ Css.buttonDisabled->Cn.ifTrue(disabled)
+          +++ Css.buttonDisabled->Styles.ifTrue(disabled)
           +++ Css.buttonColor(color)
         }>
         {string("Text", "hello")->React.string}
@@ -96,10 +91,10 @@ demo(({ addDemo: _, addCategory }) =>
         );
       <button
         disabled
-        className={
+        styles={
           Css.button
           +++ Css.buttonHuge
-          +++ Css.buttonDisabled->Cn.ifTrue(disabled)
+          +++ Css.buttonDisabled->Styles.ifTrue(disabled)
           +++ Css.buttonColor(color)
         }>
         {string("Text", "Hello")->React.string}
@@ -123,7 +118,7 @@ demo(({ addDemo: _, addCategory }) =>
             },
           );
 
-        <h1 className={Css.h1Size(size)}>
+        <h1 styles={Css.h1Size(size)}>
           {string("Text", "hello")->React.string}
         </h1>;
       });
@@ -144,7 +139,7 @@ demo(({ addDemo: _, addCategory }) =>
 
 demo(({ addDemo, addCategory: _ }) =>
   addDemo("Code example", _propsApi =>
-    <code className=Css.code>
+    <code styles=Css.code>
       {js|open Reshowcase.Entry;
 
 demo(({addDemo: _, addCategory}) =>
@@ -154,7 +149,7 @@ demo(({addDemo: _, addCategory}) =>
         let size =
           int("Font size", {min: 0, max: 100, initial: 30, step: 1});
 
-        <h1 className={Css.h1Size(size)}>
+        <h1 styles={Css.h1Size(size)}>
           {string("Text", "hello")->React.string}
         </h1>;
       });

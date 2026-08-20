@@ -36,12 +36,14 @@ const fetchHtml = async (url, server) => {
 test("only enables live reload in watch mode", async (t) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reshowcase-test-"));
   const entryPath = path.join(tempDir, "entry.js");
+  const stylesPath = path.join(tempDir, "styles.css");
   const templatePath = path.join(tempDir, "template.html");
   const outputPath = path.join(tempDir, "build");
   fs.writeFileSync(
     entryPath,
     'document.getElementById("root").textContent = "Reshowcase";'
   );
+  fs.writeFileSync(stylesPath, "body { color: rebeccapurple; }");
   fs.writeFileSync(
     templatePath,
     '<!doctype html><html><head></head><body><div id="root"></div></body></html>'
@@ -54,6 +56,7 @@ test("only enables live reload in watch mode", async (t) => {
       cliPath,
       "build",
       `--entry=${entryPath}`,
+      `--styles=${stylesPath}`,
       `--template=${templatePath}`,
       `--output=${outputPath}`,
     ],
@@ -62,6 +65,7 @@ test("only enables live reload in watch mode", async (t) => {
   assert.equal(build.status, 0, build.stderr || build.stdout);
   const builtHtml = fs.readFileSync(path.join(outputPath, "index.html"), "utf8");
   assert.doesNotMatch(builtHtml, /EventSource|\/esbuild/);
+  assert.match(builtHtml, /<link rel="stylesheet" href="\/styles-[^"]+\.css">/);
 
   const port = 20000 + (process.pid % 10000);
   const server = spawn(
@@ -70,6 +74,7 @@ test("only enables live reload in watch mode", async (t) => {
       cliPath,
       "start",
       `--entry=${entryPath}`,
+      `--styles=${stylesPath}`,
       `--template=${templatePath}`,
       `--port=${port}`,
     ],
@@ -79,4 +84,5 @@ test("only enables live reload in watch mode", async (t) => {
 
   const watchedHtml = await fetchHtml(`http://127.0.0.1:${port}/`, server);
   assert.match(watchedHtml, /new EventSource\('\/esbuild'\)/);
+  assert.match(watchedHtml, /<link rel="stylesheet" href="\/styles-[^"]+\.css">/);
 });

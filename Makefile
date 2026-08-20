@@ -61,12 +61,14 @@ start-example: ## Runs the example in watch mode
 
 .PHONY: serve-example
 serve-example: ## Serves example on given port
-	$(BUILD_DIR)/commands/reshowcase start --entry=./$(BUILD_DIR)/example/example/example/Demo.js
+	$(DUNE) build commands/reshowcase-ui.css example-styles.css
+	$(BUILD_DIR)/commands/reshowcase start --entry=./$(BUILD_DIR)/example/example/example/Demo.js --styles=./$(BUILD_DIR)/example-styles.css
 
 .PHONY: serve-example
 build-example-ok:
 	rm -rf build
-	$(BUILD_DIR)/commands/reshowcase build --entry=./$(BUILD_DIR)/example/example/example/Demo.js --output=./build
+	$(DUNE) build commands/reshowcase-ui.css example-styles.css
+	$(BUILD_DIR)/commands/reshowcase build --entry=./$(BUILD_DIR)/example/example/example/Demo.js --styles=./$(BUILD_DIR)/example-styles.css --output=./build
 
 .PHONY: build-example
 build-example: ## Builds the example

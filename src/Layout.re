@@ -25,23 +25,23 @@ module PaddedBox = {
         | Xs => Gap.xs
         | Md => Gap.md
         };
-      [%cx {|
+      [%css {|
       padding: $(padding);
     |}];
     };
 
     let boxPadding = paddingType => {
       switch (paddingType) {
-      | Around => [%cx {||}]
-      | LeftRight => [%cx {| padding-top: 0; padding-bottom: 0; |}]
-      | TopLeftRight => [%cx {| padding-bottom: 0; |}]
+      | Around => [%css {||}]
+      | LeftRight => [%css {| padding-top: 0; padding-bottom: 0; |}]
+      | TopLeftRight => [%css {| padding-bottom: 0; |}]
       };
     };
 
     let boxBorder =
       fun
-      | None => [%cx ""]
-      | Bottom => [%cx {| border-bottom: 1px solid $(Color.midGray); |}];
+      | None => [%css ""]
+      | Bottom => [%css {| border-bottom: 1px solid $(Color.midGray); |}];
   };
 
   [@react.component]
@@ -56,7 +56,7 @@ module PaddedBox = {
     <div
       name="PaddedBox"
       ?id
-      className={
+      styles={
         Css.box(gap) +++ Css.boxPadding(padding) +++ Css.boxBorder(border)
       }>
       children
@@ -67,7 +67,7 @@ module Stack = {
   module Css = {
     open StyleVars;
 
-    let stack = [%cx
+    let stack = [%css
       {|
         display: grid;
         grid-gap: $(Gap.xs);
@@ -77,7 +77,7 @@ module Stack = {
 
   [@react.component]
   let make = (~children) =>
-    <div name="Stack" className=Css.stack> children </div>;
+    <div name="Stack" styles=Css.stack> children </div>;
 };
 
 module Sidebar = {
@@ -86,7 +86,7 @@ module Sidebar = {
 
     let width = `px(230);
 
-    let sidebar = [%cx
+    let sidebar = [%css
       {|
       min-width: $(width);
       width: $(width);
@@ -96,7 +96,7 @@ module Sidebar = {
     |}
     ];
 
-    let sidebarFullHeight = [%cx {|
+    let sidebarFullHeight = [%css {|
       height: 100vh;
     |}];
   };
@@ -106,7 +106,9 @@ module Sidebar = {
     <div
       name="Sidebar"
       id=?innerContainerId
-      className={Css.sidebar +++ Css.sidebarFullHeight->Cn.ifTrue(fullHeight)}>
+      styles={
+        Css.sidebar +++ Css.sidebarFullHeight->Styles.ifTrue(fullHeight)
+      }>
       children
     </div>;
 };
@@ -115,7 +117,7 @@ module Icon = {
   open StyleVars;
 
   module Css = {
-    let iconBlock = [%cx {|
+    let iconBlock = [%css {|
       display: block;
     |}];
   };
@@ -160,7 +162,7 @@ module Icon = {
       width="18"
       height="18"
       viewBox="0 0 18 18"
-      className=Css.iconBlock>
+      styles=Css.iconBlock>
       <path
         fill="gray"
         d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"
@@ -197,7 +199,7 @@ module Icon = {
 
 module Collapsible = {
   module Css = {
-    let clickableArea = [%cx
+    let clickableArea = [%css
       {|
       display: flex;
       cursor: pointer;
@@ -206,14 +208,14 @@ module Collapsible = {
     |}
     ];
 
-    let icon = [%cx
+    let icon = [%css
       {|
       transition: 200ms ease-out transform;
       transform: rotate(-90deg);
     |}
     ];
 
-    let iconActive = [%cx {|
+    let iconActive = [%css {|
       transform: rotate(0);
     |}];
   };
@@ -222,7 +224,7 @@ module Collapsible = {
     <svg
       width="10"
       height="6"
-      className={Css.icon +++ Css.iconActive->Cn.ifTrue(isOpen)}>
+      styles={Css.icon +++ Css.iconActive->Styles.ifTrue(isOpen)}>
       <polygon
         points="0,0  10,0  5,6"
         fill=StyleVars.Color.(darkGray->toString)
@@ -247,7 +249,7 @@ module Collapsible = {
     );
     <div>
       <div
-        className=Css.clickableArea
+        styles=Css.clickableArea
         onClick={_event => setIsOpen(isOpen => !isOpen)}>
         {triangleIcon(isOpen)}
         title

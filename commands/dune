@@ -1,0 +1,5 @@
+(rule
+ (target reshowcase-ui.css)
+ (deps ../src/styles.css)
+ (action
+  (copy %{deps} %{target})))
